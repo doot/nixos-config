@@ -1,0 +1,11 @@
+* nix-config
+placeholder
+* Notes:
+** This repo is checked out to `$HOME/nixos-config`
+** `/etc/nixos` should be empty except for a symlink to `$HOME/nixos-config/flake.nix`
+** `nixos-rebuild switch` should work without extra args due to the above symlink
+** `nixos-rebuild switch --flake $HOME/nixos-config/#`
+** `nix flake update` to update the lock file
+** System specific configs go in `nixos-config/systems/<hostname>/system.nix`
+** `nix fmt` to format entire flake using configured formatter (alejandra)
+** Docker containers are run via Arion, which generates and runs (via systemd units) docker-compose files
