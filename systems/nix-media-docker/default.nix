@@ -54,6 +54,12 @@
           imports = [../../arion/pihole/arion-compose.nix];
         };
       };
+      projects.freshrss = {
+        serviceName = "freshrss"; # systemd service name
+        settings = {
+          imports = [../../arion/freshrss/arion-compose.nix];
+        };
+      };
     };
   };
 
