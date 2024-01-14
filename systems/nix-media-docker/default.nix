@@ -51,13 +51,13 @@
         serviceName = "pihole"; # systemd service name
         settings = {
           # enableDefaultNetwork = false;
-          imports = [../../arion/pihole/arion-compose.nix];
+          imports = [../../arion/pihole];
         };
       };
       projects.freshrss = {
         serviceName = "freshrss"; # systemd service name
         settings = {
-          imports = [../../arion/freshrss/arion-compose.nix];
+          imports = [../../arion/freshrss];
         };
       };
       projects.librenms = {
