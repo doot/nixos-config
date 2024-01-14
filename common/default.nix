@@ -19,6 +19,7 @@
     ripgrep
     tmux
     vim
+    wget
     yq
   ];
 
