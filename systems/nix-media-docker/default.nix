@@ -60,6 +60,12 @@
           imports = [../../arion/freshrss/arion-compose.nix];
         };
       };
+      projects.librenms = {
+        serviceName = "librenms"; # systemd service name
+        settings = {
+          imports = [../../arion/librenms];
+        };
+      };
     };
   };
 
