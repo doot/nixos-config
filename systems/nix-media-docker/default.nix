@@ -30,6 +30,11 @@
     DNSStubListener=no
   '';
 
+  networking.firewall.allowedTCPPorts = [
+    32400 # Plex
+    8181 # Tautulli
+  ];
+
   virtualisation = {
     docker = {
       enable = true;
@@ -64,6 +69,12 @@
         serviceName = "librenms"; # systemd service name
         settings = {
           imports = [../../arion/librenms];
+        };
+      };
+      projects.plex = {
+        serviceName = "plex"; # systemd service name
+        settings = {
+          imports = [../../arion/plex];
         };
       };
     };
