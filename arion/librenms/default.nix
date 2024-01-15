@@ -2,19 +2,18 @@
   project.name = "librenms";
 
   /*
-    The following environment variables are required to be set in the various env_files that are included directly below. They are explicitly not checked into this repo and are required to exist for this to work.
+  The following environment variables are required to be set in the various env_files that are included directly below. They are explicitly not checked into this repo and are required to exist for this to work.
 
-    MYSQL_DATABASE = "$${MYSQL_DATABASE}";
-    MYSQL_USER = "$${MYSQL_USER}";
-    MYSQL_PASSWORD = "$${MYSQL_PASSWORD}";
-    DB_NAME = "$${MYSQL_DATABASE}";
-    DB_USER = "$${MYSQL_USER}";
-    DB_PASSWORD = "$${MYSQL_PASSWORD}";
-    TZ = "$${TZ}";
-    PUID = "$${PUID}";
-    PGID = "$${PGID}";
+  MYSQL_DATABASE = "$${MYSQL_DATABASE}";
+  MYSQL_USER = "$${MYSQL_USER}";
+  MYSQL_PASSWORD = "$${MYSQL_PASSWORD}";
+  DB_NAME = "$${MYSQL_DATABASE}";
+  DB_USER = "$${MYSQL_USER}";
+  DB_PASSWORD = "$${MYSQL_PASSWORD}";
+  TZ = "$${TZ}";
+  PUID = "$${PUID}";
+  PGID = "$${PGID}";
   */
-
 
   services.db = {
     service.image = "mariadb:10.5";
