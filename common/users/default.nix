@@ -20,4 +20,7 @@
     uid = 1029;
     createHome = false;
   };
+  users.groups.docker-media = {
+    gid = 1029;
+  };
 }
