@@ -33,6 +33,7 @@
   networking.firewall.allowedTCPPorts = [
     32400 # Plex
     8181 # Tautulli
+    9323 # docker prometheus metrics
   ];
 
   virtualisation = {
@@ -48,6 +49,11 @@
       #   enable = true;
       #   # setSocketVariable = true;
       # };
+      daemon = {
+        settings = {
+          metrics-addr = "0.0.0.0:9323";
+        };
+      };
     };
 
     arion = {
