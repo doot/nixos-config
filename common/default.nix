@@ -57,8 +57,10 @@
 
   # Print changes after nixos-rebuild
   system.activationScripts.report-changes = ''
+    echo "---------- nvd diff:"
     PATH=$PATH:${lib.makeBinPath [pkgs.nvd pkgs.nix]}
     nvd diff $(ls -dv /nix/var/nix/profiles/system-*-link | tail -2)
+    echo "----------"
   '';
 
   time.timeZone = "America/Los_Angeles";
