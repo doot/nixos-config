@@ -70,4 +70,16 @@
     "net.core.default_qdisc" = "fq";
     "net.ipv4.tcp_congestion_control" = "bbr";
   };
+
+  # Enable node-exporter and open port so that prometheus can scrape
+  networking.firewall.allowedTCPPorts = [ 9002 ];
+  services.prometheus = {
+    exporters = {
+      node = {
+        enable = true;
+        enabledCollectors = [ "systemd" ];
+        port = 9002;
+      };
+    };
+  };
 }
