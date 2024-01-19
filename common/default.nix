@@ -64,4 +64,10 @@
   '';
 
   time.timeZone = "America/Los_Angeles";
+
+  # Try out TCP BBR, to see if it improves network throughput/latency
+  boot.kernel.sysctl = {
+    "net.core.default_qdisc" = "fq";
+    "net.ipv4.tcp_congestion_control" = "bbr";
+  };
 }
