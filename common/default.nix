@@ -8,6 +8,7 @@
     alejandra
     dig
     eza
+    fd
     file
     git
     iperf3
