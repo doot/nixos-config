@@ -1,20 +1,27 @@
-* nix-config
+* nixos-config
 Initial nixos configs. I don't really know what I'm doing.
+
 * Notes:
-** This repo is checked out to `$HOME/nixos-config`
-** Generate Proxmox LXC CT template:
-```nix run github:nix-community/nixos-generators -- --format proxmox-lxc```
-If we don't have a nix install handy:
-```
++ This repo should be checked out to ~$HOME/nixos-config~
++ ~/etc/nixos/~ should be empty except for a symlink to ~$HOME/nixos-config/flake.nix~
++ ~nixos-rebuild switch~ should then work without extra args due to the above symlink
++ Same as ~nixos-rebuild switch --flake $HOME/nixos-config/#~
++ ~nix flake update~ to update the lock file
++ System specific configs go in ~nixos-config/systems/<hostname>/default.nix~
+  and then imported in ~flake.nix~
++ ~nix fmt~ to format entire flake using configured formatter (alejandra)
++ Docker containers are run via Arion, which generates and runs (via systemd units) docker-compose files
+
+** Proxmox
++ Generate a Proxmox LXC CT template
+#+BEGIN_SRC sh
+nix run github:nix-community/nixos-generators -- --format proxmox-lxc
+#+END_SRC
+
++ If we don't have a local nix install handy, but do have docker installed:
+#+BEGIN_SRC sh
 docker run --name nix_generators -it nixos/nix nix run --extra-experimental-features "nix-command flakes" github:nix-community/nixos-generators -- --format proxmox-lxc
-docker cp nix_generators:/nix/store/dsl5vzvb1y9ifjf24mkc9ibra7yymp4z-tarball/tarball/nixos-system-x86_64-linux.tar.xz .
+docker cp nix_generators:/nix/store/dsl5vzvb1y9ifjf24mkc9ibra7yymp4z-tarball/tarball/nixos-system-x86_64-linux.tar.xz .  # replace with path from command above
 docker rm nix_generators
-```
-The load the template into proxmox and create a new container, etc...
-** `/etc/nixos` should be empty except for a symlink to `$HOME/nixos-config/flake.nix`
-** `nixos-rebuild switch` should work without extra args due to the above symlink
-** `nixos-rebuild switch --flake $HOME/nixos-config/#`
-** `nix flake update` to update the lock file
-** System specific configs go in `nixos-config/systems/<hostname>/system.nix`
-** `nix fmt` to format entire flake using configured formatter (alejandra)
-** Docker containers are run via Arion, which generates and runs (via systemd units) docker-compose files
+#+END_SRC
++ The load the template into proxmox and create a new container, etc...

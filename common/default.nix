@@ -72,12 +72,12 @@
   };
 
   # Enable node-exporter and open port so that prometheus can scrape
-  networking.firewall.allowedTCPPorts = [ 9002 ];
+  networking.firewall.allowedTCPPorts = [9002];
   services.prometheus = {
     exporters = {
       node = {
         enable = true;
-        enabledCollectors = [ "systemd" ];
+        enabledCollectors = ["systemd"];
         port = 9002;
       };
     };
