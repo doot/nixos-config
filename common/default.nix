@@ -82,4 +82,18 @@
       };
     };
   };
+
+  system.userActivationScripts = {
+    # Clone and install dotfiles
+    cloneDotfiles = ''
+      if [ ! -d "/home/doot/.dotfiles" ]; then
+        source ${config.system.build.setEnvironment}
+        git clone --recurse-submodules https://github.com/doot/dotfiles.git /home/doot/.dotfiles
+        cd /home/doot/.dotfiles
+        git remote remove origin
+        git remote add origin git@github.com:doot/dotfiles.git
+	echo ":/"
+      fi
+    '';
+  };
 }
