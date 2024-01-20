@@ -10,6 +10,7 @@
     eza
     fd
     file
+    fzf
     git
     iperf3
     jq
