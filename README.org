@@ -1,5 +1,5 @@
 * nix-config
-placeholder
+Initial nixos configs. I don't really know what I'm doing.
 * Notes:
 ** This repo is checked out to `$HOME/nixos-config`
 ** Generate Proxmox LXC CT template:

@@ -83,6 +83,12 @@
           imports = [../../arion/plex];
         };
       };
+      projects.monitoring = {
+        serviceName = "monitoring"; # systemd service name
+        settings = {
+          imports = [../../arion/monitoring];
+        };
+      };
     };
   };
 
