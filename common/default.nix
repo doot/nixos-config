@@ -93,7 +93,7 @@
         cd /home/doot/.dotfiles
         git remote remove origin
         git remote add origin git@github.com:doot/dotfiles.git
-	echo ":/"
+        echo ":/"
       fi
     '';
   };

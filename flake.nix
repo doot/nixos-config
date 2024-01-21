@@ -13,6 +13,11 @@
       url = "github:hercules-ci/arion";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    priv = {
+      url = "path:./priv";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -20,6 +25,7 @@
     nixpkgs,
     arion,
     alejandra,
+    priv,
   }: {
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
 
@@ -30,6 +36,7 @@
         ./common/users
         ./systems/nix-media-docker
         arion.nixosModules.arion
+        priv.nixosModules.stub
       ];
     };
   };

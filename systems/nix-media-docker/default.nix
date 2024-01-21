@@ -6,11 +6,10 @@
   self,
   ...
 }: {
-  imports =
-    [
-      (modulesPath + "/virtualisation/proxmox-lxc.nix")
-      ./hardware-configuration.nix # Include the results of the hardware scan.
-    ];
+  imports = [
+    (modulesPath + "/virtualisation/proxmox-lxc.nix")
+    ./hardware-configuration.nix # Include the results of the hardware scan.
+  ];
   networking.hostName = "nix-media-docker";
 
   environment.systemPackages = with pkgs; [
