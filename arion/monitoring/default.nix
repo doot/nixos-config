@@ -15,5 +15,6 @@
     service.ports = [
       "8080:8080"
     ];
+    out.service.pull_policy = "always";
   };
 }

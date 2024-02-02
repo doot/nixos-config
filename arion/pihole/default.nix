@@ -23,6 +23,7 @@
       # WEBPASSWORD: "set a secure password here or it will be random"
     };
     service.capabilities.NET_ADMIN = true;
+    out.service.pull_policy = "always";
   };
 
   services.orbital-sync = {
@@ -36,5 +37,6 @@
       INTERVAL_MINUTES = "30";
     };
     service.depends_on = ["pihole"];
+    out.service.pull_policy = "always";
   };
 }

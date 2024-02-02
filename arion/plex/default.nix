@@ -22,6 +22,7 @@
     service.devices = [
       "/dev/dri:/dev/dri"
     ];
+    out.service.pull_policy = "always";
   };
 
   services.tautulli = {
@@ -50,5 +51,6 @@
       timeout = "15s";
       retries = 3;
     };
+    out.service.pull_policy = "always";
   };
 }

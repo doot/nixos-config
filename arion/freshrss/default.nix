@@ -14,5 +14,6 @@
       PGID = 1029;
       TZ = "America/Los_Angeles";
     };
+    out.service.pull_policy = "always";
   };
 }

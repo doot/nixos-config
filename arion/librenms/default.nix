@@ -35,6 +35,7 @@
     service.env_file = [
       "/home/doot/secret_test/librenms/env"
     ];
+    out.service.pull_policy = "always";
   };
 
   services.redis = {
@@ -44,6 +45,7 @@
     service.env_file = [
       "/home/doot/secret_test/librenms/env"
     ];
+    out.service.pull_policy = "always";
   };
 
   services.msmtpd = {
@@ -54,6 +56,7 @@
       "/home/doot/secret_test/librenms/env"
       "/home/doot/secret_test/librenms/msmtpd.env"
     ];
+    out.service.pull_policy = "always";
   };
 
   services.librenms = {
@@ -90,6 +93,7 @@
       REDIS_PORT = "6379";
       REDIS_DB = "0";
     };
+    out.service.pull_policy = "always";
   };
 
   services.dispatcher = {
@@ -119,6 +123,7 @@
       REDIS_DB = "0";
       SIDECAR_DISPATCHER = "1";
     };
+    out.service.pull_policy = "always";
   };
 
   services.syslogng = {
@@ -150,6 +155,7 @@
       REDIS_DB = "0";
       SIDECAR_SYSLOGNG = "1";
     };
+    out.service.pull_policy = "always";
   };
 
   services.snmptrapd = {
@@ -181,5 +187,6 @@
       REDIS_DB = "0";
       SIDECAR_SNMPTRAPD = "1";
     };
+    out.service.pull_policy = "always";
   };
 }
