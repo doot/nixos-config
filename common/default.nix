@@ -46,12 +46,14 @@
 
   system.autoUpgrade = {
     enable = true;
-    allowReboot = true;
     flags = [
       "--update-input"
       "nixpkgs"
       "-L" # print build logs
       "--recreate-lock-file"
+      "--override-input"
+      "priv"
+      "/home/doot/nixos-config-priv"
     ];
     flake = "/home/doot/nixos-config#";
   };
