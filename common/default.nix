@@ -91,11 +91,30 @@
     cloneDotfiles = ''
       if [ ! -d "/home/doot/.dotfiles" ]; then
         source ${config.system.build.setEnvironment}
+        echo "Cloning dotfiles..."
         git clone --recurse-submodules https://github.com/doot/dotfiles.git /home/doot/.dotfiles
         cd /home/doot/.dotfiles
         git remote remove origin
         git remote add origin git@github.com:doot/dotfiles.git
         echo ":/"
+      fi
+    '';
+  };
+
+  system.activationScripts = {
+    # Clone and symlink nixos-configs
+    cloneNixosConfig = ''
+      if [ ! -d "/home/doot/nixos-config" ]; then
+        source ${config.system.build.setEnvironment}
+        echo "Cloning nixos-config..."
+        git clone https://github.com/doot/nixos-config.git /home/doot/nixos-config
+        cd /home/doot/nixos-config
+        git remote remove origin
+        git remote add origin git@github.com:doot/nixos-config.git
+      fi
+      if [ ! -f /etc/nixos/flake.nix ]; then
+        echo "Adding symlink to /etc/nixos/flake.nix"
+        ln -s /home/doot/nixos-config/flake.nix /etc/nixos/flake.nix
       fi
     '';
   };

@@ -18,6 +18,11 @@
       url = "path:./priv";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -26,6 +31,7 @@
     arion,
     alejandra,
     priv,
+    nixos-generators,
   }: {
 
     # Set the formatter for `nix fmt`
@@ -42,6 +48,19 @@
         # Pin nixpkgs to the one used to build the system
         {nix.registry.nixpkgs.flake = nixpkgs;}
       ];
+    };
+
+    # Generate proxmox image via `nix build .#nix-shitfucker`
+    packages.x86_64-linux = {
+      nix-shitfucker = nixos-generators.nixosGenerate {
+        system = "x86_64-linux";
+        modules = [
+          ./common
+          ./common/users
+          ./systems/nix-shitfucker
+        ];
+        format = "proxmox";
+      };
     };
   };
 }
