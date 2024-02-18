@@ -49,6 +49,7 @@
     flags = [
       "--update-input"
       "nixpkgs"
+      "--commit-lock-file"
       "-L" # print build logs
       "--recreate-lock-file"
       "--override-input"
