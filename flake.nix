@@ -50,6 +50,17 @@
       ];
     };
 
+    nixosConfigurations.nix-shitfucker = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        ./common
+        ./common/users
+        ./systems/nix-shitfucker
+        # Pin nixpkgs to the one used to build the system
+        {nix.registry.nixpkgs.flake = nixpkgs;}
+      ];
+    };
+
     # Generate proxmox image via `nix build .#nix-shitfucker`
     packages.x86_64-linux = {
       nix-shitfucker = nixos-generators.nixosGenerate {
@@ -58,6 +69,7 @@
           ./common
           ./common/users
           ./systems/nix-shitfucker
+          ./systems/nix-shitfucker/proxmox.nix
         ];
         format = "proxmox";
       };
