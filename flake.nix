@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11-small";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     alejandra = {
       url = "github:kamadorueda/alejandra/3.0.0";
@@ -28,6 +29,7 @@
   outputs = {
     self,
     nixpkgs,
+    nixpkgs-unstable,
     arion,
     alejandra,
     priv,
@@ -50,14 +52,14 @@
       ];
     };
 
-    nixosConfigurations.nix-shitfucker = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.nix-shitfucker = nixpkgs-unstable.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
         ./common
         ./common/users
         ./systems/nix-shitfucker
         # Pin nixpkgs to the one used to build the system
-        {nix.registry.nixpkgs.flake = nixpkgs;}
+        {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
       ];
     };
 
