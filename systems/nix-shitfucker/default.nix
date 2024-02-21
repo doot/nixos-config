@@ -16,6 +16,19 @@
   environment.systemPackages = with pkgs; [
     distrobox
     python3
+
+  fonts.packages = with pkgs; [
+    nerdfonts # needed for waybar
+    noto-fonts
+    noto-fonts-cjk
+    noto-fonts-emoji
+    liberation_ttf
+    fira-code
+    fira-code-symbols
+    mplus-outline-fonts.githubRelease
+    dina-font
+    proggyfonts
+    font-awesome
   ];
 
  boot.kernelPackages = pkgs.linuxPackages_latest;
