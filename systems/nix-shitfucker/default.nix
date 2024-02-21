@@ -18,6 +18,8 @@
     python3
   ];
 
+ boot.kernelPackages = pkgs.linuxPackages_latest;
+
   system.stateVersion = "23.11";
 
   services.qemuGuest.enable = true;
