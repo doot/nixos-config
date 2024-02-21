@@ -52,4 +52,21 @@
     xwayland.enable = false;
   };
   programs.waybar.enable = true;
+
+  services.xserver = {
+    enable = true;
+    displayManager.sddm.wayland.enable = true;
+    displayManager.sddm.enable = true;
+    displayManager.sddm.settings.Users.HideUsers = "docker-media";
+    displayManager.defaultSession = "hyprland";
+    # dummy screen
+    monitorSection = ''
+            VendorName     "Unknown"
+            HorizSync   30-85
+            VertRefresh 48-120
+
+            ModelName      "Unknown"
+            Option         "DPMS"
+        '';
+  };
 }
