@@ -36,13 +36,13 @@
     font-awesome
   ];
 
- boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   system.stateVersion = "23.11";
 
   services.qemuGuest.enable = true;
 
-  users.users.root.password = "nixos";  # Initial password, must be changed after first login
+  users.users.root.password = "nixos"; # Initial password, must be changed after first login
   services.getty.autologinUser = lib.mkDefault "doot";
 
   programs.hyprland = {
@@ -61,13 +61,13 @@
     displayManager.defaultSession = "hyprland";
     # dummy screen
     monitorSection = ''
-            VendorName     "Unknown"
-            HorizSync   30-85
-            VertRefresh 48-120
+      VendorName     "Unknown"
+      HorizSync   30-85
+      VertRefresh 48-120
 
-            ModelName      "Unknown"
-            Option         "DPMS"
-        '';
+      ModelName      "Unknown"
+      Option         "DPMS"
+    '';
   };
 
   programs.firefox.enable = true;
