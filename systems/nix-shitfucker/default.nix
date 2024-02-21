@@ -16,6 +16,11 @@
   environment.systemPackages = with pkgs; [
     distrobox
     python3
+    kitty
+    wofi
+    waypaper
+    swww
+  ];
 
   fonts.packages = with pkgs; [
     nerdfonts # needed for waybar
@@ -39,4 +44,12 @@
 
   users.users.root.password = "nixos";  # Initial password, must be changed after first login
   services.getty.autologinUser = lib.mkDefault "doot";
+
+  programs.hyprland = {
+    # Install the packages from nixpkgs
+    enable = true;
+    # Whether to enable XWayland
+    xwayland.enable = false;
+  };
+  programs.waybar.enable = true;
 }
