@@ -36,6 +36,9 @@
       "/home/doot/secret_test/librenms/env"
     ];
     out.service.pull_policy = "always";
+    out.service.cpu_shares = 512;
+    out.service.mem_limit = "2g";
+    out.service.memswap_limit = "2g";
   };
 
   services.redis = {
@@ -46,6 +49,9 @@
       "/home/doot/secret_test/librenms/env"
     ];
     out.service.pull_policy = "always";
+    out.service.cpu_shares = 512;
+    out.service.mem_limit = "2g";
+    out.service.memswap_limit = "2g";
   };
 
   services.msmtpd = {
@@ -57,6 +63,9 @@
       "/home/doot/secret_test/librenms/msmtpd.env"
     ];
     out.service.pull_policy = "always";
+    out.service.cpu_shares = 512;
+    out.service.mem_limit = "2g";
+    out.service.memswap_limit = "2g";
   };
 
   services.librenms = {
@@ -94,6 +103,9 @@
       REDIS_DB = "0";
     };
     out.service.pull_policy = "always";
+    out.service.cpu_shares = 512;
+    out.service.mem_limit = "2g";
+    out.service.memswap_limit = "2g";
   };
 
   services.dispatcher = {
@@ -124,6 +136,9 @@
       SIDECAR_DISPATCHER = "1";
     };
     out.service.pull_policy = "always";
+    out.service.cpu_shares = 512;
+    out.service.mem_limit = "2g";
+    out.service.memswap_limit = "2g";
   };
 
   services.syslogng = {
@@ -156,6 +171,9 @@
       SIDECAR_SYSLOGNG = "1";
     };
     out.service.pull_policy = "always";
+    out.service.cpu_shares = 512;
+    out.service.mem_limit = "2g";
+    out.service.memswap_limit = "2g";
   };
 
   services.snmptrapd = {
@@ -188,5 +206,8 @@
       SIDECAR_SNMPTRAPD = "1";
     };
     out.service.pull_policy = "always";
+    out.service.cpu_shares = 512;
+    out.service.mem_limit = "2g";
+    out.service.memswap_limit = "2g";
   };
 }

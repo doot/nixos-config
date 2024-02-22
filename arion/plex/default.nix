@@ -23,6 +23,7 @@
       "/dev/dri:/dev/dri"
     ];
     out.service.pull_policy = "always";
+    out.service.cpu_shares = 1280;
   };
 
   services.tautulli = {
@@ -40,7 +41,7 @@
       "/etc/localtime:/etc/localtime:ro"
     ];
     out.service.cpu_shares = 256;
-    out.service.mem_limit = "1g";
+    out.service.mem_limit = "2g";
     out.service.memswap_limit = "2g";
     service.depends_on = {
       plex.condition = "service_healthy";

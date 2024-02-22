@@ -15,5 +15,8 @@
       TZ = "America/Los_Angeles";
     };
     out.service.pull_policy = "always";
+    out.service.cpu_shares = 512;
+    out.service.mem_limit = "1g";
+    out.service.memswap_limit = "1g";
   };
 }
