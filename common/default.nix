@@ -6,12 +6,15 @@
 }: {
   environment.systemPackages = with pkgs; [
     alejandra
+    bat
+    btop
     dig
     eza
     fd
     file
     fzf
     git
+    htop
     iperf3
     jq
     lsof
