@@ -42,6 +42,8 @@
 
   services.qemuGuest.enable = true;
 
+  services.eternal-terminal.enable = true;
+
   users.users.root.password = "nixos"; # Initial password, must be changed after first login
   services.getty.autologinUser = lib.mkDefault "doot";
 
