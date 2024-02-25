@@ -21,6 +21,7 @@
     ncdu
     neovim
     nvd
+    psmisc
     ripgrep
     tmux
     vim
