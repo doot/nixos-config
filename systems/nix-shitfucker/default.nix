@@ -15,11 +15,28 @@
 
   environment.systemPackages = with pkgs; [
     distrobox
-    python3
+    emacs
     kitty
-    wofi
-    waypaper
+    python3
     swww
+    waypaper
+    wl-clipboard
+    wofi
+
+    # are these necessary?
+    meson
+    wayland-protocols
+    wayland-utils
+    wlroots
+    xdg-desktop-portal-gtk
+    xdg-desktop-portal-hyprland
+
+    # notification daemon
+    dunst
+    libnotify
+
+    # try out
+    foot
   ];
 
   fonts.packages = with pkgs; [
@@ -54,11 +71,12 @@
     xwayland.enable = false;
   };
   programs.waybar.enable = true;
+  programs.thunar.enable = true;
 
   services.xserver = {
     enable = true;
-    displayManager.sddm.wayland.enable = true;
     displayManager.sddm.enable = true;
+    displayManager.sddm.wayland.enable = true;
     displayManager.sddm.settings.Users.HideUsers = "docker-media";
     displayManager.defaultSession = "hyprland";
     # dummy screen
