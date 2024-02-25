@@ -24,6 +24,11 @@
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = {
@@ -34,6 +39,7 @@
     alejandra,
     priv,
     nixos-generators,
+    home-manager,
   }: {
     # Set the formatter for `nix fmt`
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
@@ -59,6 +65,12 @@
         ./systems/nix-shitfucker
         # Pin nixpkgs to the one used to build the system
         {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.users.doot = import ./common/home/desktop.nix;
+        }
       ];
     };
 
