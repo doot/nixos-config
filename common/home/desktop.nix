@@ -15,6 +15,7 @@
     enable = true;
     settings = {
       "$mod" = "SUPER";
+      "$fuckMacOSMod" = "CTRL";  # Fucking MacOS, stealing certain key bindings when accessing over VNC. Temporary workaround until something better is figured out.
       # See https://wiki.hyprland.org/Configuring/Monitors/
       monitor = ",1920x1080,0x0,1";
       exec-once = [
@@ -49,16 +50,26 @@
         "$mod, 9, workspace, 9"
         "$mod, 0, workspace, 10"
         # Move active window to a workspace with mainMod + SHIFT + [0-9]
-        "$mod SHIFT, 1, movetoworkspace, 1"
-        "$mod SHIFT, 2, movetoworkspace, 2"
-        "$mod SHIFT, 3, movetoworkspace, 3"
-        "$mod SHIFT, 4, movetoworkspace, 4"
-        "$mod SHIFT, 5, movetoworkspace, 5"
-        "$mod SHIFT, 6, movetoworkspace, 6"
-        "$mod SHIFT, 7, movetoworkspace, 7"
-        "$mod SHIFT, 8, movetoworkspace, 8"
-        "$mod SHIFT, 9, movetoworkspace, 9"
-        "$mod SHIFT, 0, movetoworkspace, 10"
+        "$fuckMacOSMod, 1, movetoworkspace, 1"
+        "$fuckMacOSMod, 2, movetoworkspace, 2"
+        "$fuckMacOSMod, 3, movetoworkspace, 3"
+        "$fuckMacOSMod, 4, movetoworkspace, 4"
+        "$fuckMacOSMod, 5, movetoworkspace, 5"
+        "$fuckMacOSMod, 6, movetoworkspace, 6"
+        "$fuckMacOSMod, 7, movetoworkspace, 7"
+        "$fuckMacOSMod, 8, movetoworkspace, 8"
+        "$fuckMacOSMod, 9, movetoworkspace, 9"
+        "$fuckMacOSMod, 0, movetoworkspace, 10"
+        # "$mod SHIFT, 1, movetoworkspace, 1"
+        # "$mod SHIFT, 2, movetoworkspace, 1"
+        # "$mod SHIFT, 3, movetoworkspace, 3"
+        # "$mod SHIFT, 4, movetoworkspace, 4"
+        # "$mod SHIFT, 5, movetoworkspace, 5"
+        # "$mod SHIFT, 6, movetoworkspace, 6"
+        # "$mod SHIFT, 7, movetoworkspace, 7"
+        # "$mod SHIFT, 8, movetoworkspace, 8"
+        # "$mod SHIFT, 9, movetoworkspace, 9"
+        # "$mod SHIFT, 0, movetoworkspace, 10"
         # Example special workspace (scratchpad)
         "$mod, S, togglespecialworkspace, magic"
         "$mod SHIFT, S, movetoworkspace, special:magic"
