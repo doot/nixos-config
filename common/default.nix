@@ -7,6 +7,7 @@
   environment.systemPackages = with pkgs; [
     alejandra
     bat
+    cmake
     btop
     dig
     eza
@@ -14,6 +15,7 @@
     file
     fzf
     git
+    gnumake
     htop
     iperf3
     jq
