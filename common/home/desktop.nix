@@ -15,7 +15,7 @@
     enable = true;
     settings = {
       "$mod" = "SUPER";
-      "$fuckMacOSMod" = "CTRL";  # Fucking MacOS, stealing certain key bindings when accessing over VNC. Temporary workaround until something better is figured out.
+      "$fuckMacOSMod" = "CTRL"; # Fucking MacOS, stealing certain key bindings when accessing over VNC. Temporary workaround until something better is figured out.
       # See https://wiki.hyprland.org/Configuring/Monitors/
       monitor = ",1920x1080,0x0,1";
       exec-once = [
