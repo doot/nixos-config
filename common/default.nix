@@ -64,7 +64,7 @@
       "priv"
       "/home/doot/nixos-config-priv"
     ];
-    flake = "/home/doot/nixos-config#";
+    flake = "github:doot/nixos-config#";
   };
 
   # Print changes after nixos-rebuild
