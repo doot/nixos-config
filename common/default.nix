@@ -60,9 +60,6 @@
       "--commit-lock-file"
       "-L" # print build logs
       "--recreate-lock-file"
-      "--override-input"
-      "priv"
-      "/home/doot/nixos-config-priv"
     ];
     flake = "github:doot/nixos-config#";
   };
