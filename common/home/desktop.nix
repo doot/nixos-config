@@ -198,7 +198,6 @@
         ];
         modules-center = ["hyprland/window"];
         modules-right = [
-          "mpd"
           "idle_inhibitor"
           "network"
           "cpu"
