@@ -3,6 +3,7 @@
 #   - Requires logging into a graphical session some other way first (physically or through vnc)
 #   - Uses user systemd unit
 #   - Session is shared with above mentioned session, so it's a little wierd to set a resolution that is ideal for both
+#   - Maybe look into using a separate, dummy, display?
 {
   config,
   lib,
