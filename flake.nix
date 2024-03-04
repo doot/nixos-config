@@ -63,6 +63,7 @@
         ./common
         ./common/users
         ./systems/nix-shitfucker
+        ./common/sunshine.nix
         # Pin nixpkgs to the one used to build the system
         {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
         home-manager.nixosModules.home-manager
