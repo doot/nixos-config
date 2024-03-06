@@ -1,3 +1,4 @@
+name: nix-flake-check
 on:
   pull_request:
   push:
@@ -11,6 +12,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
-      - run: nixos-rebuild build
       - name: nix flake check
-        run: nix flake check --all-systems
+        run: nix flake check --all-systems --override-input priv ./priv 
