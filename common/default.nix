@@ -54,11 +54,7 @@
   system.autoUpgrade = {
     enable = true;
     flags = [
-      "--update-input"
-      "nixpkgs"
-      "--commit-lock-file"
       "-L" # print build logs
-      "--recreate-lock-file"
     ];
     allowReboot = true;
     flake = "github:doot/nixos-config#";
