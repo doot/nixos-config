@@ -11,8 +11,7 @@
   modulesPath,
   self,
   ...
-}: let
-in {
+}: {
   environment.systemPackages = with pkgs; [
     sunshine
   ];

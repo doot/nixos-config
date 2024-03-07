@@ -21,15 +21,15 @@
 
   system.stateVersion = "23.11";
   system.autoUpgrade.flags = [
-      "--update-input"
-      "nixpkgs"
-      "--commit-lock-file"
-      "-L" # print build logs
-      "--recreate-lock-file"
-      "--override-input"
-      "priv"
-      "/home/doot/nixos-config-priv"
-    ];
+    "--update-input"
+    "nixpkgs"
+    "--commit-lock-file"
+    "-L" # print build logs
+    "--recreate-lock-file"
+    "--override-input"
+    "priv"
+    "/home/doot/nixos-config-priv"
+  ];
 
   boot.isContainer = true;
   boot.loader.efi.canTouchEfiVariables = true;
