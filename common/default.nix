@@ -48,7 +48,6 @@
 
   nix.gc = {
     automatic = true;
-    dates = "daily";
     options = "--delete-older-than 7d";
   };
 
@@ -61,6 +60,7 @@
       "-L" # print build logs
       "--recreate-lock-file"
     ];
+    allowReboot = true;
     flake = "github:doot/nixos-config#";
   };
 
