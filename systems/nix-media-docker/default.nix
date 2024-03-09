@@ -26,6 +26,8 @@
     "priv"
     "/home/doot/nixos-config-priv"
   ];
+  # This system is in lxc container, so it will never have kernel upgrades. All upgrades fail when this is enabled due to trying to read boot symlinks that don't exist.
+  system.autoUpgrade.allowReboot = lib.mkForce false;
 
   boot.isContainer = true;
   boot.loader.efi.canTouchEfiVariables = true;
