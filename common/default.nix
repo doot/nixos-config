@@ -54,6 +54,7 @@
   system.autoUpgrade = {
     enable = true;
     flags = [
+      "--refresh" # always fetch latest from git repo
       "-L" # print build logs
     ];
     allowReboot = true;

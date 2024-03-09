@@ -21,7 +21,6 @@
 
   system.stateVersion = "23.11";
   system.autoUpgrade.flags = [
-    "-L" # print build logs
     "--override-input"
     "priv"
     "/home/doot/nixos-config-priv"
