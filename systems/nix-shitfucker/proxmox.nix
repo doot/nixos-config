@@ -13,11 +13,13 @@
 
   proxmox.qemuConf.cores = 4;
   proxmox.qemuConf.memory = 12288;
-  proxmox.qemuConf.additionalSpace = "30G";
+  proxmox.qemuConf.additionalSpace = "50G";
   proxmox.qemuConf.virtio0 = "big-fucking-lvm-1:vm-130-disk-0";
 
   services.qemuGuest.enable = true;
 
   users.users.root.password = "nixos"; # Initial password, must be changed after first login
   services.getty.autologinUser = lib.mkForce "root"; # Auto-login from proxmox console
+
+  proxmox.qemuConf.scsihw = "virtio-scsi-single";
 }
