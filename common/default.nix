@@ -7,8 +7,8 @@
   environment.systemPackages = with pkgs; [
     alejandra
     bat
-    cmake
     btop
+    cmake
     dig
     eza
     fd
@@ -25,7 +25,9 @@
     nvd
     psmisc
     ripgrep
+    tcpdump
     tmux
+    traceroute
     vim
     wget
     yq
