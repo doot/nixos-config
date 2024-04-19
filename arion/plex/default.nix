@@ -1,7 +1,7 @@
 {
   project.name = "plex";
   services.plex = {
-    out.service.shm_size = "10gb"; # Necessary because shm_size does not appear to be implemented in Arion
+    out.service.shm_size = "15gb"; # Necessary because shm_size does not appear to be implemented in Arion
     service.image = "plexinc/pms-docker:beta";
     service.restart = "unless-stopped";
     service.network_mode = "host";
