@@ -97,6 +97,12 @@
           imports = [../../arion/monitoring];
         };
       };
+      projects.scrobble = {
+        serviceName = "scrobble"; # systemd service name
+        settings = {
+          imports = [../../arion/scrobble];
+        };
+      };
     };
   };
 
