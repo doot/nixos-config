@@ -41,6 +41,7 @@
     32400 # Plex
     8181 # Tautulli
     9323 # docker prometheus metrics
+    42010 # maloja
   ];
 
   virtualisation = {
