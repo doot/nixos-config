@@ -19,7 +19,7 @@
       PIHOLE_DNS_ = "9.9.9.9;149.112.112.112;2620:fe::fe;2620:fe::9";
       FTLCONF_LOCAL_IPV4 = "192.168.1.86";
       FTLCONF_LOCAL_IPV6 = "fe80::b898:73ff:fe75:1ba9";
-      DNSSEC = "false";  # Temporarily disabled as it causes some issues with plex and other services
+      DNSSEC = "false"; # Temporarily disabled as it causes some issues with plex and other services
       # WEBPASSWORD: "set a secure password here or it will be random"
     };
     service.capabilities.NET_ADMIN = true;

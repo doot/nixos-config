@@ -42,6 +42,7 @@
     8181 # Tautulli
     9323 # docker prometheus metrics
     42010 # maloja
+    9078 # multi-scrobbler
   ];
 
   virtualisation = {
