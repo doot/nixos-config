@@ -1,7 +1,9 @@
 {
   project.name = "scrobble";
   services.maloja = {
-    service.image = "krateng/maloja:latest";
+    service.build.context = "https://github.com/krateng/maloja.git";
+    service.build.dockerfile = "./Containerfile";
+    # service.image = "krateng/maloja:latest"; # Image outdated
     service.restart = "unless-stopped";
     service.ports = [
       "42010:42010"
