@@ -125,4 +125,11 @@
   systemd.services.netbird.serviceConfig.Environment = [
     "NB_DNS_RESOLVER_ADDRESS=127.0.0.1:4053"
   ];
+
+  programs.git.config = {
+    # Prevent errors due to ownership of this special override repo
+    safe.directory = [
+      "/home/doot/nixos-config-priv"
+    ];
+  };
 }

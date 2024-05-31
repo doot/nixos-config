@@ -14,7 +14,6 @@
     fd
     file
     fzf
-    git
     gnumake
     htop
     iperf3
@@ -32,6 +31,7 @@
     wget
     yq
   ];
+  programs.git.enable = true;
 
   services.openssh.enable = true;
   services.netbird.enable = true;
