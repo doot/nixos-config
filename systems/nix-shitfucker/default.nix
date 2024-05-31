@@ -75,12 +75,14 @@
   programs.waybar.enable = true;
   programs.thunar.enable = true;
 
+  services.displayManager = {
+    sddm.wayland.enable = true;
+    sddm.settings.Users.HideUsers = "docker-media";
+    defaultSession = "hyprland";
+  };
+
   services.xserver = {
     enable = true;
-    displayManager.sddm.enable = true;
-    displayManager.sddm.wayland.enable = true;
-    displayManager.sddm.settings.Users.HideUsers = "docker-media";
-    displayManager.defaultSession = "hyprland";
     # dummy screen
     monitorSection = ''
       VendorName     "Unknown"

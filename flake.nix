@@ -2,7 +2,7 @@
   description = "fuck you, that's who";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11-small";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05-small";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     alejandra = {
