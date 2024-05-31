@@ -36,7 +36,9 @@
       SECONDARY_HOST_1_PASSWORD = "dEvyeHGU";
       INTERVAL_MINUTES = "30";
     };
-    service.depends_on = ["pihole"];
+    service.depends_on = {
+      pihole.condition = "service_healthy";
+    };
     out.service.pull_policy = "always";
   };
 }

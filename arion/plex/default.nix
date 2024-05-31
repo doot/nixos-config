@@ -47,10 +47,11 @@
       plex.condition = "service_healthy";
     };
     service.healthcheck = {
-      test = ["CMD-SHELL" "curl localhost:8181/"];
+      test = ["CMD-SHELL" "curl --fail localhost:8181/ || exit 1"];
       interval = "30s";
       timeout = "15s";
       retries = 3;
+      start_period = "1m";
     };
     out.service.pull_policy = "always";
   };

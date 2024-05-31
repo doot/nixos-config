@@ -20,10 +20,11 @@
       TZ = "America/Los_Angeles";
     };
     service.healthcheck = {
-      test = ["CMD-SHELL" "curl localhost:42010/"];
+      test = ["CMD-SHELL" "curl --fail localhost:42010/ || exit 1"];
       interval = "30s";
       timeout = "15s";
       retries = 3;
+      start_period = "1m";
     };
     out.service.pull_policy = "always";
     out.service.cpu_shares = 256;
@@ -48,10 +49,11 @@
       #- BASE_URL=http://MyHostIP:9078
     };
     service.healthcheck = {
-      test = ["CMD-SHELL" "curl localhost:9078/"];
+      test = ["CMD-SHELL" "curl --fail localhost:9078/api/health || exit 1"];
       interval = "30s";
       timeout = "15s";
       retries = 3;
+      start_period = "1m";
     };
     out.service.pull_policy = "always";
     out.service.cpu_shares = 256;
