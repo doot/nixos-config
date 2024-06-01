@@ -21,6 +21,7 @@
     lsof
     ncdu
     neovim
+    nix-inspect # TUI to browse nix config
     nvd
     psmisc
     ripgrep
