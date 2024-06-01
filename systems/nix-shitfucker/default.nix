@@ -76,6 +76,8 @@
   programs.thunar.enable = true;
 
   services.displayManager = {
+    enable = true;
+    sddm.enable = true;
     sddm.wayland.enable = true;
     sddm.settings.Users.HideUsers = "docker-media";
     defaultSession = "hyprland";
