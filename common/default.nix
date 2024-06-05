@@ -124,4 +124,8 @@
       fi
     '';
   };
+
+  # Power management defaults
+  powerManagement.powertop.enable = true;
+  powerManagement.cpuFreqGovernor = "powersave"; # Assuming hardware with intel pstates
 }
