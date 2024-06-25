@@ -82,6 +82,11 @@
         "$mod, mouse:272, movewindow"
         "$mod, mouse:273, resizewindow"
       ];
+
+      # fix cursor
+      cursor = {
+        no_hardware_cursors = true;
+      };
     };
     extraConfig = ''
       # Mostly default/example config
@@ -89,9 +94,7 @@
 
       # Some default env vars.
       env = XCURSOR_SIZE,24
-
-      # Fix cursor
-      env = WLR_NO_HARDWARE_CURSORS,1
+      env = HYPRCURSOR_SIZE,24
 
       # For all categories, see https://wiki.hyprland.org/Configuring/Variables/
       input {
