@@ -26,10 +26,10 @@
   # services.udev.extraRules = ''
   #   KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess"
   # '';
-  hardware.opengl = {
+
+  hardware.graphics = {
     enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
+    enable32Bit = true;
   };
 
   security.rtkit.enable = true;
