@@ -7,7 +7,6 @@
     self,
     nixpkgs,
   }: {
-    nixosModules.stub = {...}: {
-    };
+    nixosModules.stub = {...}: {};
   };
 }
