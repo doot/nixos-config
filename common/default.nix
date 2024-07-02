@@ -34,6 +34,7 @@
     yq
   ];
   programs.git.enable = true;
+  programs.direnv.enable = true;
 
   services.openssh.enable = true;
   services.netbird.enable = true;
