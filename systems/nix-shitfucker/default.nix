@@ -17,6 +17,7 @@
     distrobox
     emacs
     kitty
+    podman-compose
     python3
     swww
     waypaper
@@ -98,4 +99,22 @@
 
   programs.firefox.enable = true;
   programs.firefox.package = pkgs.firefox-bin;
+
+  virtualisation = {
+    containers.enable = true;
+
+    podman = {
+      enable = true;
+      dockerCompat = true;
+
+      # Required for containers under podman-compose to be able to talk to each other.
+      defaultNetwork.settings.dns_enabled = true;
+
+      autoPrune = {
+        enable = true;
+        dates = "daily";
+        flags = ["--all"];
+      };
+    };
+  };
 }
