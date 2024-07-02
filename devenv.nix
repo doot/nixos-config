@@ -24,6 +24,8 @@
     enable = true;
   };
 
+  devcontainer.enable = true;
+
   pre-commit.hooks = {
     commitizen.enable = true;
 
