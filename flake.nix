@@ -32,6 +32,7 @@
   };
 
   outputs = {
+    # deadnix: skip
     self,
     nixpkgs,
     nixpkgs-unstable,

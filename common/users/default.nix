@@ -1,8 +1,4 @@
-{
-  config,
-  pkgs,
-  ...
-}: {
+{pkgs, ...}: {
   users.users.doot = {
     isNormalUser = true;
     extraGroups = [
