@@ -9,6 +9,7 @@
     bat
     btop
     cmake
+    devenv
     dig
     eza
     fd
@@ -46,6 +47,7 @@
   i18n.defaultLocale = "C.UTF-8";
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
+  nix.settings.trusted-users = ["doot"];
 
   nix.optimise.automatic = true; # Automatic daily optimisation of nix store
 
