@@ -50,9 +50,11 @@
       modules = [
         ./common
         ./common/users
+        ./common/monitoring
         ./systems/nix-media-docker
         arion.nixosModules.arion
         priv.nixosModules.stub
+
         # Pin nixpkgs to the one used to build the system
         {nix.registry.nixpkgs.flake = nixpkgs;}
 
