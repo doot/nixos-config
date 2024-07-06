@@ -55,6 +55,17 @@
         priv.nixosModules.stub
         # Pin nixpkgs to the one used to build the system
         {nix.registry.nixpkgs.flake = nixpkgs;}
+
+        # Overlay nixpkgs-unstable, so that select unstable packages can be used
+        {
+          nixpkgs.overlays = [
+            (_: _: {
+              unstable = import nixpkgs-unstable {
+                system = "x86_64-linux";
+              };
+            })
+          ];
+        }
       ];
     };
 
