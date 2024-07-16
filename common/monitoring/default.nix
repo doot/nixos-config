@@ -113,15 +113,6 @@
           ];
         }
         {
-          # This is enabled by default in common/default.nix for all NixOS hosts
-          job_name = "prometheus-md";
-          static_configs = [
-            {
-              targets = ["192.168.1.86:9090"];
-            }
-          ];
-        }
-        {
           job_name = "cadvisor-nmd";
           scrape_interval = "5s";
           static_configs = [
