@@ -9,7 +9,6 @@
     (modulesPath + "/virtualisation/proxmox-image.nix")
     ./hardware-configuration.nix # Include the results of the hardware scan.
   ];
-  networking.hostName = "nix-shitfucker";
 
   environment.systemPackages = with pkgs; [
     distrobox

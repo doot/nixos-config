@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  specialArgs,
   ...
 }: {
   environment.systemPackages = with pkgs; [
@@ -38,6 +39,8 @@
 
   services.openssh.enable = true;
   services.netbird.enable = true;
+
+  networking.hostName = specialArgs.hostname;
 
   environment.variables = {
     EDITOR = "nvim";

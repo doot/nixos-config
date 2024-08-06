@@ -41,66 +41,88 @@
     priv,
     nixos-generators,
     home-manager,
-  }: {
+  } @ inputs: let
+    inherit (self) outputs;
+    host_nmd = "nix-media-docker";
+    host_nsf = "nix-shitfucker";
+  in {
     # Set the formatter for `nix fmt`
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
 
-    nixosConfigurations.nix-media-docker = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [
-        ./common
-        ./common/users
-        ./common/monitoring
-        ./systems/nix-media-docker
-        arion.nixosModules.arion
-        priv.nixosModules.stub
+    nixosConfigurations = {
+      ${host_nmd} = let
+        hostname = host_nmd;
+      in
+        nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = {
+            inherit inputs outputs hostname;
+          };
+          modules = [
+            ./systems/${hostname}
+            ./common
+            ./common/users
+            ./common/monitoring
+            arion.nixosModules.arion
+            priv.nixosModules.stub
 
-        # Pin nixpkgs to the one used to build the system
-        {nix.registry.nixpkgs.flake = nixpkgs;}
+            # Pin nixpkgs to the one used to build the system
+            {nix.registry.nixpkgs.flake = nixpkgs;}
 
-        # Overlay nixpkgs-unstable, so that select unstable packages can be used
-        {
-          nixpkgs.overlays = [
-            (_: _: {
-              unstable = import nixpkgs-unstable {
-                system = "x86_64-linux";
-              };
-            })
+            # Overlay nixpkgs-unstable, so that select unstable packages can be used
+            {
+              # networking.hostName = "nix-media-docker";
+              nixpkgs.overlays = [
+                (_: prev: {
+                  unstable = import nixpkgs-unstable {
+                    inherit (prev) system;
+                  };
+                })
+              ];
+            }
           ];
-        }
-      ];
-    };
+        };
 
-    nixosConfigurations.nix-shitfucker = nixpkgs-unstable.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [
-        ./common
-        ./common/users
-        ./systems/nix-shitfucker
-        ./common/sunshine.nix
-        # Pin nixpkgs to the one used to build the system
-        {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
-        home-manager.nixosModules.home-manager
-        {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.users.doot = import ./common/home/desktop.nix;
-        }
-      ];
+      ${host_nsf} = let
+        hostname = host_nsf;
+      in
+        nixpkgs-unstable.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = {
+            inherit inputs outputs hostname;
+          };
+          modules = [
+            ./common
+            ./common/users
+            ./systems/${hostname}
+            ./common/sunshine.nix
+            # Pin nixpkgs to the one used to build the system
+            {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
+            home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.doot = import ./common/home/desktop.nix;
+            }
+          ];
+        };
     };
 
     # Generate proxmox image via `nix build .#nix-shitfucker`
     packages.x86_64-linux = {
-      nix-shitfucker = nixos-generators.nixosGenerate {
-        system = "x86_64-linux";
-        modules = [
-          ./common
-          ./common/users
-          ./systems/nix-shitfucker
-          ./systems/nix-shitfucker/proxmox.nix
-        ];
-        format = "proxmox";
-      };
+      ${host_nsf} = let
+        hostname = host_nsf;
+      in
+        nixos-generators.nixosGenerate {
+          system = "x86_64-linux";
+          modules = [
+            ./common
+            ./common/users
+            ./systems/${hostname}
+            ./systems/nix-shitfucker/proxmox.nix
+          ];
+          format = "proxmox";
+        };
     };
   };
 }
