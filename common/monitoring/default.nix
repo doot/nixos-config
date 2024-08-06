@@ -122,7 +122,7 @@ in {
         }
         {
           job_name = "cadvisor-nmd";
-          scrape_interval = "5s";
+          scrape_interval = "30s";
           static_configs = [
             {
               targets = ["127.0.0.1:8080"];
@@ -131,7 +131,7 @@ in {
         }
         {
           job_name = "cadvisor-md";
-          scrape_interval = "5s";
+          scrape_interval = "30s";
           static_configs = [
             {
               targets = ["192.168.1.86:8080"];

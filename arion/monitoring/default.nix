@@ -7,6 +7,10 @@
         image = "gcr.io/cadvisor/cadvisor";
         privileged = true;
         restart = "unless-stopped";
+        command = [
+          "-housekeeping_interval=30s"
+          "-store_container_labels=false"
+        ];
         volumes = [
           "/:/rootfs:ro"
           "/var/run:/var/run:rw"
