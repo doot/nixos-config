@@ -92,9 +92,9 @@
             inherit inputs outputs hostname;
           };
           modules = [
+            ./systems/${hostname}
             ./common
             ./common/users
-            ./systems/${hostname}
             ./common/sunshine.nix
             # Pin nixpkgs to the one used to build the system
             {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
@@ -115,6 +115,9 @@
       in
         nixos-generators.nixosGenerate {
           system = "x86_64-linux";
+          specialArgs = {
+            inherit inputs outputs hostname;
+          };
           modules = [
             ./common
             ./common/users
