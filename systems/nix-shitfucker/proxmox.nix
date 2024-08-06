@@ -6,12 +6,15 @@
   imports = [
     (modulesPath + "/virtualisation/qemu-guest-agent.nix")
   ];
-  proxmox.qemuConf.name = "nix-shitfucker";
-
-  proxmox.qemuConf.cores = 4;
-  proxmox.qemuConf.memory = 12288;
-  proxmox.qemuConf.additionalSpace = "50G";
-  proxmox.qemuConf.virtio0 = "big-fucking-lvm-1:vm-130-disk-0";
+  proxmox = {
+    qemuConf = {
+      name = "nix-shitfucker";
+      cores = 4;
+      memory = 12288;
+      additionalSpace = "50G";
+      virtio0 = "big-fucking-lvm-1:vm-130-disk-0";
+    };
+  };
 
   services.qemuGuest.enable = true;
 

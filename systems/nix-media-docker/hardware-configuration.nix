@@ -4,10 +4,14 @@
 {lib, ...}: {
   imports = [];
 
-  boot.initrd.availableKernelModules = ["xhci_pci" "ahci" "nvme"];
-  boot.initrd.kernelModules = [];
-  boot.kernelModules = ["kvm-intel"];
-  boot.extraModulePackages = [];
+  boot = {
+    initrd = {
+      availableKernelModules = ["xhci_pci" "ahci" "nvme"];
+      kernelModules = [];
+    };
+    kernelModules = ["kvm-intel"];
+    extraModulePackages = [];
+  };
 
   fileSystems."/" = {
     device = "/mnt/pve/sh2-nfs/images/102/vm-102-disk-0.raw";

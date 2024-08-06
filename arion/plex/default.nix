@@ -1,58 +1,70 @@
 {
   project.name = "plex";
   services.plex = {
-    out.service.shm_size = "15gb"; # Necessary because shm_size does not appear to be implemented in Arion
-    service.image = "plexinc/pms-docker:beta";
-    service.restart = "unless-stopped";
-    service.network_mode = "host";
-    service.ports = [
-      "8181:8181"
-    ];
-    service.environment = {
-      TZ = "America/Los_Angeles";
-      PLEX_UID = "1029";
-      PLEX_GID = "100";
+    service = {
+      image = "plexinc/pms-docker:beta";
+      restart = "unless-stopped";
+      network_mode = "host";
+      ports = [
+        "8181:8181"
+      ];
+      environment = {
+        TZ = "America/Los_Angeles";
+        PLEX_UID = "1029";
+        PLEX_GID = "100";
+      };
+      volumes = [
+        "/plex/config:/config"
+        "/plex/transcode:/transcode"
+        "/media-nfs:/data"
+        "/pictures-nfs:/pictures"
+      ];
+      devices = [
+        "/dev/dri:/dev/dri"
+      ];
     };
-    service.volumes = [
-      "/plex/config:/config"
-      "/plex/transcode:/transcode"
-      "/media-nfs:/data"
-      "/pictures-nfs:/pictures"
-    ];
-    service.devices = [
-      "/dev/dri:/dev/dri"
-    ];
-    out.service.pull_policy = "always";
-    out.service.cpu_shares = 1280;
+    out = {
+      service = {
+        shm_size = "15gb"; # Necessary because shm_size does not appear to be implemented in Arion
+        pull_policy = "always";
+        cpu_shares = 1280;
+      };
+    };
   };
 
   services.tautulli = {
-    service.image = "linuxserver/tautulli";
-    service.restart = "unless-stopped";
-    service.network_mode = "service:plex";
-    service.environment = {
-      TZ = "America/Los_Angeles";
-      PUID = "1029";
-      PGID = "100";
+    service = {
+      image = "linuxserver/tautulli";
+      restart = "unless-stopped";
+      network_mode = "service:plex";
+      environment = {
+        TZ = "America/Los_Angeles";
+        PUID = "1029";
+        PGID = "100";
+      };
+      volumes = [
+        "/docker-nfs/plexpy:/config"
+        "/plex/config/Library/Application Support/Plex Media Server/Logs:/logs:ro"
+        "/etc/localtime:/etc/localtime:ro"
+      ];
+      depends_on = {
+        plex.condition = "service_healthy";
+      };
+      healthcheck = {
+        test = ["CMD-SHELL" "curl --fail localhost:8181/ || exit 1"];
+        interval = "30s";
+        timeout = "15s";
+        retries = 3;
+        start_period = "1m";
+      };
     };
-    service.volumes = [
-      "/docker-nfs/plexpy:/config"
-      "/plex/config/Library/Application Support/Plex Media Server/Logs:/logs:ro"
-      "/etc/localtime:/etc/localtime:ro"
-    ];
-    out.service.cpu_shares = 256;
-    out.service.mem_limit = "2g";
-    out.service.memswap_limit = "2g";
-    service.depends_on = {
-      plex.condition = "service_healthy";
+    out = {
+      service = {
+        cpu_shares = 256;
+        mem_limit = "2g";
+        memswap_limit = "2g";
+        pull_policy = "always";
+      };
     };
-    service.healthcheck = {
-      test = ["CMD-SHELL" "curl --fail localhost:8181/ || exit 1"];
-      interval = "30s";
-      timeout = "15s";
-      retries = 3;
-      start_period = "1m";
-    };
-    out.service.pull_policy = "always";
   };
 }

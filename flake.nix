@@ -102,9 +102,11 @@
             {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
             home-manager.nixosModules.home-manager
             {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.doot = import ./common/home/desktop.nix;
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                users.doot = import ./common/home/desktop.nix;
+              };
             }
           ];
         };

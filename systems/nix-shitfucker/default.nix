@@ -55,29 +55,41 @@
 
   system.stateVersion = "23.11";
 
-  services.qemuGuest.enable = true;
+  services = {
+    qemuGuest.enable = true;
 
-  services.eternal-terminal.enable = true;
+    eternal-terminal.enable = true;
 
-  services.emacs.enable = true;
+    emacs.enable = true;
+  };
 
   users.users.root.password = "nixos"; # Initial password, must be changed after first login
   services.getty.autologinUser = lib.mkDefault "doot";
 
-  programs.hyprland = {
-    # Install the packages from nixpkgs
-    enable = true;
-    # Whether to enable XWayland
-    xwayland.enable = false;
+  programs = {
+    hyprland = {
+      # Install the packages from nixpkgs
+      enable = true;
+      # Whether to enable XWayland
+      xwayland.enable = false;
+    };
+
+    waybar.enable = true;
+
+    thunar.enable = true;
   };
-  programs.waybar.enable = true;
-  programs.thunar.enable = true;
 
   services.displayManager = {
     enable = true;
-    sddm.enable = true;
-    sddm.wayland.enable = true;
-    sddm.settings.Users.HideUsers = "docker-media";
+
+    sddm = {
+      enable = true;
+
+      wayland.enable = true;
+
+      settings.Users.HideUsers = "docker-media";
+    };
+
     defaultSession = "hyprland";
   };
 

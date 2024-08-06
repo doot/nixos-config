@@ -24,14 +24,20 @@
     python3
   ];
 
-  system.stateVersion = "23.11";
-  system.autoUpgrade.flags = [
-    "--override-input"
-    "priv"
-    "/home/doot/nixos-config-priv"
-  ];
-  # This system is in lxc container, so it will never have kernel upgrades. All upgrades fail when this is enabled due to trying to read boot symlinks that don't exist.
-  system.autoUpgrade.allowReboot = lib.mkForce false;
+  system = {
+    stateVersion = "23.11";
+
+    autoUpgrade = {
+      flags = [
+        "--override-input"
+        "priv"
+        "/home/doot/nixos-config-priv"
+      ];
+
+      # This system is in lxc container, so it will never have kernel upgrades. All upgrades fail when this is enabled due to trying to read boot symlinks that don't exist.
+      allowReboot = lib.mkForce false;
+    };
+  };
 
   boot.isContainer = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -73,64 +79,70 @@
 
     arion = {
       backend = "docker";
-      projects.pihole = {
-        serviceName = "pihole"; # systemd service name
-        settings = {
-          # enableDefaultNetwork = false;
-          imports = [../../arion/pihole];
+      projects = {
+        pihole = {
+          serviceName = "pihole"; # systemd service name
+          settings = {
+            # enableDefaultNetwork = false;
+            imports = [../../arion/pihole];
+          };
         };
-      };
-      projects.freshrss = {
-        serviceName = "freshrss"; # systemd service name
-        settings = {
-          imports = [../../arion/freshrss];
+        freshrss = {
+          serviceName = "freshrss"; # systemd service name
+          settings = {
+            imports = [../../arion/freshrss];
+          };
         };
-      };
-      projects.librenms = {
-        serviceName = "librenms"; # systemd service name
-        settings = {
-          imports = [../../arion/librenms];
+        librenms = {
+          serviceName = "librenms"; # systemd service name
+          settings = {
+            imports = [../../arion/librenms];
+          };
         };
-      };
-      projects.plex = {
-        serviceName = "plex"; # systemd service name
-        settings = {
-          imports = [../../arion/plex];
+        plex = {
+          serviceName = "plex"; # systemd service name
+          settings = {
+            imports = [../../arion/plex];
+          };
         };
-      };
-      projects.monitoring = {
-        serviceName = "monitoring"; # systemd service name
-        settings = {
-          imports = [../../arion/monitoring];
+        monitoring = {
+          serviceName = "monitoring"; # systemd service name
+          settings = {
+            imports = [../../arion/monitoring];
+          };
         };
-      };
-      projects.scrobble = {
-        serviceName = "scrobble"; # systemd service name
-        settings = {
-          imports = [../../arion/scrobble];
+        scrobble = {
+          serviceName = "scrobble"; # systemd service name
+          settings = {
+            imports = [../../arion/scrobble];
+          };
         };
       };
     };
   };
 
   # Supress systemd units that don't work because of LXC
-  systemd.suppressedSystemUnits = [
-    "dev-mqueue.mount"
-    "sys-kernel-debug.mount"
-    "sys-fs-fuse-connections.mount"
-  ];
+  systemd = {
+    suppressedSystemUnits = [
+      "dev-mqueue.mount"
+      "sys-kernel-debug.mount"
+      "sys-fs-fuse-connections.mount"
+    ];
 
-  # Start tty0 on serial console (needed for proxmox console)
-  systemd.services."getty@tty1" = {
-    enable = lib.mkForce true;
-    wantedBy = ["getty.target"]; # to start at boot
-    serviceConfig.Restart = "always"; # restart when session is closed
+    # Start tty0 on serial console (needed for proxmox console)
+    services = {
+      "getty@tty1" = {
+        enable = lib.mkForce true;
+        wantedBy = ["getty.target"]; # to start at boot
+        serviceConfig.Restart = "always"; # restart when session is closed
+      };
+
+      # Prevent netbird from starting a resolver on port 53, because that fucks shit up, especially on this host that runs a dns server
+      netbird.serviceConfig.Environment = [
+        "NB_DNS_RESOLVER_ADDRESS=127.0.0.1:4053"
+      ];
+    };
   };
-
-  # Prevent netbird from starting a resolver on port 53, because that fucks shit up, especially on this host that runs a dns server
-  systemd.services.netbird.serviceConfig.Environment = [
-    "NB_DNS_RESOLVER_ADDRESS=127.0.0.1:4053"
-  ];
 
   programs.git.config = {
     # Prevent errors due to ownership of this special override repo
