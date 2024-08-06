@@ -3,7 +3,9 @@
   pkgs,
   lib,
   ...
-}: {
+}: let
+  loki_port = 3100;
+in {
   # This is necessary since the NixOS Prometheus services does not have an easy way to set the data directory
   fileSystems."/var/lib/prometheus2/data" = {
     depends = [
@@ -67,6 +69,12 @@
           type = "prometheus";
           access = "proxy";
           url = "http://192.168.1.86:9090";
+        }
+        {
+          name = "Loki";
+          type = "loki";
+          access = "proxy";
+          url = "http://localhost:${toString loki_port}";
         }
       ];
     };
@@ -211,6 +219,46 @@
       ];
     };
 
+    loki = {
+      enable = true;
+      configuration = {
+        auth_enabled = false;
+        server = {http_listen_port = loki_port;};
+        common = {
+          ring = {
+            instance_addr = "0.0.0.0";
+            kvstore = {store = "inmemory";};
+          };
+          replication_factor = 1;
+          path_prefix = "/tmp/loki";
+        };
+        schema_config = {
+          configs = [
+            {
+              from = "2020-05-15";
+              store = "tsdb";
+              object_store = "filesystem";
+              schema = "v13";
+              index = {
+                prefix = "index_";
+                period = "24h";
+              };
+            }
+          ];
+        };
+        storage_config = {
+          filesystem = {
+            directory = "/var/lib/loki/chunks";
+          };
+        };
+        limits_config = {volume_enabled = true;};
+      };
+      extraFlags = [
+        "--pattern-ingester.enabled=true"
+        "--server.http-listen-port=${toString loki_port}"
+      ];
+    };
+
     nginx = {
       enable = true;
       virtualHosts.${config.services.grafana.settings.server.domain} = {
@@ -227,5 +275,6 @@
     # config.services.grafana.settings.server.http_port # Grafana web ui: 3000 TODO remove, nginx is over port 80 for now...
     80 # nginx proxy
     config.services.prometheus.port # Prometheus web ui
+    loki_port # loki push
   ];
 }
