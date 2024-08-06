@@ -63,6 +63,7 @@
             ./common
             ./common/users
             ./common/monitoring
+            ./common/alloy
             arion.nixosModules.arion
             priv.nixosModules.stub
 
@@ -96,6 +97,7 @@
             ./common
             ./common/users
             ./common/sunshine.nix
+            # ./common/alloy  # TODO: either add unecessary stable overlay, or wait until overlay is no longer necessary, so this module works
             # Pin nixpkgs to the one used to build the system
             {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
             home-manager.nixosModules.home-manager
@@ -119,9 +121,9 @@
             inherit inputs outputs hostname;
           };
           modules = [
+            ./systems/${hostname}
             ./common
             ./common/users
-            ./systems/${hostname}
             ./systems/nix-shitfucker/proxmox.nix
           ];
           format = "proxmox";
