@@ -223,6 +223,7 @@ in {
       enable = true;
       configuration = {
         auth_enabled = false;
+        analytics.reporting_enabled = false;
         server = {http_listen_port = loki_port;};
         common = {
           ring = {
