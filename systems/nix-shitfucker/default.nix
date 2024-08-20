@@ -71,7 +71,7 @@
       # Install the packages from nixpkgs
       enable = true;
       # Whether to enable XWayland
-      xwayland.enable = false;
+      xwayland.enable = true;
     };
 
     waybar.enable = true;
