@@ -27,7 +27,7 @@
       service = {
         shm_size = "15gb"; # Necessary because shm_size does not appear to be implemented in Arion
         pull_policy = "always";
-        cpu_shares = 1280;
+        cpu_shares = 2048;
       };
     };
   };

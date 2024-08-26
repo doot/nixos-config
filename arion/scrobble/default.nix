@@ -5,7 +5,7 @@
     service = {
       build.context = "https://github.com/krateng/maloja.git";
       build.dockerfile = "./Containerfile";
-      # service.image = "krateng/maloja:latest"; # Image outdated
+      # image = "krateng/maloja:latest"; # Image outdated
       restart = "unless-stopped";
       ports = [
         "42010:42010"
@@ -41,7 +41,8 @@
 
   services.multi-scrobbler = {
     service = {
-      image = "foxxmd/multi-scrobbler";
+      # image = "foxxmd/multi-scrobbler";
+      image = "foxxmd/multi-scrobbler:pr-181";
       restart = "unless-stopped";
       ports = [
         "9078:9078"
