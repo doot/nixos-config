@@ -41,8 +41,7 @@
 
   services.multi-scrobbler = {
     service = {
-      # image = "foxxmd/multi-scrobbler";
-      image = "foxxmd/multi-scrobbler:pr-181";
+      image = "foxxmd/multi-scrobbler";
       restart = "unless-stopped";
       ports = [
         "9078:9078"
