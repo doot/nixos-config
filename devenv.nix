@@ -12,7 +12,6 @@
 
   enterShell = ''
     hello
-    git --version
   '';
 
   # https://devenv.sh/tests/
