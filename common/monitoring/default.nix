@@ -65,12 +65,6 @@ in {
           url = "http://localhost:${toString config.services.prometheus.port}";
         }
         {
-          name = "Prometheus - md";
-          type = "prometheus";
-          access = "proxy";
-          url = "http://192.168.1.86:9090";
-        }
-        {
           name = "Loki";
           type = "loki";
           access = "proxy";
@@ -130,27 +124,10 @@ in {
           ];
         }
         {
-          job_name = "cadvisor-md";
-          scrape_interval = "30s";
-          static_configs = [
-            {
-              targets = ["192.168.1.86:8080"];
-            }
-          ];
-        }
-        {
           job_name = "docker-nmd";
           static_configs = [
             {
               targets = ["127.0.0.1:9323"];
-            }
-          ];
-        }
-        {
-          job_name = "docker-md";
-          static_configs = [
-            {
-              targets = ["192.168.1.86:9323"];
             }
           ];
         }
