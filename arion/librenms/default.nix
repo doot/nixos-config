@@ -165,7 +165,7 @@
       out = {
         service = {
           pull_policy = "always";
-          cpu_shares = 512;
+          cpu_shares = 256;
           mem_limit = "2g";
           memswap_limit = "2g";
         };
