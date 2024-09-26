@@ -34,6 +34,7 @@
       vim
       wget
       yq
+      lunarvim
     ];
 
     variables = {
