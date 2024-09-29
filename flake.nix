@@ -108,6 +108,18 @@
                 users.doot = import ./common/home/desktop.nix;
               };
             }
+            # Overlay nixpkgs-unstable. This host is based off of unstable, but the variable should be available uniformly
+            # TODO: Figure out a way to deduplicate this so it's the default for all host configs
+            {
+              # networking.hostName = "nix-media-docker";
+              nixpkgs.overlays = [
+                (_: prev: {
+                  unstable = import nixpkgs-unstable {
+                    inherit (prev) system;
+                  };
+                })
+              ];
+            }
           ];
         };
     };
