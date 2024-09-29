@@ -97,7 +97,7 @@
             ./common
             ./common/users
             ./common/sunshine.nix
-            # ./common/alloy  # TODO: either add unecessary stable overlay, or wait until overlay is no longer necessary, so this module works
+            ./common/alloy
             # Pin nixpkgs to the one used to build the system
             {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
             home-manager.nixosModules.home-manager
