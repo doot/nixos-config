@@ -8,7 +8,7 @@
   # https://devenv.sh/tests/
   enterTest = ''
     echo "Running tests"
-    nix flake check --override-input priv ~/nixos-config-priv
+    nix flake check --override-input priv ./priv
   '';
 
   languages.nix = {
