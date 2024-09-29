@@ -97,7 +97,7 @@
             ./common
             ./common/users
             ./common/sunshine.nix
-            # ./common/alloy  # TODO: either add unecessary stable overlay, or wait until overlay is no longer necessary, so this module works
+            ./common/alloy
             # Pin nixpkgs to the one used to build the system
             {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
             home-manager.nixosModules.home-manager
@@ -108,7 +108,7 @@
                 users.doot = import ./common/home/desktop.nix;
               };
             }
-            # Overlay nixpkgs-unstable. This host is based off of unstable, but the variable should be available uniformly
+            # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly
             # TODO: Figure out a way to deduplicate this so it's the default for all host configs
             {
               # networking.hostName = "nix-media-docker";
@@ -139,6 +139,18 @@
             ./common
             ./common/users
             ./systems/nix-shitfucker/proxmox.nix
+            # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly
+            # TODO: Figure out a way to deduplicate this so it's the default for all host configs
+            {
+              # networking.hostName = "nix-media-docker";
+              nixpkgs.overlays = [
+                (_: prev: {
+                  unstable = import nixpkgs-unstable {
+                    inherit (prev) system;
+                  };
+                })
+              ];
+            }
           ];
           format = "proxmox";
         };

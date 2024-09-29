@@ -2,21 +2,13 @@
   # https://devenv.sh/basics/
   # See full reference at https://devenv.sh/reference/options/
 
-  env.GREET = "devenv";
-
   # https://devenv.sh/packages/
   packages = [pkgs.git];
-
-  # https://devenv.sh/scripts/
-  scripts.hello.exec = "echo hello from $GREET";
-
-  enterShell = ''
-    hello
-  '';
 
   # https://devenv.sh/tests/
   enterTest = ''
     echo "Running tests"
+    nix flake check --override-input priv ~/nixos-config-priv
   '';
 
   languages.nix = {
