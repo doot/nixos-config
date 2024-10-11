@@ -36,12 +36,13 @@ in {
     grafana = {
       package = pkgs.unstable.grafana;
       enable = true;
-      declarativePlugins = with pkgs.grafanaPlugins; [
-        grafana-piechart-panel
-        grafana-clock-panel
-        grafana-worldmap-panel
-        # natel-discrete-panel
-      ];
+      # TODO Temorarily disable declarative plugins to try out a few plugins which are not available in nixpkgs
+      # declarativePlugins = with pkgs.grafanaPlugins; [
+      #   grafana-piechart-panel
+      #   grafana-clock-panel
+      #   grafana-worldmap-panel
+      #   # natel-discrete-panel
+      # ];
       settings = {
         # TODO for now database exists in default of /var/lib/grafana/data/grafana.db and is not backed up, except for snapshots. Get a proper set up working. Fucking permissions.
         # database.path = "/docker-nfs/monitoring/grafana/grafana.db";
