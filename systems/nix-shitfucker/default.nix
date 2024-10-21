@@ -40,7 +40,7 @@
   fonts.packages = with pkgs; [
     nerdfonts # needed for waybar
     noto-fonts
-    noto-fonts-cjk
+    noto-fonts-cjk-sans
     noto-fonts-emoji
     liberation_ttf
     fira-code
