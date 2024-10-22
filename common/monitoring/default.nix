@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  fqdn,
   ...
 }: let
   loki_port = 3100;
@@ -52,8 +53,8 @@ in {
           # and Port
           http_port = 3000;
           # Grafana needs to know on which domain and URL it's running
-          domain = "nmd.jhauschildt.com";
-          root_url = "https://nmd.jhauschildt.com/grafana/";
+          domain = "grafana.${fqdn}";
+          root_url = "https://grafana.${fqdn}/";
           serve_from_sub_path = true;
         };
       };
@@ -63,7 +64,7 @@ in {
           name = "Prometheus";
           type = "prometheus";
           access = "proxy";
-          url = "http://localhost:${toString config.services.prometheus.port}";
+          url = "https://prom.${fqdn}";
         }
         {
           name = "Loki";
@@ -240,20 +241,29 @@ in {
 
     nginx = {
       enable = true;
-      virtualHosts.${config.services.grafana.settings.server.domain} = {
-        locations."/grafana" = {
+      virtualHosts."grafana.${fqdn}" = {
+        useACMEHost = fqdn;
+        forceSSL = true;
+        locations."/" = {
           proxyPass = "http://127.0.0.1:${toString config.services.grafana.settings.server.http_port}";
           proxyWebsockets = true;
-          recommendedProxySettings = true;
+        };
+      };
+      virtualHosts."prom.${fqdn}" = {
+        useACMEHost = fqdn;
+        forceSSL = true;
+        locations."/" = {
+          proxyPass = "http://127.0.0.1:${toString config.services.prometheus.port}";
+          proxyWebsockets = true;
         };
       };
     };
   };
 
   networking.firewall.allowedTCPPorts = [
-    # config.services.grafana.settings.server.http_port # Grafana web ui: 3000 TODO remove, nginx is over port 80 for now...
+    # TODO Extract this to common nginx config
     80 # nginx proxy
-    config.services.prometheus.port # Prometheus web ui
+    443 # nginx proxy
     loki_port # loki push
   ];
 }

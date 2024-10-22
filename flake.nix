@@ -45,6 +45,7 @@
     inherit (self) outputs;
     host_nmd = "nix-media-docker";
     host_nsf = "nix-shitfucker";
+    domain = "jhauschildt.com";
   in {
     # Set the formatter for `nix fmt`
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
@@ -52,11 +53,13 @@
     nixosConfigurations = {
       ${host_nmd} = let
         hostname = host_nmd;
+        shortname = "nmd";
+        fqdn = "${shortname}.${domain}";
       in
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {
-            inherit inputs outputs hostname;
+            inherit inputs outputs hostname fqdn;
           };
           modules = [
             ./systems/${hostname}
@@ -86,11 +89,13 @@
 
       ${host_nsf} = let
         hostname = host_nsf;
+        shortname = "nsf";
+        fqdn = "${shortname}.${domain}";
       in
         nixpkgs-unstable.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {
-            inherit inputs outputs hostname;
+            inherit inputs outputs hostname fqdn;
           };
           modules = [
             ./systems/${hostname}
@@ -128,11 +133,13 @@
     packages.x86_64-linux = {
       ${host_nsf} = let
         hostname = host_nsf;
+        shortname = "nsf";
+        fqdn = "${shortname}.${domain}";
       in
         nixos-generators.nixosGenerate {
           system = "x86_64-linux";
           specialArgs = {
-            inherit inputs outputs hostname;
+            inherit inputs outputs hostname fqdn;
           };
           modules = [
             ./systems/${hostname}

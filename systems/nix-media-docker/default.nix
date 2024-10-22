@@ -4,6 +4,7 @@
   pkgs,
   modulesPath,
   inputs,
+  fqdn,
   ...
 }: {
   imports = [
@@ -150,4 +151,20 @@
       "/home/doot/nixos-config-priv/.git"
     ];
   };
+
+  # Certs
+  security.acme = {
+    # TODO extract this into common config
+    acceptTerms = true;
+    defaults.email = "jeremy@jhauschildt.com";
+    defaults.dnsResolver = "8.8.8.8"; # Needed due to using a wildcard and hijacking locally
+    certs.${fqdn} = {
+      domain = "*.${fqdn}";
+      dnsProvider = "digitalocean";
+      dnsPropagationCheck = true;
+      environmentFile = "/home/doot/secret_test/acme/env";
+    };
+  };
+
+  users.users.nginx.extraGroups = ["acme"];
 }

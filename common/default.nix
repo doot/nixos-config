@@ -152,4 +152,11 @@
   # Power management defaults
   powerManagement.powertop.enable = true;
   powerManagement.cpuFreqGovernor = "powersave"; # Assuming hardware with intel pstates
+
+  # nginx defaults
+  services.nginx = {
+    recommendedProxySettings = true;
+    recommendedTlsSettings = true;
+    recommendedGzipSettings = true;
+  };
 }
