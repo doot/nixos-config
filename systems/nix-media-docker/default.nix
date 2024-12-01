@@ -118,6 +118,12 @@
             imports = [../../arion/scrobble];
           };
         };
+        # wireguard = {
+        #   serviceName = "wireguard"; # systemd service name
+        #   settings = {
+        #     imports = [../../arion/wireguard];
+        #   };
+        # };
       };
     };
   };
@@ -149,6 +155,7 @@
     # Prevent errors due to ownership of this special override repo
     safe.directory = [
       "/home/doot/nixos-config-priv/.git"
+      "/home/doot/nixos-config-priv/"
     ];
   };
 
