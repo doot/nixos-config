@@ -118,6 +118,12 @@
             imports = [../../arion/scrobble];
           };
         };
+        maybe = {
+          serviceName = "maybe"; # systemd service name
+          settings = {
+            imports = [../../arion/maybe];
+          };
+        };
         # wireguard = {
         #   serviceName = "wireguard"; # systemd service name
         #   settings = {
@@ -174,4 +180,17 @@
   };
 
   users.users.nginx.extraGroups = ["acme"];
+
+  # Add certain arion/docker services to nginx proxy
+  services.nginx = {
+    enable = true;
+    virtualHosts."maybe.${fqdn}" = {
+      useACMEHost = fqdn;
+      forceSSL = true;
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:3060";
+        proxyWebsockets = true;
+      };
+    };
+  };
 }
