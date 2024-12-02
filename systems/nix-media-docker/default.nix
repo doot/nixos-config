@@ -161,7 +161,7 @@
     # Prevent errors due to ownership of this special override repo
     safe.directory = [
       "/home/doot/nixos-config-priv/.git"
-      "/home/doot/nixos-config-priv/"
+      "/home/doot/nixos-config-priv"
     ];
   };
 
