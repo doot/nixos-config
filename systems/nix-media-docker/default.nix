@@ -3,19 +3,12 @@
   lib,
   pkgs,
   modulesPath,
-  inputs,
   fqdn,
   ...
 }: {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ./hardware-configuration.nix # Include the results of the hardware scan.
-    "${inputs.nixpkgs-unstable}/nixos/modules/services/monitoring/alloy.nix"
-  ];
-
-  # TODO: remove alloy from disabled modules and unstable override of the alloy service after next nixOS version is released. Currently the service is only available in unstable.
-  disabledModules = [
-    "services/monitoring/alloy.nix"
   ];
 
   environment.systemPackages = with pkgs; [
