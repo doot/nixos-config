@@ -27,10 +27,6 @@
     shellcheck.enable = true;
 
     alejandra.enable = true;
-    # nixfmt = {
-    #   enable = true;
-    #   package = pkgs.nixfmt-rfc-style;
-    # };
 
     # TODO enable after reworking configs
     # statix.enable = true;
