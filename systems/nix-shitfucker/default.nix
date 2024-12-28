@@ -59,8 +59,6 @@
   services = {
     qemuGuest.enable = true;
 
-    eternal-terminal.enable = true;
-
     emacs.enable = true;
   };
 

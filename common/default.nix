@@ -57,9 +57,17 @@
       enable = true;
       package = pkgs.unstable.netbird;
     };
+    eternal-terminal.enable = true;
   };
 
-  networking.hostName = hostname;
+  networking = {
+    hostName = hostname;
+    firewall = {
+      allowedTCPPorts = [
+        config.services.eternal-terminal.port
+      ];
+    };
+  };
 
   i18n.defaultLocale = "C.UTF-8";
 
