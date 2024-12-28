@@ -94,6 +94,7 @@ in {
             pass = "/etc/nixos/shared_secret_test/unpoller/pass";
             url = "https://192.168.1.1:443";
             verify_ssl = false;
+            save_dpi = true; # May be resource intensive, disable if it causes problems
           }
         ];
       };
