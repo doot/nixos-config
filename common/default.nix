@@ -35,7 +35,7 @@
       wget
       yq
       # TODO Temporarily disable as it breaks recent build
-      # lunarvim
+      lunarvim
     ];
 
     variables = {
