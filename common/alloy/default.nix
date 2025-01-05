@@ -4,6 +4,7 @@
   ...
 }: let
   alloy_port = 3030;
+  syslog_port = 1514;
   loki_host = "nmd.jhauschildt.com";
 in {
   services.alloy = {
@@ -14,7 +15,10 @@ in {
     ];
   };
 
-  networking.firewall.allowedTCPPorts = [alloy_port]; # Alloy web ui
+  networking.firewall.allowedTCPPorts = [
+    alloy_port # Alloy web ui
+    syslog_port # syslog listen port
+  ];
 
   environment.etc."alloy/config.alloy".text = ''
     local.file_match "local_files" {
@@ -63,6 +67,29 @@ in {
         host = "${hostname}",
         job  = "systemd-journal",
       }
+    }
+
+    // rsyslog
+    // TODO: this should not go in common config, needs to only apply to nmd config since it is a listener
+    loki.relabel "syslog" {
+      forward_to = []
+      rule {
+        source_labels = ["__syslog_message_hostname"]
+        target_label  = "host"
+      }
+    }
+
+    loki.source.syslog "syslog" {
+      listener {
+        address = "${loki_host}:${toString syslog_port}"
+        label_structured_data = true
+        labels = {
+          job  = "syslog",
+        }
+      }
+
+      forward_to = [loki.write.grafana_loki.receiver]
+      relabel_rules = loki.relabel.syslog.rules
     }
   '';
 }
