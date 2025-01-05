@@ -186,4 +186,7 @@
       };
     };
   };
+
+  # Host specific settings for certain roles
+  roles.alloy.withSyslogListener = true;
 }

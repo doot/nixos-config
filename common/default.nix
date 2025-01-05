@@ -168,4 +168,7 @@
     recommendedTlsSettings = true;
     recommendedGzipSettings = true;
   };
+
+  # Enable default roles
+  roles.alloy.enable = true;
 }
