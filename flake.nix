@@ -145,6 +145,8 @@
             ./systems/${hostname}
             ./common
             ./common/users
+            ./common/sunshine.nix
+            ./common/alloy
             ./systems/nix-shitfucker/proxmox.nix
             # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly
             # TODO: Figure out a way to deduplicate this so it's the default for all host configs
