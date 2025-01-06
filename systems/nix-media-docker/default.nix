@@ -1,5 +1,4 @@
 {
-  config,
   lib,
   pkgs,
   modulesPath,
@@ -174,17 +173,94 @@
 
   users.users.nginx.extraGroups = ["acme"];
 
+  # TODO: this works, but ultimately we want this to be part of a module instead
+  # services.nginx =
+  # let
+  #   newNginxVHost = args:
+  #   {
+  #     virtualHosts."${args.name}.${args.fqdn}" = {
+  #       useACMEHost = args.fqdn;
+  #       forceSSL = true;
+  #       locations."/" = {
+  #         proxyPass = "http://127.0.0.1:${toString args.port}";
+  #         proxyWebsockets = true;
+  #       };
+  #     };
+  #   };
+  # in newNginxVHost { name = "maybe"; fqdn = fqdn; port = 3060; };
+
   # Add certain arion/docker services to nginx proxy
   services.nginx = {
     enable = true;
-    virtualHosts."maybe.${fqdn}" = {
-      useACMEHost = fqdn;
-      forceSSL = true;
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:3060";
-        proxyWebsockets = true;
-      };
-    };
+    virtualHosts = builtins.listToAttrs (
+      # This is a mess, but it iterates over a list of attribute sets, whose attributes are arguments, and creates a virtualHosts attribute set with those arguments for each one
+      # for example { name = "pihole"; port = 2000;} turns into:
+      #   {
+      #     "pihole.nmd.jhauschildt.com" = {
+      #       useACMEHost = "nmd.jhauschildt.com";
+      #       forceSSL = true;
+      #       locations."/" = {
+      #         proxyPass = "http://127.0.0.1:2000";
+      #         proxyWebsockets = true;
+      #       };
+      #     };
+      #   }
+      # TODO: This should be a temporary solution until I can create a module that does this in a cleaner way.
+      #       Ideally the module would let me set the bare minumum attributes anywhere in the config, then extrapolate using these defaults
+      builtins.map (
+        arg: {
+          name = "${arg.name}.${fqdn}";
+          value = {
+            useACMEHost = fqdn;
+            forceSSL = true;
+            locations."/" = {
+              proxyPass = "http://127.0.0.1:${toString arg.port}";
+              proxyWebsockets = true;
+              extraConfig = arg.extraConfig or '''';
+            };
+          };
+        }
+      )
+      [
+        {
+          name = "maybe";
+          port = 3060;
+        }
+        {
+          name = "pihole";
+          port = 2000;
+          extraConfig = ''rewrite ^/$ /admin permanent;'';
+        }
+        {
+          name = "freshrss";
+          port = 8666;
+        }
+        {
+          name = "librenms";
+          port = 7000;
+        }
+        {
+          name = "maloja";
+          port = 42010;
+        }
+        {
+          name = "ms";
+          port = 9078;
+        }
+        {
+          name = "cadvisor";
+          port = 8080;
+        }
+        {
+          name = "plex";
+          port = 32400;
+        }
+        {
+          name = "tautulli";
+          port = 8181;
+        }
+      ]
+    );
   };
 
   # Host specific settings for certain roles
