@@ -101,7 +101,7 @@
             ./systems/${hostname}
             ./common
             ./common/users
-            ./common/sunshine.nix
+            ./common/sunshine
             ./common/alloy
             # Pin nixpkgs to the one used to build the system
             {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
@@ -145,7 +145,7 @@
             ./systems/${hostname}
             ./common
             ./common/users
-            ./common/sunshine.nix
+            ./common/sunshine
             ./common/alloy
             ./systems/nix-shitfucker/proxmox.nix
             # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly
