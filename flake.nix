@@ -63,6 +63,7 @@
           };
           modules = [
             ./systems/${hostname}
+            ./modules
             ./common
             ./common/users
             ./common/monitoring
@@ -99,6 +100,7 @@
           };
           modules = [
             ./systems/${hostname}
+            ./modules
             ./common
             ./common/users
             ./common/sunshine
@@ -143,6 +145,7 @@
           };
           modules = [
             ./systems/${hostname}
+            ./modules
             ./common
             ./common/users
             ./common/sunshine
