@@ -27,6 +27,9 @@ in {
         nodejs_23
         tree-sitter
         luarocks
+        sqlfluff
+        gcc
+        gh
       ];
     };
     programs = {
