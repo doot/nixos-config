@@ -9,33 +9,39 @@
     systemPackages = with pkgs; [
       alejandra
       bat
-      btop
       cmake
       devenv
-      dig
       eza
       fd
       file
       fzf
       gnumake
       htop
-      iperf3
       jq
-      lsof
       ncdu
       neovim
       nix-inspect # TUI to browse nix config
       nvd
-      psmisc
       ripgrep
-      tcpdump
       tmux
-      traceroute
       vim
       wget
       yq
-      # TODO Temporarily disable as it breaks recent build
-      lunarvim
+
+      # General diagnostic tools
+      bcc
+      bpftrace
+      btop
+      dig
+      ethtool
+      iperf3
+      lsof
+      nicstat
+      psmisc
+      sysstat
+      tcpdump
+      trace-cmd
+      traceroute
     ];
 
     variables = {
