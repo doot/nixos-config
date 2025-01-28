@@ -30,6 +30,8 @@ in {
         sqlfluff
         gcc
         gh
+        rustc
+        cargo
       ];
     };
     programs = {
