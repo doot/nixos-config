@@ -173,6 +173,9 @@
     recommendedProxySettings = true;
     recommendedTlsSettings = true;
     recommendedGzipSettings = true;
+    recommendedBrotliSettings = true;
+    recommendedZstdSettings = true;
+    recommendedOptimisation = true;
   };
 
   # Enable default roles

@@ -243,6 +243,7 @@ in {
     nginx = {
       enable = true;
       virtualHosts."grafana.${fqdn}" = {
+        default = true;
         useACMEHost = fqdn;
         forceSSL = true;
         locations."/" = {
