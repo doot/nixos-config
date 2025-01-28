@@ -3,6 +3,7 @@
   pkgs,
   modulesPath,
   fqdn,
+  config,
   ...
 }: {
   imports = [
@@ -149,6 +150,12 @@
     };
   };
 
+  services = {
+    audiobookshelf = {
+      enable = true;
+    };
+  };
+
   programs.git.config = {
     # Prevent errors due to ownership of this special override repo
     safe.directory = [
@@ -211,6 +218,7 @@
         arg: {
           name = "${arg.name}.${fqdn}";
           value = {
+            default = arg.default or false;
             useACMEHost = fqdn;
             forceSSL = true;
             locations."/" = {
