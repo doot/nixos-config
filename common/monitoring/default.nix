@@ -70,7 +70,7 @@ in {
           name = "Loki";
           type = "loki";
           access = "proxy";
-          url = "http://localhost:${toString loki_port}";
+          url = "http://127.0.0.1:${toString loki_port}";
         }
       ];
     };
@@ -138,7 +138,7 @@ in {
           job_name = "unifipoller";
           static_configs = [
             {
-              targets = ["localhost:${toString config.services.prometheus.exporters.unpoller.port}"];
+              targets = ["127.0.0.1:${toString config.services.prometheus.exporters.unpoller.port}"];
             }
           ];
         }
@@ -162,7 +162,7 @@ in {
             }
             {
               target_label = "__address__";
-              replacement = "192.168.1.88:${toString config.services.prometheus.exporters.pve.port}"; # PVE exporter.
+              replacement = "127.0.0.1:${toString config.services.prometheus.exporters.pve.port}"; # PVE exporter.
             }
           ];
         }
@@ -192,7 +192,7 @@ in {
             }
             {
               target_label = "__address__";
-              replacement = "192.168.1.88:9995";
+              replacement = "127.0.0.1:9995";
             }
           ];
         }

@@ -44,11 +44,6 @@
 
   networking.firewall.allowedTCPPorts = [
     32400 # Plex
-    8181 # Tautulli
-    9323 # docker prometheus metrics
-    42010 # maloja
-    9078 # multi-scrobbler
-    3493 # nut-exporter
   ];
 
   virtualisation = {
@@ -266,6 +261,10 @@
         {
           name = "tautulli";
           port = 8181;
+        }
+        {
+          name = "audiobook";
+          port = config.services.audiobookshelf.port;
         }
       ]
     );
