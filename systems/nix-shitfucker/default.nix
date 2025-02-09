@@ -36,6 +36,7 @@
     # try out
     foot
     ghostty
+    wezterm
   ];
 
   fonts.packages = with pkgs; [
