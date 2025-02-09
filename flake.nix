@@ -16,7 +16,8 @@
     };
 
     priv = {
-      url = "path:priv";
+      # url = "path:./priv";
+      url = "github:doot/nixos-config?dir=priv";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

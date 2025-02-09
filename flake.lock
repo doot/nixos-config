@@ -215,14 +215,19 @@
         ]
       },
       "locked": {
-        "lastModified": 1,
-        "narHash": "sha256-oz9ThVuzSqWcMCmv1xiTt/PGq7DYYZLPXTqYoijxEGs=",
-        "path": "priv",
-        "type": "path"
+        "dir": "priv",
+        "lastModified": 1739086296,
+        "narHash": "sha256-gLw/UBll5titQa+bf4nIQlQ5k9/VK3Fmzs2zFrOwarg=",
+        "owner": "doot",
+        "repo": "nixos-config",
+        "rev": "fd451dcdaec00d2431596425402f88eb8233d625",
+        "type": "github"
       },
       "original": {
-        "path": "priv",
-        "type": "path"
+        "dir": "priv",
+        "owner": "doot",
+        "repo": "nixos-config",
+        "type": "github"
       }
     },
     "root": {
