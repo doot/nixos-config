@@ -25,6 +25,7 @@
       ripgrep
       tmux
       vim
+      wezterm
       wget
       yq
 
