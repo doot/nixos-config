@@ -16,6 +16,9 @@
     };
 
     priv = {
+      # TODO: For some reason the relative path stopped working only in the nix-flake-update github action
+      # It works fine locally on nix 2.24.12, maybe nix-flake-update was updated to a newer version?
+      # I am not sure why this broke, but for now setting the url to the github repo + directory with the sub flake seems to work :/
       # url = "path:./priv";
       url = "github:doot/nixos-config?dir=priv";
       inputs.nixpkgs.follows = "nixpkgs";
