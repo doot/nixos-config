@@ -215,15 +215,14 @@
         ]
       },
       "locked": {
-        "lastModified": 1,
-        "narHash": "sha256-yBHbYzgqSd+15UhwiNdi90Iwj7buPn0N5lVG0V327NU=",
         "path": "priv",
         "type": "path"
       },
       "original": {
         "path": "priv",
         "type": "path"
-      }
+      },
+      "parent": []
     },
     "root": {
       "inputs": {
