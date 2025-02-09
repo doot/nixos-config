@@ -16,7 +16,7 @@
     };
 
     priv = {
-      url = "path:./priv";
+      url = "path:priv";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
