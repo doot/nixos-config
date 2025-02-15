@@ -61,7 +61,19 @@
     qemuGuest.enable = true;
 
     emacs.enable = true;
+
+    immich = {
+      enable = true;
+      host = "192.168.1.110";
+      openFirewall = true;
+      settings.server.externalDomain = "https://immich.nmd.jhauschildt.com";
+      mediaLocation = "/mnt/pictures-nfs/immich/";
+    };
   };
+
+  # Extra immich settings (move into module later)
+  users.users.immich.extraGroups = ["video" "render"];
+  services.immich.accelerationDevices = null; # `null` gives access to all devices.
 
   users.users.root.password = "nixos"; # Initial password, must be changed after first login
   services.getty.autologinUser = lib.mkDefault "doot";
