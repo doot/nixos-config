@@ -4,6 +4,7 @@
   modulesPath,
   fqdn,
   config,
+  outputs,
   ...
 }: {
   imports = [
@@ -217,7 +218,7 @@
             useACMEHost = fqdn;
             forceSSL = true;
             locations."/" = {
-              proxyPass = "http://127.0.0.1:${toString arg.port}";
+              proxyPass = "${arg.proxyPassHost or "http://127.0.0.1"}:${toString arg.port}";
               proxyWebsockets = true;
               extraConfig = arg.extraConfig or '''';
             };
@@ -265,6 +266,13 @@
         {
           name = "audiobook";
           port = config.services.audiobookshelf.port;
+        }
+        {
+          name = "immich";
+          # TODO: this can't be a good way to do this, try to find a cleaner way
+          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          # proxyPassHost = "http://nsf.jhauschildt.com";
+          port = config.services.immich.port;
         }
       ]
     );
