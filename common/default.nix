@@ -48,6 +48,7 @@
     variables = {
       EDITOR = "nvim";
       VISUAL = "nvim";
+      DO_NOT_TRACK = 1;
     };
 
     sessionVariables.EDITOR = "nvim";
