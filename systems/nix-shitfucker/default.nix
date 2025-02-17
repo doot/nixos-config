@@ -66,7 +66,6 @@
       enable = true;
       host = "192.168.1.110";
       openFirewall = true;
-      settings.server.externalDomain = "https://immich.nmd.jhauschildt.com";
       mediaLocation = "/mnt/pictures-nfs/immich/";
     };
   };

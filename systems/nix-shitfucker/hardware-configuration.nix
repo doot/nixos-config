@@ -29,6 +29,7 @@
   fileSystems."/mnt/pictures-nfs" = {
     device = "sh2.jhauschildt.com:/volume1/Pictures";
     fsType = "nfs";
+    options = ["noatime"];
   };
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
