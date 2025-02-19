@@ -3,9 +3,9 @@
 
   services.maloja = {
     service = {
-      build.context = "https://github.com/krateng/maloja.git";
-      build.dockerfile = "./Containerfile";
-      # image = "krateng/maloja:latest"; # Image outdated
+      # build.context = "https://github.com/krateng/maloja.git";
+      # build.dockerfile = "./Containerfile";
+      image = "krateng/maloja:latest"; # Image outdated
       restart = "unless-stopped";
       ports = [
         "42010:42010"
