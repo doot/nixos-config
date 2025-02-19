@@ -237,6 +237,7 @@ in {
       extraFlags = [
         "--pattern-ingester.enabled=true"
         "--server.http-listen-port=${toString loki_port}"
+        "--log.level=warn"
       ];
     };
 
