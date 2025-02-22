@@ -180,6 +180,8 @@
     recommendedOptimisation = true;
   };
 
+  services.fstrim.enable = true;
+
   # Enable default roles
   roles.alloy.enable = true;
 }
