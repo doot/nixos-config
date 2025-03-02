@@ -12,7 +12,6 @@
 
   environment.systemPackages = with pkgs; [
     distrobox
-    emacs
     kitty
     podman-compose
     python3
@@ -60,7 +59,10 @@
   services = {
     qemuGuest.enable = true;
 
-    emacs.enable = true;
+    emacs = {
+      enable = true;
+      package = pkgs.emacs30;
+    };
 
     immich = {
       enable = true;
