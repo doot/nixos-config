@@ -38,7 +38,7 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Disable stub and override default nameservers, pihole use port 53 instead
-  networking.nameservers = ["192.168.1.1"]; # override due to disabled stub listener
+  networking.nameservers = ["192.168.1.88" "192.168.1.60"]; # override due to disabled stub listener
   services.resolved.extraConfig = ''
     DNSStubListener=no
   '';
