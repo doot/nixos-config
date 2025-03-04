@@ -47,6 +47,7 @@ in {
       settings = {
         # TODO for now database exists in default of /var/lib/grafana/data/grafana.db and is not backed up, except for snapshots. Get a proper set up working. Fucking permissions.
         # database.path = "/docker-nfs/monitoring/grafana/grafana.db";
+        analytics.reporting_enabled = false;
         server = {
           # Listening Address
           http_addr = "127.0.0.1";

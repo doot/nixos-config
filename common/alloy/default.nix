@@ -25,6 +25,7 @@ in {
       package = pkgs.unstable.grafana-alloy;
       extraFlags = [
         "--server.http.listen-addr=0.0.0.0:${toString alloy_port}"
+        "--disable-reporting"
       ];
     };
 
