@@ -10,7 +10,7 @@
       alejandra
       bat
       cmake
-      devenv
+      unstable.devenv
       eza
       fd
       file
