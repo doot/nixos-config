@@ -18,16 +18,15 @@
         environment = {
           TZ = "America/Los_Angeles";
           FTLCONF_dns_listeningMode = "all";
-          # PIHOLE_DNS_: "1.1.1.1;1.0.0.1;2606:4700:4700::1111;2606:4700:4700::1001"
           FTLCONF_dns_upstreams = "9.9.9.9;149.112.112.112;2620:fe::fe;2620:fe::9";
-          FTLCONF_LOCAL_IPV4 = "192.168.1.88";
-          FTLCONF_LOCAL_IPV6 = "fe80::be24:11ff:fef7:aee4";
           FTLCONF_dns_dnssec = "false"; # Temporarily disabled as it causes some issues with plex and other services
-          # WEBPASSWORD: "set a secure password here or it will be random"
         };
         capabilities.NET_ADMIN = true;
+        capabilities.SYS_NICE = true;
+        networks = ["piholenet"];
       };
       out.service.pull_policy = "always";
+      out.service.shm_size = "250mb";
     };
 
     orbital-sync = {
@@ -46,6 +45,18 @@
         };
       };
       out.service.pull_policy = "always";
+    };
+  };
+  networks = {
+    piholenet = {
+      enable_ipv6 = true;
+      ipam = {
+        config = [
+          {
+            subnet = "fd18:9732:5931:3::/64";
+          }
+        ];
+      };
     };
   };
 }
