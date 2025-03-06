@@ -9,7 +9,8 @@
     home-manager.enable = true;
 
     librewolf = {
-      enable = true;
+      # TODO: temporarily disabled since it constantly tries to build instead of using binary cache, filling up disk space and failing
+      enable = false;
       package = pkgs.librewolf;
     };
   };
