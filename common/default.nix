@@ -10,6 +10,7 @@
       alejandra
       bat
       cmake
+      delta
       unstable.devenv
       eza
       fd
