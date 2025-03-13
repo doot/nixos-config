@@ -32,15 +32,18 @@
 
     orbital-sync = {
       service = {
-        image = "mattwebbio/orbital-sync";
+        image = "ghcr.io/mattwebbio/orbital-sync:master";
+        # TODO: switch this back to stable after v6 changes are released
         restart = "unless-stopped";
         environment = {
-          PRIMARY_HOST_BASE_URL = "http://pihole:80"; # TODO: replace with final host ip
-          PRIMARY_HOST_PASSWORD = "-o_WqUaV";
-          SECONDARY_HOST_1_BASE_URL = "http://192.168.1.60:2000";
-          SECONDARY_HOST_1_PASSWORD = "dEvyeHGU";
+          PRIMARY_HOST_BASE_URL = "https://pihole.nmd.jhauschildt.com";
+          SECONDARY_HOST_1_BASE_URL = "https://pihole2.nmd.jhauschildt.com";
           INTERVAL_MINUTES = "30";
         };
+        env_file = [
+          # Sets PRIMARY_HOST_PASSWORD and SECONDARY_HOST_1_PASSWORD
+          "/home/doot/secret_test/orbital-sync/env"
+        ];
         depends_on = {
           pihole.condition = "service_healthy";
         };
