@@ -67,6 +67,9 @@
       package = pkgs.unstable.netbird;
     };
     eternal-terminal.enable = true;
+
+    # Entirely disalbe fallback DNS servers in resolved
+    resolved.fallbackDns = [];
   };
 
   networking = {
