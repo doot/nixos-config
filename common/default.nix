@@ -70,6 +70,23 @@
 
     # Entirely disalbe fallback DNS servers in resolved
     resolved.fallbackDns = [];
+
+    snmpd = {
+      enable = true;
+      openFirewall = true;
+      configText = ''
+        sysLocation    rack
+        sysContact     Fart <Fart@Fart.org>
+        sysServices    72
+
+        # view   systemonly  included   .1.3.6.1.2.1.1
+        # view   systemonly  included   .1.3.6.1.2.1.25.1
+
+        # rocommunity my_servers 192.168.0.0/16
+        rocommunity public
+        dontLogTCPWrappersConnects yes
+      '';
+    };
   };
 
   networking = {
