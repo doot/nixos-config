@@ -197,6 +197,7 @@
   # Add certain arion/docker services to nginx proxy
   services.nginx = {
     enable = true;
+    statusPage = true;
     virtualHosts = builtins.listToAttrs (
       # This is a mess, but it iterates over a list of attribute sets, whose attributes are arguments, and creates a virtualHosts attribute set with those arguments for each one
       # for example { name = "pihole"; port = 2000;} turns into:

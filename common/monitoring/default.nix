@@ -100,15 +100,20 @@ in {
         ];
       };
 
+      exporters.nginx = {
+        enable = true;
+      };
+
       scrapeConfigs = [
         {
-          # This is enabled by default in common/default.nix for all NixOS hosts
+          # This node and systemd exporters are enabled by default in common/default.nix for all NixOS hosts
           job_name = "nix-media-docker";
           static_configs = [
             {
               targets = [
                 "127.0.0.1:${toString config.services.prometheus.exporters.node.port}"
                 "127.0.0.1:${toString config.services.prometheus.exporters.systemd.port}"
+                "127.0.0.1:${toString config.services.prometheus.exporters.nginx.port}"
               ];
             }
           ];
