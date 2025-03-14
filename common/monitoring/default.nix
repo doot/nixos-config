@@ -106,7 +106,10 @@ in {
           job_name = "nix-media-docker";
           static_configs = [
             {
-              targets = ["127.0.0.1:${toString config.services.prometheus.exporters.node.port}"];
+              targets = [
+                "127.0.0.1:${toString config.services.prometheus.exporters.node.port}"
+                "127.0.0.1:${toString config.services.prometheus.exporters.systemd.port}"
+              ];
             }
           ];
         }
@@ -114,7 +117,10 @@ in {
           job_name = "nix-shitfucker";
           static_configs = [
             {
-              targets = ["192.168.1.110:${toString config.services.prometheus.exporters.node.port}"];
+              targets = [
+                "192.168.1.110:${toString config.services.prometheus.exporters.node.port}"
+                "192.168.1.110:${toString config.services.prometheus.exporters.systemd.port}"
+              ];
             }
           ];
         }

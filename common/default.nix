@@ -184,6 +184,14 @@
         port = 9002;
         openFirewall = true;
       };
+      systemd = {
+        enable = true;
+        openFirewall = true;
+        extraFlags = [
+          "--systemd.collector.enable-restart-count"
+          "--systemd.collector.enable-ip-accounting"
+        ];
+      };
     };
   };
 
