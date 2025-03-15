@@ -20,13 +20,13 @@
       htop
       jq
       ncdu
-      neovim
+      unstable.neovim
       nix-inspect # TUI to browse nix config
       nvd
       ripgrep
       tmux
       vim
-      wezterm
+      unstable.wezterm
       wget
       yq
 

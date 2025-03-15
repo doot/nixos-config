@@ -5,11 +5,19 @@
   fqdn,
   config,
   outputs,
+  inputs,
   ...
 }: {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ./hardware-configuration.nix # Include the results of the hardware scan.
+
+    # TODO: Temporarily use unstable version of prometheus module
+    "${inputs.nixpkgs-unstable}/nixos/modules/services/monitoring/prometheus/default.nix"
+  ];
+
+  disabledModules = [
+    "services/monitoring/prometheus/default.nix"
   ];
 
   environment.systemPackages = with pkgs; [

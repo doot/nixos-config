@@ -84,6 +84,8 @@ in {
       port = 9001;
       retentionTime = "1y";
 
+      package = pkgs.unstable.prometheus;
+
       exporters.pve = {
         enable = true;
         port = 9221;
@@ -225,6 +227,7 @@ in {
 
     loki = {
       enable = true;
+      package = pkgs.unstable.grafana-loki;
       configuration = {
         auth_enabled = false;
         analytics.reporting_enabled = false;

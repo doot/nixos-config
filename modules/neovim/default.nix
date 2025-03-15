@@ -39,6 +39,7 @@ in {
         enable = true;
         withPython3 = true;
         withNodeJs = true;
+        package = pkgs.unstable.neovim-unwrapped;
       };
       nix-ld = {
         # Allows LazyVim to work with neovim as-is (not a good way to do this, but works for now)
