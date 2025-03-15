@@ -86,6 +86,9 @@
                   unstable = import nixpkgs-unstable {
                     inherit (prev) system;
                   };
+
+                  # TODO: Override pihole-exporter package with unstable since stable version is not yet compatible with pihole v6
+                  prometheus-pihole-exporter = nixpkgs-unstable.legacyPackages."x86_64-linux".prometheus-pihole-exporter;
                 })
               ];
             }

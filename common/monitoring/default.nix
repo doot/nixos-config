@@ -33,6 +33,9 @@ in {
   # systemd.services.grafana.serviceConfig.User = lib.mkForce "docker-media"; # this doesn't actually work well...
   systemd.services.prometheus.serviceConfig.User = lib.mkForce "docker-media";
 
+  # Explicitly add an EnvironmentFile to the pihole-exporter systemd unit as the module does not provide a way to do this natively
+  systemd.services.prometheus-pihole-exporter.serviceConfig.EnvironmentFile = lib.mkForce "/home/doot/secret_test/pihole-exporter/primary.env";
+
   services = {
     grafana = {
       package = pkgs.unstable.grafana;
@@ -104,6 +107,14 @@ in {
         enable = true;
       };
 
+      exporters.pihole = {
+        enable = true;
+        protocol = "https";
+        piholePort = 443;
+        piholeHostname = "pihole.nmd.jhauschildt.com";
+        # TODO: password is provided via overriden systemd EnvironmentFile (secret_test/pihole-exporter/primary.env) above until module has a better option
+      };
+
       scrapeConfigs = [
         {
           # This node and systemd exporters are enabled by default in common/default.nix for all NixOS hosts
@@ -114,6 +125,7 @@ in {
                 "127.0.0.1:${toString config.services.prometheus.exporters.node.port}"
                 "127.0.0.1:${toString config.services.prometheus.exporters.systemd.port}"
                 "127.0.0.1:${toString config.services.prometheus.exporters.nginx.port}"
+                "127.0.0.1:${toString config.services.prometheus.exporters.pihole.port}"
               ];
             }
           ];
