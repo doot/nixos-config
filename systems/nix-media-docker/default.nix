@@ -250,6 +250,7 @@
           name = "pihole2";
           proxyPassHost = "http://192.168.1.60";
           port = 2000;
+          extraConfig = ''rewrite ^/$ /admin permanent;'';
         }
         {
           name = "freshrss";
