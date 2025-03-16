@@ -2,22 +2,11 @@
   # Basic/partial home manager config. This only configures a few things that will only ever be used on nixos hosts. Main dotfile repo is more generic and should contain anything that may be used by work/macos hosts.
   # Right now just configures: hyprland, waybar
 
-  home.stateVersion = "23.11";
+  home = {
+    stateVersion = "23.11";
 
-  programs = {
-    # Let Home Manager install and manage itself.
-    home-manager.enable = true;
-
-    librewolf = {
-      # TODO: temporarily disabled since it constantly tries to build instead of using binary cache, filling up disk space and failing
-      enable = false;
-      package = pkgs.librewolf;
-    };
+    home.packages = [pkgs.tor-browser];
   };
-
-  home.packages = [
-    pkgs.tor-browser
-  ];
 
   nix.gc = {
     automatic = true;
@@ -195,78 +184,89 @@
     '';
   };
 
-  programs.waybar = {
-    enable = true;
-    # Mostly default/example config
-    settings = {
-      mainBar = {
-        layer = "top";
-        height = 10;
-        spacing = 2;
-        modules-left = [
-          "hyprland/workspaces"
-          "hyprland/mode"
-          "hyprland/submap"
-          "custom/media"
-        ];
-        modules-center = ["hyprland/window"];
-        modules-right = [
-          "idle_inhibitor"
-          "network"
-          "cpu"
-          "memory"
-          "temperature"
-          "tray"
-          "clock"
-        ];
-        "hyprland/window" = {
-          format = "{title}";
-        };
-        idle_inhibitor = {
-          format = "{icon}";
-          format-icons = {
-            activated = "";
-            deactivated = "";
+  programs = {
+    # Let Home Manager install and manage itself.
+    home-manager.enable = true;
+
+    librewolf = {
+      # TODO: temporarily disabled since it constantly tries to build instead of using binary cache, filling up disk space and failing
+      enable = false;
+      package = pkgs.librewolf;
+    };
+
+    waybar = {
+      enable = true;
+      # Mostly default/example config
+      settings = {
+        mainBar = {
+          layer = "top";
+          height = 10;
+          spacing = 2;
+          modules-left = [
+            "hyprland/workspaces"
+            "hyprland/mode"
+            "hyprland/submap"
+            "custom/media"
+          ];
+          modules-center = ["hyprland/window"];
+          modules-right = [
+            "idle_inhibitor"
+            "network"
+            "cpu"
+            "memory"
+            "temperature"
+            "tray"
+            "clock"
+          ];
+          "hyprland/window" = {
+            format = "{title}";
           };
-        };
-        tray = {
-          spacing = 10;
-        };
-        clock = {
-          tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
-          format-alt = "{:%Y-%m-%d}";
-        };
-        cpu = {
-          format = "{usage}% ";
-          tooltip = false;
-        };
-        memory = {
-          format = "{}% ";
-        };
-        temperature = {
-          critical-threshold = 80;
-          format = "{temperatureC}°C {icon}";
-          format-icons = ["" "" ""];
-        };
-        network = {
-          format-wifi = "{essid} ({signalStrength}%) ";
-          format-ethernet = "{ipaddr}/{cidr} ";
-          tooltip-format = "{ifname} via {gwaddr} ";
-          format-linked = "{ifname} (No IP) ";
-          format-disconnected = "Disconnected ⚠";
-          format-alt = "{ifname}: {ipaddr}/{cidr}";
-        };
-        "custom/media" = {
-          format = "{icon} {}";
-          return-type = "json";
-          max-length = 40;
-          format-icons = {
-            spotify = "";
-            default = "🎜";
+          idle_inhibitor = {
+            format = "{icon}";
+            format-icons = {
+              activated = "";
+              deactivated = "";
+            };
           };
-          escape = true;
-          exec = "$HOME/.config/waybar/mediaplayer.py 2> /dev/null";
-          # exec = "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+          tray = {
+            spacing = 10;
+          };
+          clock = {
+            tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
+            format-alt = "{:%Y-%m-%d}";
+          };
+          cpu = {
+            format = "{usage}% ";
+            tooltip = false;
+          };
+          memory = {
+            format = "{}% ";
+          };
+          temperature = {
+            critical-threshold = 80;
+            format = "{temperatureC}°C {icon}";
+            format-icons = ["" "" ""];
+          };
+          network = {
+            format-wifi = "{essid} ({signalStrength}%) ";
+            format-ethernet = "{ipaddr}/{cidr} ";
+            tooltip-format = "{ifname} via {gwaddr} ";
+            format-linked = "{ifname} (No IP) ";
+            format-disconnected = "Disconnected ⚠";
+            format-alt = "{ifname}: {ipaddr}/{cidr}";
+          };
+          "custom/media" = {
+            format = "{icon} {}";
+            return-type = "json";
+            max-length = 40;
+            format-icons = {
+              spotify = "";
+              default = "🎜";
+            };
+            escape = true;
+            exec = "$HOME/.config/waybar/mediaplayer.py 2> /dev/null";
+            # exec = "$HOME/.config/waybar/mediaplayer.py --player spotify 2> /dev/null" // Filter player based on name
+          };
         };
       };
     };

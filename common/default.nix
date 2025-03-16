@@ -67,14 +67,48 @@
 
   services = {
     openssh.enable = true;
+
+    fstrim.enable = true;
+
+    # Entirely disalbe fallback DNS servers in resolved
+    resolved.fallbackDns = [];
+
     netbird = {
       enable = true;
       package = pkgs.unstable.netbird;
     };
+
     eternal-terminal.enable = true;
 
-    # Entirely disalbe fallback DNS servers in resolved
-    resolved.fallbackDns = [];
+    # nginx defaults
+    nginx = {
+      recommendedProxySettings = true;
+      recommendedTlsSettings = true;
+      recommendedGzipSettings = true;
+      recommendedBrotliSettings = true;
+      recommendedZstdSettings = true;
+      recommendedOptimisation = true;
+    };
+
+    # Enable node-exporter and open port so that prometheus can scrape
+    prometheus = {
+      exporters = {
+        node = {
+          enable = true;
+          enabledCollectors = ["systemd"];
+          port = 9002;
+          openFirewall = true;
+        };
+        systemd = {
+          enable = true;
+          openFirewall = true;
+          extraFlags = [
+            "--systemd.collector.enable-restart-count"
+            "--systemd.collector.enable-ip-accounting"
+          ];
+        };
+      };
+    };
 
     snmpd = {
       enable = true;
@@ -180,41 +214,11 @@
     "net.ipv4.tcp_congestion_control" = "bbr";
   };
 
-  # Enable node-exporter and open port so that prometheus can scrape
-  services.prometheus = {
-    exporters = {
-      node = {
-        enable = true;
-        enabledCollectors = ["systemd"];
-        port = 9002;
-        openFirewall = true;
-      };
-      systemd = {
-        enable = true;
-        openFirewall = true;
-        extraFlags = [
-          "--systemd.collector.enable-restart-count"
-          "--systemd.collector.enable-ip-accounting"
-        ];
-      };
-    };
-  };
-
   # Power management defaults
-  powerManagement.powertop.enable = true;
-  powerManagement.cpuFreqGovernor = "powersave"; # Assuming hardware with intel pstates
-
-  # nginx defaults
-  services.nginx = {
-    recommendedProxySettings = true;
-    recommendedTlsSettings = true;
-    recommendedGzipSettings = true;
-    recommendedBrotliSettings = true;
-    recommendedZstdSettings = true;
-    recommendedOptimisation = true;
+  powerManagement = {
+    powertop.enable = true;
+    cpuFreqGovernor = "powersave"; # Assuming hardware with intel pstates
   };
-
-  services.fstrim.enable = true;
 
   # Enable default roles
   roles.alloy.enable = true;

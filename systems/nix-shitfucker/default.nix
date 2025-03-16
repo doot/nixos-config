@@ -64,63 +64,62 @@
       package = pkgs.emacs30;
     };
 
+    getty.autologinUser = lib.mkDefault "doot";
+
     immich = {
       enable = true;
       host = "192.168.1.110";
       openFirewall = true;
       mediaLocation = "/mnt/pictures-nfs/immich/";
+      accelerationDevices = null; # `null` gives access to all devices.
+    };
+
+    displayManager = {
+      enable = true;
+      defaultSession = "hyprland";
+      sddm = {
+        enable = true;
+        wayland.enable = true;
+        settings.Users.HideUsers = "docker-media";
+      };
+    };
+
+    xserver = {
+      enable = true;
+      # dummy screen
+      monitorSection = ''
+        VendorName     "Unknown"
+        HorizSync   30-85
+        VertRefresh 48-120
+
+        ModelName      "Unknown"
+        Option         "DPMS"
+      '';
     };
   };
 
-  # Extra immich settings (move into module later)
-  users.users.immich.extraGroups = ["video" "render"];
-  services.immich.accelerationDevices = null; # `null` gives access to all devices.
-
-  users.users.root.password = "nixos"; # Initial password, must be changed after first login
-  services.getty.autologinUser = lib.mkDefault "doot";
+  users = {
+    users = {
+      root.password = "nixos"; # Initial password, must be changed after first login
+      immich.extraGroups = ["video" "render"]; # Extra immich settings (move into module later)
+    };
+  };
 
   programs = {
     hyprland = {
-      # Install the packages from nixpkgs
       enable = true;
-      # Whether to enable XWayland
       xwayland.enable = true;
     };
 
     waybar.enable = true;
 
     thunar.enable = true;
-  };
 
-  services.displayManager = {
-    enable = true;
-
-    sddm = {
+    firefox = {
       enable = true;
-
-      wayland.enable = true;
-
-      settings.Users.HideUsers = "docker-media";
+      package = pkgs.firefox-bin;
     };
-
-    defaultSession = "hyprland";
   };
-
-  services.xserver = {
-    enable = true;
-    # dummy screen
-    monitorSection = ''
-      VendorName     "Unknown"
-      HorizSync   30-85
-      VertRefresh 48-120
-
-      ModelName      "Unknown"
-      Option         "DPMS"
-    '';
-  };
-
-  programs.firefox.enable = true;
-  programs.firefox.package = pkgs.firefox-bin;
 
   virtualisation = {
     containers.enable = true;

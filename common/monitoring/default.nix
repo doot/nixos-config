@@ -29,12 +29,16 @@ in {
   #   options = [ "bind" ];
   # };
 
-  # Override the user of the Grafana systemd unit to docker-media, as this the way the mounted NFS directory is set up.
-  # systemd.services.grafana.serviceConfig.User = lib.mkForce "docker-media"; # this doesn't actually work well...
-  systemd.services.prometheus.serviceConfig.User = lib.mkForce "docker-media";
+  systemd = {
+    services = {
+      # Override the user of the Grafana systemd unit to docker-media, as this the way the mounted NFS directory is set up.
+      # systemd.services.grafana.serviceConfig.User = lib.mkForce "docker-media"; # this doesn't actually work well...
+      prometheus.serviceConfig.User = lib.mkForce "docker-media";
 
-  # Explicitly add an EnvironmentFile to the pihole-exporter systemd unit as the module does not provide a way to do this natively
-  systemd.services.prometheus-pihole-exporter.serviceConfig.EnvironmentFile = lib.mkForce "/home/doot/secret_test/pihole-exporter/primary.env";
+      # Explicitly add an EnvironmentFile to the pihole-exporter systemd unit as the module does not provide a way to do this natively
+      prometheus-pihole-exporter.serviceConfig.EnvironmentFile = lib.mkForce "/home/doot/secret_test/pihole-exporter/primary.env";
+    };
+  };
 
   services = {
     grafana = {

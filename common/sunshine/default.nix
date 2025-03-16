@@ -10,16 +10,18 @@
     "sound" # sunshine
   ];
 
-  services.sunshine = {
-    autoStart = true;
-    enable = true;
-    openFirewall = true;
-  };
+  services = {
+    sunshine = {
+      autoStart = true;
+      enable = true;
+      openFirewall = true;
+    };
 
-  # Sunshine service enables Avahi, which also does mDNS, so disable resolved mDNS
-  services.resolved.extraConfig = ''
-    MulticastDNS=no
-  '';
+    # Sunshine service enables Avahi, which also does mDNS, so disable resolved mDNS
+    resolved.extraConfig = ''
+      MulticastDNS=no
+    '';
+  };
 
   # services.udev.extraRules = ''
   #   KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess"
