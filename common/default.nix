@@ -58,6 +58,11 @@
   programs = {
     git.enable = true;
     direnv.enable = true;
+    bash.completion.enable = true;
+    fzf = {
+      keybindings = true;
+      fuzzyCompletion = true;
+    };
   };
 
   services = {
