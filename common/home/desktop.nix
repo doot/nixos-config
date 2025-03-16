@@ -5,7 +5,7 @@
   home = {
     stateVersion = "23.11";
 
-    home.packages = [pkgs.tor-browser];
+    packages = [pkgs.tor-browser];
   };
 
   nix.gc = {
