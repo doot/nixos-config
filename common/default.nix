@@ -22,6 +22,7 @@
       ncdu
       unstable.neovim
       nix-inspect # TUI to browse nix config
+      nix-tree # TUI to browse nix dependency graph/sizes
       nvd
       ripgrep
       tmux
