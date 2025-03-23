@@ -3,9 +3,15 @@
   pkgs,
   lib,
   fqdn,
+  domain,
   ...
 }: let
   loki_port = 3100;
+  nsf_fqdn = "nsf.${domain}";
+  sh_fqdn = "sh2.${domain}";
+  # TODO: replace with pve.jhauschildt.com once DNS cache is busted and confirmed resolving correclty again
+  # pve_fqdn = "pve.${domain}";
+  pve_fqdn = "192.168.1.80";
 in {
   # This is necessary since the NixOS Prometheus services does not have an easy way to set the data directory
   fileSystems."/var/lib/prometheus2/data" = {
@@ -123,44 +129,45 @@ in {
 
       scrapeConfigs = [
         {
-          # This node and systemd exporters are enabled by default in common/default.nix for all NixOS hosts
-          job_name = "nix-media-docker";
+          # The node exporter is enabled by default in common/default.nix for all NixOS hosts
+          job_name = "node";
           static_configs = [
             {
               targets = [
-                "127.0.0.1:${toString config.services.prometheus.exporters.node.port}"
-                "127.0.0.1:${toString config.services.prometheus.exporters.systemd.port}"
-                "127.0.0.1:${toString config.services.prometheus.exporters.nginx.port}"
-                "127.0.0.1:${toString config.services.prometheus.exporters.pihole.port}"
+                "${fqdn}:${toString config.services.prometheus.exporters.node.port}"
+                "${nsf_fqdn}:${toString config.services.prometheus.exporters.node.port}"
+                # "192.168.1.80:9100"
+                "${pve_fqdn}:9100"
               ];
             }
           ];
         }
         {
-          job_name = "nix-shitfucker";
+          # The systemd exporter is enabled by default in common/default.nix for all NixOS hosts
+          job_name = "systemd";
           static_configs = [
             {
               targets = [
-                "192.168.1.110:${toString config.services.prometheus.exporters.node.port}"
-                "192.168.1.110:${toString config.services.prometheus.exporters.systemd.port}"
+                "${fqdn}:${toString config.services.prometheus.exporters.systemd.port}"
+                "${nsf_fqdn}:${toString config.services.prometheus.exporters.systemd.port}"
               ];
             }
           ];
         }
         {
-          job_name = "cadvisor-nmd";
+          job_name = "cadvisor";
           scrape_interval = "30s";
           static_configs = [
             {
-              targets = ["127.0.0.1:8080"];
+              targets = ["${fqdn}:8080"];
             }
           ];
         }
         {
-          job_name = "docker-nmd";
+          job_name = "docker";
           static_configs = [
             {
-              targets = ["127.0.0.1:9323"];
+              targets = ["${fqdn}:${toString (lib.tail (lib.splitString ":" config.virtualisation.docker.daemon.settings.metrics-addr))}"];
             }
           ];
         }
@@ -168,7 +175,7 @@ in {
           job_name = "unifipoller";
           static_configs = [
             {
-              targets = ["127.0.0.1:${toString config.services.prometheus.exporters.unpoller.port}"];
+              targets = ["${fqdn}:${toString config.services.prometheus.exporters.unpoller.port}"];
             }
           ];
         }
@@ -176,7 +183,7 @@ in {
           job_name = "pve";
           static_configs = [
             {
-              targets = ["192.168.1.80"];
+              targets = [pve_fqdn];
             }
           ];
           metrics_path = "/pve";
@@ -192,7 +199,7 @@ in {
             }
             {
               target_label = "__address__";
-              replacement = "127.0.0.1:${toString config.services.prometheus.exporters.pve.port}"; # PVE exporter.
+              replacement = "${fqdn}:${toString config.services.prometheus.exporters.pve.port}"; # PVE exporter.
             }
           ];
         }
@@ -208,7 +215,7 @@ in {
           static_configs = [
             {
               # NUT server address
-              targets = ["192.168.1.60:3493"];
+              targets = ["${sh_fqdn}:3493"];
             }
           ];
           relabel_configs = [
@@ -222,7 +229,27 @@ in {
             }
             {
               target_label = "__address__";
-              replacement = "127.0.0.1:9995";
+              replacement = "${fqdn}:9995";
+            }
+          ];
+        }
+        {
+          job_name = "nginx";
+          static_configs = [
+            {
+              targets = [
+                "${fqdn}:${toString config.services.prometheus.exporters.nginx.port}"
+              ];
+            }
+          ];
+        }
+        {
+          job_name = "pihole";
+          static_configs = [
+            {
+              targets = [
+                "${fqdn}:${toString config.services.prometheus.exporters.pihole.port}"
+              ];
             }
           ];
         }

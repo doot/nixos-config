@@ -63,7 +63,7 @@
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {
-            inherit inputs outputs hostname fqdn;
+            inherit inputs outputs hostname fqdn domain;
           };
           modules = [
             ./systems/${hostname}
@@ -103,7 +103,7 @@
         nixpkgs-unstable.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {
-            inherit inputs outputs hostname fqdn;
+            inherit inputs outputs hostname fqdn domain;
           };
           modules = [
             ./systems/${hostname}
@@ -148,7 +148,7 @@
         nixos-generators.nixosGenerate {
           system = "x86_64-linux";
           specialArgs = {
-            inherit inputs outputs hostname fqdn;
+            inherit inputs outputs hostname fqdn domain;
           };
           modules = [
             ./systems/${hostname}
