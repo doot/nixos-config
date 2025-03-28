@@ -9,9 +9,7 @@
   loki_port = 3100;
   nsf_fqdn = "nsf.${domain}";
   sh_fqdn = "sh2.${domain}";
-  # TODO: replace with pve.jhauschildt.com once DNS cache is busted and confirmed resolving correclty again
-  # pve_fqdn = "pve.${domain}";
-  pve_fqdn = "192.168.1.80";
+  pve_fqdn = "pve.${domain}";
 in {
   # This is necessary since the NixOS Prometheus services does not have an easy way to set the data directory
   fileSystems."/var/lib/prometheus2/data" = {
