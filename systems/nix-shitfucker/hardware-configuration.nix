@@ -26,10 +26,23 @@
     }
   ];
 
-  fileSystems."/mnt/pictures-nfs" = {
-    device = "sh2.jhauschildt.com:/volume1/Pictures";
-    fsType = "nfs";
-    options = ["noatime"];
+  fileSystems = {
+    "/" = {
+      device = "/dev/disk/by-label/nixos";
+      fsType = "ext4";
+      neededForBoot = true;
+    };
+    "/nix" = {
+      device = "/dev/disk/by-label/nix-store";
+      fsType = "xfs";
+      options = ["noatime"];
+      neededForBoot = true;
+    };
+    "/mnt/pictures-nfs" = {
+      device = "sh2.jhauschildt.com:/volume1/Pictures";
+      fsType = "nfs4";
+      options = ["noatime"];
+    };
   };
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
