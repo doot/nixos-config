@@ -134,7 +134,7 @@
       autoPrune = {
         enable = true;
         dates = "daily";
-        flags = ["--all"];
+        flags = ["--all" "--build"];
       };
     };
   };
