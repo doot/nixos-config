@@ -2,7 +2,7 @@
   project.name = "plex";
   services.plex = {
     service = {
-      image = "plexinc/pms-docker:beta";
+      image = "lscr.io/linuxserver/plex:latest";
       restart = "unless-stopped";
       network_mode = "host";
       ports = [
@@ -10,8 +10,9 @@
       ];
       environment = {
         TZ = "America/Los_Angeles";
-        PLEX_UID = "1029";
-        PLEX_GID = "100";
+        PUID = "1029";
+        PGID = "100";
+        VERSION = "latest";
       };
       volumes = [
         "/plex/config:/config"
@@ -22,6 +23,13 @@
       devices = [
         "/dev/dri:/dev/dri"
       ];
+      healthcheck = {
+        test = ["CMD-SHELL" "curl --connect-timeout 15 --max-time 100 --silent --show-error --fail http://localhost:32400/identity > /dev/null || exit 1"];
+        interval = "5s";
+        timeout = "2s";
+        retries = 20;
+        start_period = "1m";
+      };
     };
     out = {
       service = {
