@@ -30,5 +30,6 @@
 
     # TODO enable after reworking configs
     # statix.enable = true;
+    check-yaml.enable = true;
   };
 }
