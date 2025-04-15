@@ -144,6 +144,9 @@
     settings = {
       experimental-features = ["nix-command" "flakes"];
       trusted-users = ["doot"];
+
+      # Get rid of download buffer is full errors
+      download-buffer-size = 524288000;
     };
 
     optimise.automatic = true; # Automatic daily optimisation of nix store
