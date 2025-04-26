@@ -17,7 +17,12 @@
     };
     kernelModules = ["kvm-intel"];
     extraModulePackages = [];
-    loader.timeout = lib.mkDefault 15;
+    loader = {
+      timeout = lib.mkForce 5;
+      grub = {
+        device = "/dev/sda";
+      };
+    };
   };
 
   swapDevices = [
