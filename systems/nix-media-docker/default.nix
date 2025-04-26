@@ -271,6 +271,7 @@
           {
             name = "plex";
             port = 32400;
+            extraConfig = ''rewrite ^/$ /web permanent;'';
           }
           {
             name = "tautulli";
