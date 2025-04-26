@@ -17,6 +17,7 @@
     };
     kernelModules = ["kvm-intel"];
     extraModulePackages = [];
+    loader.timeout = 15;
   };
 
   swapDevices = [
