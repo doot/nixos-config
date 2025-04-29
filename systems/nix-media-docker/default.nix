@@ -14,6 +14,10 @@
 
     # TODO: Temporarily use unstable version of prometheus module
     "${inputs.nixpkgs-unstable}/nixos/modules/services/monitoring/prometheus/default.nix"
+
+    # TODO: Temporarily use unstable versions of karakeep and readeck since they do not yet exist in stable. Remove after next nixos release.
+    "${inputs.nixpkgs-unstable}/nixos/modules/services/web-apps/readeck.nix"
+    "${inputs.nixpkgs-unstable}/nixos/modules/services/web-apps/karakeep.nix"
   ];
 
   disabledModules = [
@@ -199,6 +203,27 @@
       enable = true;
     };
 
+    karakeep = {
+      package = pkgs.unstable.karakeep;
+      enable = true;
+      browser.enable = false;
+      meilisearch.enable = true;
+      extraEnvironment = {
+        PORT = "3004";
+      };
+    };
+    readeck = {
+      package = pkgs.unstable.readeck;
+      enable = true;
+      # READECK_SECRET_KEY must be set:
+      environmentFile = "/home/doot/secret_test/readeck/env";
+      settings = {
+        server = {
+          port = 8002;
+        };
+      };
+    };
+
     nginx = {
       enable = true;
       statusPage = true;
@@ -293,6 +318,14 @@
               proxy_send_timeout   600s;
               send_timeout         600s;
             '';
+          }
+          {
+            name = "readeck";
+            port = config.services.readeck.settings.server.port;
+          }
+          {
+            name = "karakeep";
+            port = config.services.karakeep.extraEnvironment.PORT;
           }
         ]
       );
