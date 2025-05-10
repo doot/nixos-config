@@ -13,7 +13,8 @@
   boot = {
     initrd = {
       availableKernelModules = ["ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sd_mod"];
-      kernelModules = [];
+      kernelModules = ["crc32c" "xfs"];
+      supportedFilesystems = ["ext4" "xfs"];
     };
     kernelModules = ["kvm-intel"];
     extraModulePackages = [];

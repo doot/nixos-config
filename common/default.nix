@@ -30,6 +30,7 @@
       unstable.wezterm
       wget
       yq
+      xfsprogs
 
       # General diagnostic tools
       bcc

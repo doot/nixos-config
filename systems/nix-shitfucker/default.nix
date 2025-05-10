@@ -12,7 +12,7 @@
 
   environment.systemPackages = with pkgs; [
     distrobox
-    kitty
+    # kitty TODO: build failures
     podman-compose
     python3
     swww
@@ -55,6 +55,7 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   system.stateVersion = "23.11";
+  system.autoUpgrade.enable = lib.mkForce false; # TODO: temporarily disable auto-upgrade since everything is fucked.
 
   services = {
     qemuGuest.enable = true;
