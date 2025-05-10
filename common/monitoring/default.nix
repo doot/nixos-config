@@ -112,6 +112,10 @@ in {
 
       exporters.unpoller = {
         enable = true;
+        loki = {
+          # url = "http://127.0.0.1:${toString loki_port}/loki/api/v1/push";
+          url = "http://127.0.0.1:${toString loki_port}";
+        };
         controllers = [
           {
             user = "unifipoller";
@@ -119,6 +123,9 @@ in {
             url = "https://192.168.1.1:443";
             verify_ssl = false;
             save_dpi = true; # May be resource intensive, disable if it causes problems
+            # enable loki and then try out the following:
+            save_events = true;
+            save_anomalies = true;
           }
         ];
       };
