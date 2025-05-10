@@ -69,6 +69,16 @@ in {
           root_url = "https://grafana.${fqdn}/";
           serve_from_sub_path = true;
         };
+        feature_toggles = {
+          # Toggles for enabling experimental GitSync
+          provisioning = true;
+          kubernetesClientDashboardsFolders = true;
+          kubernetesDashboards = true;
+          grafanaAPIServerEnsureKubectlAccess = true;
+
+          # Toggles experimental dynamic dashboards
+          dashboardNewLayouts = true;
+        };
       };
       # provision.datasources.settings.deleteDatasources = [{name="Prometheus2"; orgId = 1;}];
       provision.datasources.settings.datasources = [
