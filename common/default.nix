@@ -30,6 +30,7 @@
       unstable.wezterm
       wget
       yq
+      unstable.git-who # `git who` command to show blame for file trees
 
       # General diagnostic tools
       bcc
