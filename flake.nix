@@ -2,11 +2,11 @@
   description = "fuck you, that's who";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11-small";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05-small";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable-small";
 
     alejandra = {
-      url = "github:kamadorueda/alejandra/3.0.0";
+      url = "github:kamadorueda/alejandra/4.0.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

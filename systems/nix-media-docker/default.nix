@@ -5,23 +5,14 @@
   fqdn,
   config,
   outputs,
-  inputs,
   ...
 }: {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ./hardware-configuration.nix # Include the results of the hardware scan.
-
-    # TODO: Temporarily use unstable version of prometheus module
-    "${inputs.nixpkgs-unstable}/nixos/modules/services/monitoring/prometheus/default.nix"
-
-    # TODO: Temporarily use unstable versions of karakeep and readeck since they do not yet exist in stable. Remove after next nixos release.
-    "${inputs.nixpkgs-unstable}/nixos/modules/services/web-apps/readeck.nix"
-    "${inputs.nixpkgs-unstable}/nixos/modules/services/web-apps/karakeep.nix"
   ];
 
   disabledModules = [
-    "services/monitoring/prometheus/default.nix"
   ];
 
   environment.systemPackages = with pkgs; [
@@ -212,6 +203,7 @@
         PORT = "3004";
       };
     };
+    meilisearch.package = pkgs.meilisearch;
     readeck = {
       package = pkgs.unstable.readeck;
       enable = true;

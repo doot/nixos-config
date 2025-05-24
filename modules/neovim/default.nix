@@ -24,7 +24,7 @@ in {
         unzip
         stylua
         ueberzugpp
-        unstable.nodejs_24 # TODO: temporarily use unstable, since nodejs_23 has been removed from unstable and nodejs_24 is not in stable yet
+        nodejs_24
         tree-sitter
         luarocks
         sqlfluff
