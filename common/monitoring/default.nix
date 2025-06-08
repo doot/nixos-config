@@ -135,7 +135,8 @@ in {
       };
 
       exporters.pihole = {
-        enable = true;
+        # TODO: re-enable once fix to command line args is released and in nixpkgs
+        enable = false;
         protocol = "https";
         piholePort = 443;
         piholeHostname = "pihole.nmd.jhauschildt.com";
