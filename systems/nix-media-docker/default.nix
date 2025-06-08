@@ -145,6 +145,10 @@
       netbird.serviceConfig.Environment = [
         "NB_DNS_RESOLVER_ADDRESS=127.0.0.1:4053"
       ];
+
+      # Ensure that mediaDir is not mounted read-only. Systemd unit sets DynamicUser=yes, which implicitly sets ProtectSystem=strict, which mounts everything
+      # read-only
+      pinchflat.serviceConfig.ReadWritePaths = config.services.pinchflat.mediaDir;
     };
   };
 
@@ -214,6 +218,12 @@
           port = 8002;
         };
       };
+    };
+
+    pinchflat = {
+      enable = true;
+      mediaDir = "/media-nfs/pinchflat/";
+      secretsFile = "/home/doot/secret_test/pinchflat/env";
     };
 
     nginx = {
@@ -318,6 +328,10 @@
           {
             name = "karakeep";
             port = config.services.karakeep.extraEnvironment.PORT;
+          }
+          {
+            name = "pinchflat";
+            port = config.services.pinchflat.port;
           }
         ]
       );
