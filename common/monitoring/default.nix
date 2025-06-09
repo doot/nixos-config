@@ -259,16 +259,17 @@ in {
             }
           ];
         }
-        {
-          job_name = "pihole";
-          static_configs = [
-            {
-              targets = [
-                "${fqdn}:${toString config.services.prometheus.exporters.pihole.port}"
-              ];
-            }
-          ];
-        }
+        # TODO: re-enable once fix to command line args is released and in nixpkgs (see pihole exporter above)
+        # {
+        #   job_name = "pihole";
+        #   static_configs = [
+        #     {
+        #       targets = [
+        #         "${fqdn}:${toString config.services.prometheus.exporters.pihole.port}"
+        #       ];
+        #     }
+        #   ];
+        # }
       ];
     };
 
