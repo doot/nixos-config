@@ -30,19 +30,21 @@
       out.service.shm_size = "250mb";
     };
 
-    orbital-sync = {
+    nebula-sync = {
       service = {
-        image = "ghcr.io/mattwebbio/orbital-sync:master";
-        # TODO: switch this back to stable after v6 changes are released
+        image = "ghcr.io/lovelaze/nebula-sync:latest";
         restart = "unless-stopped";
         environment = {
-          PRIMARY_HOST_BASE_URL = "https://pihole.nmd.jhauschildt.com";
-          SECONDARY_HOST_1_BASE_URL = "https://pihole2.nmd.jhauschildt.com";
-          INTERVAL_MINUTES = "30";
+          FULL_SYNC = "true";
+          RUN_GRAVITY = "false";
+          # RUN_GRAVITY = "true";
+          CRON = "0 * * * *";
         };
         env_file = [
-          # Sets PRIMARY_HOST_PASSWORD and SECONDARY_HOST_1_PASSWORD
-          "/home/doot/secret_test/orbital-sync/env"
+          # Sets the following:
+          # - PRIMARY=http://ph1.example.com|password
+          # - REPLICAS=http://ph2.example.com|password,http://ph3.example.com|password
+          "/home/doot/secret_test/nebula-sync/env"
         ];
         depends_on = {
           pihole.condition = "service_healthy";
@@ -51,6 +53,7 @@
       out.service.pull_policy = "always";
     };
   };
+
   networks = {
     piholenet = {
       enable_ipv6 = true;
