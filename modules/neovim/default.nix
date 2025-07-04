@@ -39,8 +39,7 @@ in {
         enable = true;
         withPython3 = true;
         withNodeJs = true;
-        # TODO: switch back to unstable once breakage is fixed with stable or next version is released
-        # package = pkgs.unstable.neovim-unwrapped;
+        package = pkgs.unstable.neovim-unwrapped;
       };
       nix-ld = {
         # Allows LazyVim to work with neovim as-is (not a good way to do this, but works for now)
