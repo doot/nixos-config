@@ -61,6 +61,7 @@
     priv,
     nixos-generators,
     home-manager,
+    wezterm,
   } @ inputs: let
     inherit (self) outputs;
     host_nmd = "nix-media-docker";
@@ -135,7 +136,7 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 users.doot = import ./common/home/desktop.nix;
-                extraSpecialArgs = {inherit inputs;};
+                extraSpecialArgs = {inherit inputs wezterm;};
               };
             }
             # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly
