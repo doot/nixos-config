@@ -17,7 +17,7 @@
 
   devcontainer.enable = true;
 
-  pre-commit.hooks = {
+  git-hooks.hooks = {
     commitizen.enable = true;
 
     deadnix.enable = true;
