@@ -47,6 +47,7 @@
     nameservers = ["192.168.1.88" "192.168.1.60"]; # override due to disabled stub listener
     firewall.allowedTCPPorts = [
       32400 # Plex
+      8765 # wezterm
     ];
   };
   services.resolved.extraConfig = ''
