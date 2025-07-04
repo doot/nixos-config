@@ -80,7 +80,6 @@
 
             # Overlay nixpkgs-unstable, so that select unstable packages can be used
             {
-              # networking.hostName = "nix-media-docker";
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
@@ -125,7 +124,6 @@
             # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly
             # TODO: Figure out a way to deduplicate this so it's the default for all host configs
             {
-              # networking.hostName = "nix-media-docker";
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
@@ -161,7 +159,6 @@
             # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly
             # TODO: Figure out a way to deduplicate this so it's the default for all host configs
             {
-              # networking.hostName = "nix-media-docker";
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {

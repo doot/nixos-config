@@ -3,6 +3,8 @@
   pkgs,
   lib,
   hostname,
+  domain,
+  fqdn,
   ...
 }: {
   environment = {
@@ -132,6 +134,8 @@
 
   networking = {
     hostName = hostname;
+    domain = domain;
+    fqdn = fqdn;
     firewall = {
       allowedTCPPorts = [
         config.services.eternal-terminal.port
