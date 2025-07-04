@@ -34,6 +34,7 @@
       yq
       unstable.git-who # `git who` command to show blame for file trees
       go
+      cachix
 
       # General diagnostic tools
       bcc
@@ -153,6 +154,8 @@
 
       # Get rid of download buffer is full errors
       download-buffer-size = 524288000;
+      substituters = ["https://nix-community.cachix.org" "https://wezterm.cachix.org"];
+      trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=" "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="];
     };
 
     optimise.automatic = true; # Automatic daily optimisation of nix store
