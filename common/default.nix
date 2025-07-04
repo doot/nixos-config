@@ -33,6 +33,7 @@
       wget
       yq
       unstable.git-who # `git who` command to show blame for file trees
+      go
 
       # General diagnostic tools
       bcc
