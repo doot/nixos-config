@@ -44,6 +44,11 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    wezterm = {
+      url = "github:wezterm/wezterm?dir=nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = {
@@ -130,6 +135,7 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 users.doot = import ./common/home/desktop.nix;
+                extraSpecialArgs = {inherit inputs;};
               };
             }
             # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly

@@ -1,4 +1,8 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  inputs,
+  ...
+}: {
   # Basic/partial home manager config. This only configures a few things that will only ever be used on nixos hosts. Main dotfile repo is more generic and should contain anything that may be used by work/macos hosts.
   # Right now just configures: hyprland, waybar
 
@@ -192,6 +196,12 @@
       # TODO: temporarily disabled since it constantly tries to build instead of using binary cache, filling up disk space and failing
       enable = false;
       package = pkgs.librewolf;
+    };
+
+    wezterm = {
+      enable = true;
+      enableBashIntegration = true;
+      package = inputs.wezterm.packages.${pkgs.system}.default;
     };
 
     waybar = {

@@ -137,4 +137,10 @@
       };
     };
   };
+
+  networking = {
+    firewall.allowedTCPPorts = [
+      8765 # wezterm
+    ];
+  };
 }
