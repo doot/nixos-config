@@ -72,7 +72,12 @@
   };
 
   services = {
-    openssh.enable = true;
+    openssh = {
+      enable = true;
+      settings = {
+        AcceptEnv = "TERM_PROGRAM COLORTERM TERM_PROGRAM_VERSION TERM WEZTERM_REMOTE_PANE";
+      };
+    };
 
     fstrim.enable = true;
 
