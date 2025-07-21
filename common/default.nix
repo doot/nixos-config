@@ -79,6 +79,8 @@
       };
     };
 
+    fail2ban.enable = true;
+
     fstrim.enable = true;
 
     # Entirely disalbe fallback DNS servers in resolved
