@@ -97,7 +97,6 @@
       recommendedTlsSettings = true;
       recommendedGzipSettings = true;
       recommendedBrotliSettings = true;
-      recommendedZstdSettings = true;
       recommendedOptimisation = true;
     };
 
