@@ -17,7 +17,7 @@
       eza
       fd
       file
-      fzf
+      unstable.fzf
       gnumake
       htop
       jq
