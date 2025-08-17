@@ -143,4 +143,7 @@
       8765 # wezterm
     ];
   };
+
+  # Enable forgejo service
+  roles.forgejo.enable = true;
 }
