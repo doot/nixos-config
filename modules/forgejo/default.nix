@@ -2,7 +2,7 @@
 {
   config,
   lib,
-  fqdn,
+  outputs,
   pkgs,
   ...
 }: let
@@ -30,7 +30,7 @@ in {
         # lfs.enable = false;
         settings = {
           server = {
-            DOMAIN = "git.${fqdn}";
+            DOMAIN = "git.${outputs.nixosConfigurations.nix-media-docker._module.specialArgs.fqdn}";
             ROOT_URL = "https://${config.services.forgejo.settings.server.DOMAIN}/";
             HTTP_PORT = 3333;
           };

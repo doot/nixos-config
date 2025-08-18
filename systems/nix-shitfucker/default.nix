@@ -2,6 +2,7 @@
   lib,
   pkgs,
   modulesPath,
+  config,
   ...
 }: {
   imports = [
@@ -141,6 +142,7 @@
   networking = {
     firewall.allowedTCPPorts = [
       8765 # wezterm
+      config.services.forgejo.settings.server.HTTP_PORT
     ];
   };
 
