@@ -334,6 +334,14 @@
             name = "pinchflat";
             port = config.services.pinchflat.port;
           }
+          {
+            name = "git";
+            proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+            port = outputs.nixosConfigurations.nix-shitfucker.config.services.forgejo.settings.server.HTTP_PORT;
+            extraConfig = ''
+              client_max_body_size 512M;
+            '';
+          }
         ]
       );
     };
