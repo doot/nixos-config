@@ -52,11 +52,11 @@
   };
 
   outputs = {
-    # deadnix: skip
     self,
     nixpkgs,
     nixpkgs-unstable,
     arion,
+    # deadnix: skip
     alejandra,
     priv,
     nixos-generators,
