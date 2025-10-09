@@ -18,7 +18,7 @@
   devcontainer.enable = true;
 
   git-hooks.hooks = {
-    commitizen.enable = true;
+    # commitizen.enable = true;  # TODO: Uncomment once fixed upstream
 
     deadnix.enable = true;
 
