@@ -73,6 +73,7 @@
       openFirewall = true;
       mediaLocation = "/mnt/pictures-nfs/immich/";
       accelerationDevices = null; # `null` gives access to all devices.
+      database.enableVectors = false; # No longer needed after migration to VectorChord.
     };
 
     displayManager = {
