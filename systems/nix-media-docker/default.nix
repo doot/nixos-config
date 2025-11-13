@@ -236,6 +236,7 @@
       enable = true;
       mediaDir = "/media-nfs/pinchflat/";
       secretsFile = "/home/doot/secret_test/pinchflat/env";
+      package = pkgs.unstable.pinchflat;
     };
 
     nginx = {
