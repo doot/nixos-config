@@ -206,6 +206,17 @@
       meilisearch.enable = true;
       extraEnvironment = {
         PORT = "3004";
+        NODE_OPTIONS = "--max-old-space-size=8192";
+        DISABLE_SIGNUPS = "true";
+        DB_WAL_MODE = "true";
+        SEARCH_NUM_WORKERS = "2";
+        SEARCH_JOB_TIMEOUT_SEC = "60";
+        WEBHOOK_NUM_WORKERS = "2";
+        ASSET_PREPROCESSING_NUM_WORKERS = "3";
+        # Crawler Configs
+        CRAWLER_NUM_WORKERS = "2";
+        CRAWLER_JOB_TIMEOUT_SEC = "120";
+        CRAWLER_NAVIGATE_TIMEOUT_SEC = "60";
       };
     };
     meilisearch.package = pkgs.meilisearch;
