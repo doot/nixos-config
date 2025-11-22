@@ -154,12 +154,16 @@
   i18n.defaultLocale = "C.UTF-8";
 
   nix = {
+    # Use Lix in place of Nix
+    package = pkgs.unstable.lixPackageSets.latest.lix;
+
     settings = {
       experimental-features = ["nix-command" "flakes"];
       trusted-users = ["doot"];
 
       # Get rid of download buffer is full errors
-      download-buffer-size = 524288000;
+      # download-buffer-size = 524288000;
+      # TODO: might not be supported with Lix
       substituters = ["https://nix-community.cachix.org" "https://wezterm.cachix.org"];
       trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=" "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="];
     };
