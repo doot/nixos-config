@@ -4,7 +4,7 @@
   services = {
     cadvisor = {
       service = {
-        image = "gcr.io/cadvisor/cadvisor";
+        image = "gcr.io/cadvisor/cadvisor:v0.52.0"; # TODO: latest tag is over a year old, switch back once it's ben updated
         privileged = true;
         restart = "unless-stopped";
         command = [

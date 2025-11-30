@@ -285,11 +285,11 @@
       },
       "locked": {
         "dir": "priv",
-        "lastModified": 1764397502,
-        "narHash": "sha256-6iPn+TH8jgKOg2QdwJG3meY+IjEN7Ay9YyBwyL4XCME=",
+        "lastModified": 1764483949,
+        "narHash": "sha256-DdEGSNLHZLr+51ibrKVwjVTYCdfAk0a/Ri8Ms7lV86M=",
         "owner": "doot",
         "repo": "nixos-config",
-        "rev": "655503ba0a3f9e962fa4af0c33a9858a270d923a",
+        "rev": "1ef494016bd1d4779b05fc0606509d82390f4dd9",
         "type": "github"
       },
       "original": {
