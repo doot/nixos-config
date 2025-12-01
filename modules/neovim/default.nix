@@ -6,6 +6,7 @@
   pkgs,
   config,
   lib,
+  inputs,
   ...
 }: let
   cfg = config.roles.neovim;
@@ -39,7 +40,7 @@ in {
         enable = true;
         withPython3 = true;
         withNodeJs = true;
-        package = pkgs.unstable.neovim-unwrapped;
+        package = inputs.neovim-nightly-overlay.packages.${pkgs.system}.default;
       };
       nix-ld = {
         # Allows LazyVim to work with neovim as-is (not a good way to do this, but works for now)

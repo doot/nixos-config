@@ -49,6 +49,11 @@
       url = "github:wezterm/wezterm?dir=nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    neovim-nightly-overlay = {
+      url = "github:nix-community/neovim-nightly-overlay";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = {
@@ -62,6 +67,8 @@
     nixos-generators,
     home-manager,
     wezterm,
+    # deadnix: skip
+    neovim-nightly-overlay,
   } @ inputs: let
     inherit (self) outputs;
     host_nmd = "nix-media-docker";

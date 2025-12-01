@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  inputs,
   hostname,
   domain,
   fqdn,
@@ -22,7 +23,7 @@
       htop
       jq
       ncdu
-      unstable.neovim
+      inputs.neovim-nightly-overlay.packages.${pkgs.system}.default
       nix-inspect # TUI to browse nix config
       nix-tree # TUI to browse nix dependency graph/sizes
       nvd
