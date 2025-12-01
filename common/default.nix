@@ -72,6 +72,12 @@
   };
 
   services = {
+    angrr = {
+      # Automatically remove old GC roots that haven't been touched in the last 14 days
+      enable = true;
+      period = "14d";
+    };
+
     openssh = {
       enable = true;
       settings = {
