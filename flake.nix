@@ -85,7 +85,6 @@
         fqdn = "${shortname}.${domain}";
       in
         nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
           specialArgs = {
             inherit inputs outputs hostname fqdn domain;
           };
@@ -107,7 +106,7 @@
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
-                    inherit (prev) system;
+                    system = prev.stdenv.hostPlatform.system;
                   };
 
                   # TODO: Override pihole-exporter package with unstable since stable version is not yet compatible with pihole v6
@@ -124,7 +123,6 @@
         fqdn = "${shortname}.${domain}";
       in
         nixpkgs-unstable.lib.nixosSystem {
-          system = "x86_64-linux";
           specialArgs = {
             inherit inputs outputs hostname fqdn domain;
           };
@@ -152,7 +150,7 @@
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
-                    inherit (prev) system;
+                    system = prev.stdenv.hostPlatform.system;
                   };
                 })
               ];
@@ -169,7 +167,6 @@
         fqdn = "${shortname}.${domain}";
       in
         nixos-generators.nixosGenerate {
-          system = "x86_64-linux";
           specialArgs = {
             inherit inputs outputs hostname fqdn domain;
           };
@@ -187,7 +184,7 @@
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
-                    inherit (prev) system;
+                    system = prev.stdenv.hostPlatform.system;
                   };
                 })
               ];

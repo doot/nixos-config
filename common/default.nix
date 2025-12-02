@@ -23,7 +23,7 @@
       htop
       jq
       ncdu
-      inputs.neovim-nightly-overlay.packages.${pkgs.system}.default
+      inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default
       nix-inspect # TUI to browse nix config
       nix-tree # TUI to browse nix dependency graph/sizes
       nvd

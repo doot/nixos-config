@@ -198,7 +198,7 @@
       enable = true;
       enableBashIntegration = true;
       # TODO: Nightly wezterm breaks the build for some reason. Investigate further...
-      #   package = inputs.wezterm.packages.${pkgs.system}.default;
+      #   package = inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default;
     };
 
     waybar = {

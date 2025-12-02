@@ -40,7 +40,7 @@ in {
         enable = true;
         withPython3 = true;
         withNodeJs = true;
-        package = inputs.neovim-nightly-overlay.packages.${pkgs.system}.default;
+        package = inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default;
       };
       nix-ld = {
         # Allows LazyVim to work with neovim as-is (not a good way to do this, but works for now)
