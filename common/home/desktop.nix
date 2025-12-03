@@ -27,7 +27,7 @@
       bind = [
         # Mostly defaults, see: https://wiki.hyprland.org/Configuring/Binds/ for more
         "$mod, F, exec, firefox"
-        "$mod, Return, exec, kitty"
+        "$mod, Return, exec, wezterm"
         "$mod, C, killactive,"
         "$mod, M, exit,"
         "$mod, E, exec, dolphin"
@@ -174,7 +174,7 @@
 
       gestures {
           # See https://wiki.hyprland.org/Configuring/Variables/ for more
-          workspace_swipe = off
+          gesture = 3, horizontal, workspace
       }
 
       misc {
