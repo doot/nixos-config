@@ -106,7 +106,7 @@
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
-                    system = prev.stdenv.hostPlatform.system;
+                    inherit (prev.stdenv.hostPlatform) system;
                   };
                 })
               ];
@@ -147,7 +147,7 @@
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
-                    system = prev.stdenv.hostPlatform.system;
+                    inherit (prev.stdenv.hostPlatform) system;
                   };
                 })
               ];
@@ -164,6 +164,7 @@
         fqdn = "${shortname}.${domain}";
       in
         nixos-generators.nixosGenerate {
+          system = "x86_64-linux";
           specialArgs = {
             inherit inputs outputs hostname fqdn domain;
           };
@@ -181,7 +182,7 @@
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
-                    system = prev.stdenv.hostPlatform.system;
+                    inherit (prev.stdenv.hostPlatform) system;
                   };
                 })
               ];
