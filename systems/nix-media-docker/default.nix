@@ -354,6 +354,10 @@
               client_max_body_size 512M;
             '';
           }
+          {
+            name = "navidrome";
+            port = config.services.navidrome.settings.Port;
+          }
         ]
       );
     };
@@ -361,4 +365,7 @@
 
   # Host specific settings for certain roles
   roles.alloy.withSyslogListener = true;
+
+  # Enable forgejo service
+  roles.navidrome.enable = true;
 }

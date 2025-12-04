@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  inputs,
   hostname,
   domain,
   fqdn,
@@ -22,7 +23,7 @@
       htop
       jq
       ncdu
-      unstable.neovim
+      inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default
       nix-inspect # TUI to browse nix config
       nix-tree # TUI to browse nix dependency graph/sizes
       nvd
@@ -72,6 +73,12 @@
   };
 
   services = {
+    angrr = {
+      # Automatically remove old GC roots that haven't been touched in the last 14 days
+      enable = true;
+      period = "14d";
+    };
+
     openssh = {
       enable = true;
       settings = {

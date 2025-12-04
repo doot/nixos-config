@@ -13,7 +13,7 @@
   };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05-small";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11-small";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable-small";
 
     alejandra = {
@@ -49,6 +49,11 @@
       url = "github:wezterm/wezterm?dir=nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    neovim-nightly-overlay = {
+      url = "github:nix-community/neovim-nightly-overlay";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = {
@@ -62,6 +67,8 @@
     nixos-generators,
     home-manager,
     wezterm,
+    # deadnix: skip
+    neovim-nightly-overlay,
   } @ inputs: let
     inherit (self) outputs;
     host_nmd = "nix-media-docker";
@@ -78,7 +85,6 @@
         fqdn = "${shortname}.${domain}";
       in
         nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
           specialArgs = {
             inherit inputs outputs hostname fqdn domain;
           };
@@ -100,11 +106,8 @@
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
-                    inherit (prev) system;
+                    inherit (prev.stdenv.hostPlatform) system;
                   };
-
-                  # TODO: Override pihole-exporter package with unstable since stable version is not yet compatible with pihole v6
-                  prometheus-pihole-exporter = nixpkgs-unstable.legacyPackages."x86_64-linux".prometheus-pihole-exporter;
                 })
               ];
             }
@@ -117,7 +120,6 @@
         fqdn = "${shortname}.${domain}";
       in
         nixpkgs-unstable.lib.nixosSystem {
-          system = "x86_64-linux";
           specialArgs = {
             inherit inputs outputs hostname fqdn domain;
           };
@@ -145,7 +147,7 @@
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
-                    inherit (prev) system;
+                    inherit (prev.stdenv.hostPlatform) system;
                   };
                 })
               ];
@@ -180,7 +182,7 @@
               nixpkgs.overlays = [
                 (_: prev: {
                   unstable = import nixpkgs-unstable {
-                    inherit (prev) system;
+                    inherit (prev.stdenv.hostPlatform) system;
                   };
                 })
               ];
