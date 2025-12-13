@@ -202,7 +202,7 @@
     karakeep = {
       package = pkgs.unstable.karakeep;
       enable = true;
-      browser.enable = false;
+      browser.enable = true;
       meilisearch.enable = true;
       extraEnvironment = {
         PORT = "3004";
