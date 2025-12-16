@@ -150,6 +150,9 @@
       # Ensure that mediaDir is not mounted read-only. Systemd unit sets DynamicUser=yes, which implicitly sets ProtectSystem=strict, which mounts everything
       # read-only
       pinchflat.serviceConfig.ReadWritePaths = config.services.pinchflat.mediaDir;
+
+      # TODO: This appears to be required for karakeep-browser to work at the moment. Move this into a module and into a VM rather than container
+      karakeep-browser.serviceConfig.PrivateDevices = lib.mkForce "no";
     };
   };
 
@@ -176,6 +179,12 @@
   };
 
   users.users.nginx.extraGroups = ["acme"];
+
+  # TODO: This appears to be required for karakeep-browser to work at the moment. Move this into a module and into a VM rather than container
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
+  };
 
   # TODO: this works, but ultimately we want this to be part of a module instead
   # services.nginx =
