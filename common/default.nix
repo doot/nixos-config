@@ -84,7 +84,11 @@
     openssh = {
       enable = true;
       settings = {
-        AcceptEnv = lib.mkForce "TERM_PROGRAM COLORTERM TERM_PROGRAM_VERSION TERM WEZTERM_REMOTE_PANE GIT_PROTOCOL";
+        # TODO: Remove after next release
+        AcceptEnv =
+          if (lib.trivial.release == "25.11")
+          then lib.mkForce "TERM_PROGRAM COLORTERM TERM_PROGRAM_VERSION TERM WEZTERM_REMOTE_PANE GIT_PROTOCOL"
+          else lib.mkForce ["TERM_PROGRAM" "COLORTERM" "TERM_PROGRAM_VERSION" "TERM WEZTERM_REMOTE_PANE" "GIT_PROTOCOL"];
       };
     };
 
