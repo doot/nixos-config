@@ -79,6 +79,7 @@
       settings = {
         period = "14d";
       };
+      package = pkgs.unstable.angrr;
     };
 
     openssh = {
