@@ -26,6 +26,7 @@
       inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default
       nix-inspect # TUI to browse nix config
       nix-tree # TUI to browse nix dependency graph/sizes
+      unstable.nix-sweep # CLI to analyse nix store usage
       nvd
       ripgrep
       tmux
