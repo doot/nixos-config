@@ -235,7 +235,7 @@
     meilisearch.package = pkgs.meilisearch;
     readeck = {
       package = pkgs.unstable.readeck;
-      enable = true;
+      enable = false; # TODO: Temporarily disable as I am not actively using it
       # READECK_SECRET_KEY must be set:
       environmentFile = "/home/doot/secret_test/readeck/env";
       settings = {
