@@ -110,6 +110,19 @@ in {
         configFile = "/docker-nfs/monitoring/pve-exporter/pve.yml";
       };
 
+      exporters.smokeping = {
+        enable = true;
+        interval = "15s";
+        hosts = [
+          "192.168.1.88"
+          "192.168.1.60"
+          "192.168.1.1"
+          "pihole.nmd.jhauschildt.com"
+          "google.com"
+          "1.1.1.1"
+        ];
+      };
+
       exporters.unpoller = {
         enable = true;
         loki = {
@@ -256,6 +269,14 @@ in {
               targets = [
                 "${fqdn}:${toString config.services.prometheus.exporters.nginx.port}"
               ];
+            }
+          ];
+        }
+        {
+          job_name = "smokeping";
+          static_configs = [
+            {
+              targets = ["${fqdn}:${toString config.services.prometheus.exporters.smokeping.port}"];
             }
           ];
         }
