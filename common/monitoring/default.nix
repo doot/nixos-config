@@ -337,6 +337,13 @@ in {
       ];
     };
 
+    uptime-kuma = {
+      enable = true;
+      settings = {
+        PORT = "8023";
+      };
+    };
+
     nginx = {
       enable = true;
       virtualHosts."grafana.${fqdn}" = {
@@ -353,6 +360,14 @@ in {
         forceSSL = true;
         locations."/" = {
           proxyPass = "http://127.0.0.1:${toString config.services.prometheus.port}";
+          proxyWebsockets = true;
+        };
+      };
+      virtualHosts."uptime-kuma.${fqdn}" = {
+        useACMEHost = fqdn;
+        forceSSL = true;
+        locations."/" = {
+          proxyPass = "http://127.0.0.1:${toString config.services.uptime-kuma.settings.PORT}";
           proxyWebsockets = true;
         };
       };
