@@ -112,7 +112,7 @@ in {
 
       exporters.smokeping = {
         enable = true;
-        interval = "15s";
+        pingInterval = "15s";
         hosts = [
           "192.168.1.88"
           "192.168.1.60"
