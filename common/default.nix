@@ -71,6 +71,58 @@
       keybindings = true;
       fuzzyCompletion = true;
     };
+    rust-motd = {
+      enable = true;
+      enableMotdInSSHD = true;
+      order = [
+        "global"
+        "banner"
+        "load_avg"
+        "memory"
+        "filesystems"
+        "service_status"
+        "last_login"
+        "uptime"
+      ];
+      settings = {
+        banner = {
+          color = "green";
+          command = ''
+            cat << EOF
+            ########: ##:::: ##:: ######:: ##::: ##::::: #######:: ########: ########:
+            ##.....:: ##:::: ##: ##... ##: ##:: ##::::: ##.... ##: ##.....:: ##.....::
+            ##::::::: ##:::: ##: ##:::..:: ##: ##:::::: ##:::: ##: ##::::::: ##:::::::
+            ######::: ##:::: ##: ##::::::: #####::::::: ##:::: ##: ######::: ######:::
+            ##...:::: ##:::: ##: ##::::::: ##. ##:::::: ##:::: ##: ##...:::: ##...::::
+            ##::::::: ##:::: ##: ##::: ##: ##:. ##::::: ##:::: ##: ##::::::: ##:::::::
+            ##:::::::. #######::. ######:: ##::. ##::::. #######:: ##::::::: ##:::::::
+            EOF
+          '';
+        };
+        load_avg = {
+          format = "Load (1, 5, 15 min.): {one:.02}, {five:.02}, {fifteen:.02}";
+        };
+        memory = {
+          swap_pos = "beside";
+        };
+        filesystems = {
+          root = "/";
+          nix = "/nix";
+        };
+        service_status = {
+          System = "system.slice";
+          User = "user.slice";
+          Upgrade = "nixos-upgrade.service";
+          UpgradeTimer = "nixos-upgrade.timer";
+        };
+        last_login = {
+          doot = 2;
+        };
+        uptime = {
+          prefix = "Up";
+        };
+      };
+    };
   };
 
   services = {
@@ -170,7 +222,7 @@
 
   nix = {
     # Use Lix in place of Nix
-    package = pkgs.unstable.lixPackageSets.latest.lix;
+    # package = pkgs.unstable.lixPackageSets.latest.lix;
 
     settings = {
       experimental-features = ["nix-command" "flakes"];
