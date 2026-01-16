@@ -18,9 +18,7 @@
     };
 
     # Sunshine service enables Avahi, which also does mDNS, so disable resolved mDNS
-    resolved.extraConfig = ''
-      MulticastDNS=no
-    '';
+    resolved.settings.Resolve.MulticastDNS = "no";
   };
 
   # services.udev.extraRules = ''
