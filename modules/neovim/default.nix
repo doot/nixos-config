@@ -33,6 +33,8 @@ in {
         gh
         rustc
         cargo
+        nil
+        rust-analyzer
       ];
     };
     programs = {
