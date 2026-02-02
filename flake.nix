@@ -52,7 +52,8 @@
 
     neovim-nightly-overlay = {
       url = "github:nix-community/neovim-nightly-overlay";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      # TODO: Temporarily follow stable since recent unstable change breaks compatability with this overlay. Switch back after overlay is updated.
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
