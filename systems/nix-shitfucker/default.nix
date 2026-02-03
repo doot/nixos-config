@@ -1,13 +1,10 @@
 {
   lib,
   pkgs,
-  modulesPath,
   config,
   ...
 }: {
   imports = [
-    (modulesPath + "/virtualisation/qemu-guest-agent.nix")
-    (modulesPath + "/virtualisation/proxmox-image.nix")
     ./hardware-configuration.nix # Include the results of the hardware scan.
   ];
 
@@ -113,12 +110,20 @@
       xwayland.enable = true;
     };
 
-    waybar.enable = true;
+    # niri.enable = true;
+    # Need to get working niri config before we can switch. Default keybindings don't work with RDP and I don't have them memorized.
+
+    # waybar.enable = true;
 
     thunar.enable = true;
 
     firefox = {
       enable = true;
+    };
+
+    dms-shell = {
+      enable = true;
+      systemd.enable = true;
     };
   };
 

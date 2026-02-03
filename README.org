@@ -29,7 +29,9 @@ docker rm nix_generators
 *** Generate a Proxmox image
 
 #+BEGIN_SRC sh
-nix build .#nix-shitfucker
+nix build .#nsf-proxmox
+# or:
+nixos-rebuild build-image --image-variant iso --flake .#nix-shitfucker
 # Image generated to ./result/vzdump-qemu-nix-shitfucker.vma.zst
 scp ./result/vzdump-qemu-nix-shitfucker.vma.zst pve:/mnt/pve/sh2-nfs/dump/
 ssh pve qmrestore /mnt/pve/sh2-nfs/dump/vzdump-qemu-nix-shitfucker.vma.zst 130 --unique true

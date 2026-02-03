@@ -35,11 +35,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -65,7 +60,6 @@
     # deadnix: skip
     alejandra,
     priv,
-    nixos-generators,
     home-manager,
     wezterm,
     # deadnix: skip
@@ -131,6 +125,7 @@
             ./common/users
             ./common/sunshine
             ./common/alloy
+            ./systems/nix-shitfucker/proxmox.nix
             # Pin nixpkgs to the one used to build the system
             {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
             home-manager.nixosModules.home-manager
@@ -157,40 +152,8 @@
         };
     };
 
-    # Generate proxmox image via `nix build .#nix-shitfucker`
     packages.x86_64-linux = {
-      ${host_nsf} = let
-        hostname = host_nsf;
-        shortname = "nsf";
-        fqdn = "${shortname}.${domain}";
-      in
-        nixos-generators.nixosGenerate {
-          system = "x86_64-linux";
-          specialArgs = {
-            inherit inputs outputs hostname fqdn domain;
-          };
-          modules = [
-            ./systems/${hostname}
-            ./modules
-            ./common
-            ./common/users
-            ./common/sunshine
-            ./common/alloy
-            ./systems/nix-shitfucker/proxmox.nix
-            # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly
-            # TODO: Figure out a way to deduplicate this so it's the default for all host configs
-            {
-              nixpkgs.overlays = [
-                (_: prev: {
-                  unstable = import nixpkgs-unstable {
-                    inherit (prev.stdenv.hostPlatform) system;
-                  };
-                })
-              ];
-            }
-          ];
-          format = "proxmox";
-        };
+      nsf-proxmox = self.nixosConfigurations.nix-shitfucker.config.system.build.images.proxmox;
     };
   };
 }
