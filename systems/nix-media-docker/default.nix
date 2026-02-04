@@ -227,9 +227,10 @@
         WEBHOOK_NUM_WORKERS = "2";
         ASSET_PREPROCESSING_NUM_WORKERS = "3";
         # Crawler Configs
-        CRAWLER_NUM_WORKERS = "2";
-        CRAWLER_JOB_TIMEOUT_SEC = "120";
+        CRAWLER_NUM_WORKERS = "3";
+        CRAWLER_JOB_TIMEOUT_SEC = "300";
         CRAWLER_NAVIGATE_TIMEOUT_SEC = "60";
+        CRAWLER_STORE_PDF = "true";
       };
     };
     meilisearch.package = pkgs.meilisearch;
