@@ -235,7 +235,7 @@
         "flake-parts": "flake-parts_2",
         "neovim-src": "neovim-src",
         "nixpkgs": [
-          "nixpkgs"
+          "nixpkgs-unstable"
         ]
       },
       "locked": {
