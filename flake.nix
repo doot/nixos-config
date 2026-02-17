@@ -95,7 +95,6 @@
             ./modules
             ./common
             ./common/users
-            ./common/alloy
             unstableOverlay
             {nix.registry.nixpkgs.flake = hostNixpkgs;}
           ]
