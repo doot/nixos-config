@@ -4,8 +4,15 @@
     nix flake check --override-input priv ./priv
   '';
 
-  languages.nix = {
-    enable = true;
+  languages = {
+    nix = {
+      enable = true;
+      lsp.enable = true;
+    };
+    shell = {
+      enable = true;
+      lsp.enable = true;
+    };
   };
 
   git-hooks.hooks = {
