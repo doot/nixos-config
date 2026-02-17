@@ -69,7 +69,6 @@
     host_nsf = "nix-shitfucker";
     domain = "jhauschildt.com";
     unstableOverlay = {
-      # Overlay nixpkgs-unstable, so that select unstable packages can be used
       nixpkgs.overlays = [
         (_: prev: {
           unstable = import nixpkgs-unstable {
@@ -78,68 +77,64 @@
         })
       ];
     };
+    mkHost = {
+      hostname,
+      shortname,
+      hostNixpkgs,
+      extraModules ? [],
+    }: let
+      fqdn = "${shortname}.${domain}";
+    in
+      hostNixpkgs.lib.nixosSystem {
+        specialArgs = {
+          inherit inputs outputs hostname fqdn domain;
+        };
+        modules =
+          [
+            ./systems/${hostname}
+            ./modules
+            ./common
+            ./common/users
+            ./common/alloy
+            unstableOverlay
+            {nix.registry.nixpkgs.flake = hostNixpkgs;}
+          ]
+          ++ extraModules;
+      };
   in {
     # Set the formatter for `nix fmt`
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
 
     nixosConfigurations = {
-      ${host_nmd} = let
+      ${host_nmd} = mkHost {
         hostname = host_nmd;
         shortname = "nmd";
-        fqdn = "${shortname}.${domain}";
-      in
-        nixpkgs.lib.nixosSystem {
-          specialArgs = {
-            inherit inputs outputs hostname fqdn domain;
-          };
-          modules = [
-            ./systems/${hostname}
-            ./modules
-            ./common
-            ./common/users
-            ./common/monitoring
-            ./common/alloy
-            arion.nixosModules.arion
-            priv.nixosModules.stub
-            unstableOverlay
+        hostNixpkgs = nixpkgs;
+        extraModules = [
+          ./common/monitoring
+          arion.nixosModules.arion
+          priv.nixosModules.stub
+        ];
+      };
 
-            # Pin nixpkgs to the one used to build the system
-            {nix.registry.nixpkgs.flake = nixpkgs;}
-          ];
-        };
-
-      ${host_nsf} = let
+      ${host_nsf} = mkHost {
         hostname = host_nsf;
         shortname = "nsf";
-        fqdn = "${shortname}.${domain}";
-      in
-        nixpkgs-unstable.lib.nixosSystem {
-          specialArgs = {
-            inherit inputs outputs hostname fqdn domain;
-          };
-          modules = [
-            ./systems/${hostname}
-            ./modules
-            ./common
-            ./common/users
-            ./common/sunshine
-            ./common/alloy
-            ./systems/nix-shitfucker/proxmox.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.doot = import ./common/home/desktop.nix;
-                extraSpecialArgs = {inherit inputs wezterm;};
-              };
-            }
-            unstableOverlay
-
-            # Pin nixpkgs to the one used to build the system
-            {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
-          ];
-        };
+        hostNixpkgs = nixpkgs-unstable;
+        extraModules = [
+          ./common/sunshine
+          ./systems/nix-shitfucker/proxmox.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              users.doot = import ./common/home/desktop.nix;
+              extraSpecialArgs = {inherit inputs wezterm;};
+            };
+          }
+        ];
+      };
     };
 
     packages.x86_64-linux = {
