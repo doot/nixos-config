@@ -120,12 +120,6 @@
             imports = [../../arion/scrobble];
           };
         };
-        maybe = {
-          serviceName = "maybe"; # systemd service name
-          settings = {
-            imports = [../../arion/maybe];
-          };
-        };
       };
     };
   };
