@@ -1,4 +1,6 @@
-{
+let
+  common = import ../common.nix;
+in {
   project.name = "librenms";
 
   /*
@@ -38,14 +40,7 @@
           "/home/doot/secret_test/librenms/env"
         ];
       };
-      out = {
-        service = {
-          pull_policy = "always";
-          cpu_shares = 512;
-          mem_limit = "2g";
-          memswap_limit = "2g";
-        };
-      };
+      out.service = common.outDefaults // {cpu_shares = 512;};
     };
 
     redis = {
@@ -57,14 +52,7 @@
           "/home/doot/secret_test/librenms/env"
         ];
       };
-      out = {
-        service = {
-          pull_policy = "always";
-          cpu_shares = 512;
-          mem_limit = "2g";
-          memswap_limit = "2g";
-        };
-      };
+      out.service = common.outDefaults // {cpu_shares = 512;};
     };
 
     msmtpd = {
@@ -77,14 +65,7 @@
           "/home/doot/secret_test/librenms/msmtpd.env"
         ];
       };
-      out = {
-        service = {
-          pull_policy = "always";
-          cpu_shares = 512;
-          mem_limit = "2g";
-          memswap_limit = "2g";
-        };
-      };
+      out.service = common.outDefaults // {cpu_shares = 512;};
     };
 
     librenms = {
@@ -123,14 +104,7 @@
           REDIS_DB = "0";
         };
       };
-      out = {
-        service = {
-          pull_policy = "always";
-          cpu_shares = 512;
-          mem_limit = "2g";
-          memswap_limit = "2g";
-        };
-      };
+      out.service = common.outDefaults // {cpu_shares = 512;};
     };
 
     dispatcher = {
@@ -162,14 +136,7 @@
           SIDECAR_DISPATCHER = "1";
         };
       };
-      out = {
-        service = {
-          pull_policy = "always";
-          cpu_shares = 256;
-          mem_limit = "2g";
-          memswap_limit = "2g";
-        };
-      };
+      out.service = common.outDefaults;
     };
 
     syslogng = {
@@ -203,14 +170,7 @@
           SIDECAR_SYSLOGNG = "1";
         };
       };
-      out = {
-        service = {
-          pull_policy = "always";
-          cpu_shares = 512;
-          mem_limit = "2g";
-          memswap_limit = "2g";
-        };
-      };
+      out.service = common.outDefaults // {cpu_shares = 512;};
     };
 
     snmptrapd = {
@@ -244,14 +204,7 @@
           SIDECAR_SNMPTRAPD = "1";
         };
       };
-      out = {
-        service = {
-          pull_policy = "always";
-          cpu_shares = 512;
-          mem_limit = "2g";
-          memswap_limit = "2g";
-        };
-      };
+      out.service = common.outDefaults // {cpu_shares = 512;};
     };
   };
 }

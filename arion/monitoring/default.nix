@@ -1,4 +1,6 @@
-{
+let
+  common = import ../common.nix;
+in {
   project.name = "monitoring";
 
   services = {
@@ -22,21 +24,19 @@
           "8080:8080"
         ];
       };
-      out = {
-        service = {
-          pull_policy = "always";
-          cpu_shares = 256;
+      out.service =
+        common.outDefaults
+        // {
           mem_limit = "1g";
           memswap_limit = "1g";
         };
-      };
     };
     nut-exporter = {
       service = {
         image = "hon95/prometheus-nut-exporter:latest";
         restart = "unless-stopped";
         environment = {
-          TZ = "America/Los_Angeles";
+          TZ = common.tz;
           HTTP_PATH = "/metrics";
           # Defaults
           # RUST_LOG = "info";
@@ -49,14 +49,12 @@
           "9995:9995"
         ];
       };
-      out = {
-        service = {
-          pull_policy = "always";
-          cpu_shares = 256;
+      out.service =
+        common.outDefaults
+        // {
           mem_limit = "1g";
           memswap_limit = "1g";
         };
-      };
     };
   };
 }

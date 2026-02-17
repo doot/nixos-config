@@ -9,6 +9,6 @@
     # deadnix: skip
     nixpkgs,
   }: {
-    nixosModules.stub = {...}: {};
+    nixosModules.stub = _: {};
   };
 }

@@ -1,4 +1,6 @@
-{
+let
+  common = import ../common.nix;
+in {
   project.name = "freshrss";
   services.freshrss = {
     service = {
@@ -13,12 +15,12 @@
       environment = {
         PUID = 1029;
         PGID = 1029;
-        TZ = "America/Los_Angeles";
+        TZ = common.tz;
       };
     };
-    out = {
-      service = {
-        pull_policy = "always";
+    out.service =
+      common.outDefaults
+      // {
         cpu_shares = 512;
         mem_limit = "1g";
         memswap_limit = "1g";
@@ -30,6 +32,5 @@
           start_period = "1m";
         };
       };
-    };
   };
 }

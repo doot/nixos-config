@@ -1,4 +1,6 @@
-{
+let
+  common = import ../common.nix;
+in {
   project.name = "scrobble";
 
   services.maloja = {
@@ -19,7 +21,7 @@
       environment = {
         PUID = 1029;
         PGID = 100;
-        TZ = "America/Los_Angeles";
+        TZ = common.tz;
       };
       healthcheck = {
         test = ["CMD-SHELL" "curl --fail localhost:42010/ || exit 1"];
@@ -29,14 +31,7 @@
         start_period = "1m";
       };
     };
-    out = {
-      service = {
-        pull_policy = "always";
-        cpu_shares = 256;
-        mem_limit = "2g";
-        memswap_limit = "2g";
-      };
-    };
+    out.service = common.outDefaults;
   };
 
   services.multi-scrobbler = {
@@ -52,7 +47,7 @@
       environment = {
         PUID = 1029;
         PGID = 100;
-        TZ = "America/Los_Angeles";
+        TZ = common.tz;
         # set if using a source/client with redirect URI that you have not explicitly set and MS is NOT running on the same machine that you will view the dashboard from
         # EX: You will view MS dashboard at 'http://192.168.0.101:9078' -> set BASE_URL=http://192.168.0.101:9078
         #- BASE_URL=http://MyHostIP:9078
@@ -68,13 +63,6 @@
         maloja.condition = "service_healthy";
       };
     };
-    out = {
-      service = {
-        pull_policy = "always";
-        cpu_shares = 256;
-        mem_limit = "2g";
-        memswap_limit = "2g";
-      };
-    };
+    out.service = common.outDefaults;
   };
 }

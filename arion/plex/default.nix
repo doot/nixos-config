@@ -1,4 +1,6 @@
-{
+let
+  common = import ../common.nix;
+in {
   project.name = "plex";
   services.plex = {
     service = {
@@ -9,7 +11,7 @@
         "8181:8181"
       ];
       environment = {
-        TZ = "America/Los_Angeles";
+        TZ = common.tz;
         PUID = "1029";
         PGID = "100";
         VERSION = "latest";
@@ -31,14 +33,13 @@
         start_period = "1m";
       };
     };
-    out = {
-      service = {
+    out.service =
+      common.outDefaults
+      // {
         shm_size = "12gb"; # Necessary because shm_size does not appear to be implemented in Arion
-        pull_policy = "always";
         cpu_shares = 2048;
         mem_limit = "15g";
       };
-    };
   };
 
   services.tautulli = {
@@ -47,7 +48,7 @@
       restart = "unless-stopped";
       network_mode = "service:plex";
       environment = {
-        TZ = "America/Los_Angeles";
+        TZ = common.tz;
         PUID = "1029";
         PGID = "100";
       };
@@ -67,13 +68,6 @@
         start_period = "1m";
       };
     };
-    out = {
-      service = {
-        cpu_shares = 256;
-        mem_limit = "2g";
-        memswap_limit = "2g";
-        pull_policy = "always";
-      };
-    };
+    out.service = common.outDefaults;
   };
 }

@@ -1,4 +1,6 @@
-{
+let
+  common = import ../common.nix;
+in {
   project.name = "pihole";
 
   services = {
@@ -16,7 +18,7 @@
           "2000:80/tcp"
         ];
         environment = {
-          TZ = "America/Los_Angeles";
+          TZ = common.tz;
           FTLCONF_dns_listeningMode = "all";
           # FTLCONF_dns_upstreams = "9.9.9.9;149.112.112.112;2620:fe::fe;2620:fe::9";
           FTLCONF_dns_upstreams = "192.168.1.1";
@@ -26,8 +28,7 @@
         capabilities.SYS_NICE = true;
         networks = ["piholenet"];
       };
-      out.service.pull_policy = "always";
-      out.service.shm_size = "250mb";
+      out.service = common.outDefaults // {shm_size = "250mb";};
     };
 
     nebula-sync = {
@@ -50,7 +51,7 @@
           pihole.condition = "service_healthy";
         };
       };
-      out.service.pull_policy = "always";
+      out.service = common.outDefaults;
     };
   };
 
