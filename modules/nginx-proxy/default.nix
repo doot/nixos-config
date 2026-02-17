@@ -13,6 +13,30 @@ in {
       // {
         default = false;
       };
+    acme = {
+      enable =
+        lib.mkEnableOption "ACME wildcard certificate"
+        // {
+          default = false;
+        };
+      email = lib.mkOption {
+        type = lib.types.str;
+        description = "Email for ACME account";
+      };
+      dnsProvider = lib.mkOption {
+        type = lib.types.str;
+        description = "DNS provider for ACME DNS-01 challenge";
+      };
+      dnsResolver = lib.mkOption {
+        type = lib.types.str;
+        default = "8.8.8.8";
+        description = "DNS resolver for propagation checks. Needed due to using a wildcard and the fact that we hijack these DNS entries locally.";
+      };
+      environmentFile = lib.mkOption {
+        type = lib.types.str;
+        description = "Path to environment file with DNS provider credentials";
+      };
+    };
     proxies = lib.mkOption {
       type = lib.types.listOf (lib.types.submodule {
         options = {
@@ -45,22 +69,38 @@ in {
       description = "List of reverse proxy entries";
     };
   };
-  config = lib.mkIf cfg.enable {
-    services.nginx.virtualHosts = builtins.listToAttrs (
-      builtins.map (proxy: {
-        name = "${proxy.name}.${fqdn}";
-        value = {
-          inherit (proxy) default;
-          useACMEHost = fqdn;
-          forceSSL = true;
-          locations."/" = {
-            proxyPass = "${proxy.proxyPassHost}:${toString proxy.port}";
-            proxyWebsockets = true;
-            extraConfig = proxy.extraConfig;
+  config = lib.mkMerge [
+    (lib.mkIf cfg.enable {
+      services.nginx.virtualHosts = builtins.listToAttrs (
+        builtins.map (proxy: {
+          name = "${proxy.name}.${fqdn}";
+          value = {
+            inherit (proxy) default;
+            useACMEHost = fqdn;
+            forceSSL = true;
+            locations."/" = {
+              proxyPass = "${proxy.proxyPassHost}:${toString proxy.port}";
+              proxyWebsockets = true;
+              extraConfig = proxy.extraConfig;
+            };
           };
+        })
+        cfg.proxies
+      );
+    })
+    (lib.mkIf (cfg.enable && cfg.acme.enable) {
+      security.acme = {
+        acceptTerms = true;
+        defaults.email = cfg.acme.email;
+        defaults.dnsResolver = cfg.acme.dnsResolver;
+        certs.${fqdn} = {
+          domain = "*.${fqdn}";
+          dnsProvider = cfg.acme.dnsProvider;
+          dnsPropagationCheck = true;
+          environmentFile = cfg.acme.environmentFile;
         };
-      })
-      cfg.proxies
-    );
-  };
+      };
+      users.users.nginx.extraGroups = ["acme"];
+    })
+  ];
 }

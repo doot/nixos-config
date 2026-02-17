@@ -2,7 +2,6 @@
   lib,
   pkgs,
   modulesPath,
-  fqdn,
   config,
   outputs,
   inputs,
@@ -130,22 +129,6 @@
     ];
   };
 
-  # Certs
-  security.acme = {
-    # TODO extract this into common config
-    acceptTerms = true;
-    defaults.email = "jeremy@jhauschildt.com";
-    defaults.dnsResolver = "8.8.8.8"; # Needed due to using a wildcard and hijacking locally
-    certs.${fqdn} = {
-      domain = "*.${fqdn}";
-      dnsProvider = "digitalocean";
-      dnsPropagationCheck = true;
-      environmentFile = "/home/doot/secret_test/acme/env";
-    };
-  };
-
-  users.users.nginx.extraGroups = ["acme"];
-
   # TODO: This appears to be required for karakeep-browser to work at the moment. Move this into a module and into a VM rather than container
   hardware.graphics = {
     enable = true;
@@ -213,6 +196,13 @@
 
   roles.nginx-proxy = {
     enable = true;
+    acme = {
+      enable = true;
+      email = "jeremy@jhauschildt.com";
+      dnsProvider = "digitalocean";
+      dnsResolver = "8.8.8.8";
+      environmentFile = "/home/doot/secret_test/acme/env";
+    };
     proxies = [
       {
         name = "pihole";
