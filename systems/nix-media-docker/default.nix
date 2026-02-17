@@ -82,45 +82,13 @@
 
     arion = {
       backend = "docker";
-      projects = {
-        pihole = {
-          serviceName = "pihole"; # systemd service name
-          settings = {
-            # enableDefaultNetwork = false;
-            imports = [../../arion/pihole];
-          };
-        };
-        freshrss = {
-          serviceName = "freshrss"; # systemd service name
-          settings = {
-            imports = [../../arion/freshrss];
-          };
-        };
-        librenms = {
-          serviceName = "librenms"; # systemd service name
-          settings = {
-            imports = [../../arion/librenms];
-          };
-        };
-        plex = {
-          serviceName = "plex"; # systemd service name
-          settings = {
-            imports = [../../arion/plex];
-          };
-        };
-        monitoring = {
-          serviceName = "monitoring"; # systemd service name
-          settings = {
-            imports = [../../arion/monitoring];
-          };
-        };
-        scrobble = {
-          serviceName = "scrobble"; # systemd service name
-          settings = {
-            imports = [../../arion/scrobble];
-          };
-        };
-      };
+      projects =
+        lib.genAttrs
+        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble"]
+        (name: {
+          serviceName = name; # systemd service name
+          settings.imports = [../../arion/${name}];
+        });
     };
   };
 
