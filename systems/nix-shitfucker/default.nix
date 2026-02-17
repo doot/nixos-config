@@ -17,6 +17,7 @@
     waypaper
     wl-clipboard
     wofi
+    immich-cli
 
     # are these necessary?
     meson
