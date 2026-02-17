@@ -25,7 +25,7 @@ in {
         unzip
         stylua
         ueberzugpp
-        nodejs_24
+        unstable.nodejs_25
         tree-sitter
         luarocks
         sqlfluff
