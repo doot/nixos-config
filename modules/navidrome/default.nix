@@ -2,6 +2,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: let
   cfg = config.roles.navidrome;
@@ -17,6 +18,7 @@ in {
     services = {
       navidrome = {
         enable = true;
+        package = pkgs.unstable.navidrome;
         settings = {
           MusicFolder = "/media-nfs/Music_lidarr";
         };
