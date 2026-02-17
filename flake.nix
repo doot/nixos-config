@@ -68,6 +68,16 @@
     host_nmd = "nix-media-docker";
     host_nsf = "nix-shitfucker";
     domain = "jhauschildt.com";
+    unstableOverlay = {
+      # Overlay nixpkgs-unstable, so that select unstable packages can be used
+      nixpkgs.overlays = [
+        (_: prev: {
+          unstable = import nixpkgs-unstable {
+            inherit (prev.stdenv.hostPlatform) system;
+          };
+        })
+      ];
+    };
   in {
     # Set the formatter for `nix fmt`
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
@@ -91,20 +101,10 @@
             ./common/alloy
             arion.nixosModules.arion
             priv.nixosModules.stub
+            unstableOverlay
 
             # Pin nixpkgs to the one used to build the system
             {nix.registry.nixpkgs.flake = nixpkgs;}
-
-            # Overlay nixpkgs-unstable, so that select unstable packages can be used
-            {
-              nixpkgs.overlays = [
-                (_: prev: {
-                  unstable = import nixpkgs-unstable {
-                    inherit (prev.stdenv.hostPlatform) system;
-                  };
-                })
-              ];
-            }
           ];
         };
 
@@ -125,8 +125,6 @@
             ./common/sunshine
             ./common/alloy
             ./systems/nix-shitfucker/proxmox.nix
-            # Pin nixpkgs to the one used to build the system
-            {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
             home-manager.nixosModules.home-manager
             {
               home-manager = {
@@ -136,17 +134,10 @@
                 extraSpecialArgs = {inherit inputs wezterm;};
               };
             }
-            # Overlay nixpkgs-unstable. This host is based off of unstable, but the overlay should be available uniformly
-            # TODO: Figure out a way to deduplicate this so it's the default for all host configs
-            {
-              nixpkgs.overlays = [
-                (_: prev: {
-                  unstable = import nixpkgs-unstable {
-                    inherit (prev.stdenv.hostPlatform) system;
-                  };
-                })
-              ];
-            }
+            unstableOverlay
+
+            # Pin nixpkgs to the one used to build the system
+            {nix.registry.nixpkgs.flake = nixpkgs-unstable;}
           ];
         };
     };
