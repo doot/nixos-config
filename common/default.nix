@@ -214,6 +214,7 @@
     firewall = {
       allowedTCPPorts = [
         config.services.eternal-terminal.port
+        8765 # wezterm
       ];
     };
   };

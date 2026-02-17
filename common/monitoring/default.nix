@@ -368,9 +368,6 @@ in {
   };
 
   networking.firewall.allowedTCPPorts = [
-    # TODO Extract this to common nginx config
-    80 # nginx proxy
-    443 # nginx proxy
     loki_port # loki push
   ];
 }

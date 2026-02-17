@@ -71,6 +71,7 @@ in {
   };
   config = lib.mkMerge [
     (lib.mkIf cfg.enable {
+      networking.firewall.allowedTCPPorts = [80 443];
       services.nginx.virtualHosts = builtins.listToAttrs (
         builtins.map (proxy: {
           name = "${proxy.name}.${fqdn}";
