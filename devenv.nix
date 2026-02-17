@@ -1,4 +1,4 @@
-{...}: {
+{pkgs, ...}: {
   enterTest = ''
     echo "Running tests"
     nix flake check --override-input priv ./priv
@@ -14,6 +14,8 @@
       lsp.enable = true;
     };
   };
+
+  packages = [pkgs.github-cli];
 
   git-hooks.hooks = {
     commitizen.enable = true;
