@@ -104,55 +104,57 @@ in {
 
       package = pkgs.unstable.prometheus;
 
-      exporters.pve = {
-        enable = true;
-        port = 9221;
-        configFile = "/docker-nfs/monitoring/pve-exporter/pve.yml";
-      };
-
-      exporters.smokeping = {
-        enable = true;
-        pingInterval = "15s";
-        hosts = [
-          "192.168.1.88"
-          "192.168.1.60"
-          "192.168.1.1"
-          "pihole.nmd.jhauschildt.com"
-          "google.com"
-          "1.1.1.1"
-        ];
-      };
-
-      exporters.unpoller = {
-        enable = true;
-        loki = {
-          # url = "http://127.0.0.1:${toString loki_port}/loki/api/v1/push";
-          url = "http://127.0.0.1:${toString loki_port}";
+      exporters = {
+        pve = {
+          enable = true;
+          port = 9221;
+          configFile = "/docker-nfs/monitoring/pve-exporter/pve.yml";
         };
-        controllers = [
-          {
-            user = "unifipoller";
-            pass = "/etc/nixos/shared_secret_test/unpoller/pass";
-            url = "https://192.168.1.1:443";
-            verify_ssl = false;
-            save_dpi = true; # May be resource intensive, disable if it causes problems
-            # enable loki and then try out the following:
-            save_events = true;
-            save_anomalies = true;
-          }
-        ];
-      };
 
-      exporters.nginx = {
-        enable = true;
-      };
+        smokeping = {
+          enable = true;
+          pingInterval = "15s";
+          hosts = [
+            "192.168.1.88"
+            "192.168.1.60"
+            "192.168.1.1"
+            "pihole.nmd.jhauschildt.com"
+            "google.com"
+            "1.1.1.1"
+          ];
+        };
 
-      exporters.pihole = {
-        enable = true;
-        protocol = "https";
-        piholePort = 443;
-        piholeHostname = "pihole.nmd.jhauschildt.com";
-        # TODO: password is provided via overriden systemd EnvironmentFile (secret_test/pihole-exporter/primary.env) above until module has a better option
+        unpoller = {
+          enable = true;
+          loki = {
+            # url = "http://127.0.0.1:${toString loki_port}/loki/api/v1/push";
+            url = "http://127.0.0.1:${toString loki_port}";
+          };
+          controllers = [
+            {
+              user = "unifipoller";
+              pass = "/etc/nixos/shared_secret_test/unpoller/pass";
+              url = "https://192.168.1.1:443";
+              verify_ssl = false;
+              save_dpi = true; # May be resource intensive, disable if it causes problems
+              # enable loki and then try out the following:
+              save_events = true;
+              save_anomalies = true;
+            }
+          ];
+        };
+
+        nginx = {
+          enable = true;
+        };
+
+        pihole = {
+          enable = true;
+          protocol = "https";
+          piholePort = 443;
+          piholeHostname = "pihole.nmd.jhauschildt.com";
+          # TODO: password is provided via overriden systemd EnvironmentFile (secret_test/pihole-exporter/primary.env) above until module has a better option
+        };
       };
 
       scrapeConfigs = [
@@ -358,7 +360,7 @@ in {
       }
       {
         name = "prom";
-        port = config.services.prometheus.port;
+        inherit (config.services.prometheus) port;
       }
       {
         name = "uptime-kuma";

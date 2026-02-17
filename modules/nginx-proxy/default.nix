@@ -82,7 +82,7 @@ in {
             locations."/" = {
               proxyPass = "${proxy.proxyPassHost}:${toString proxy.port}";
               proxyWebsockets = true;
-              extraConfig = proxy.extraConfig;
+              inherit (proxy) extraConfig;
             };
           };
         })
@@ -96,9 +96,8 @@ in {
         defaults.dnsResolver = cfg.acme.dnsResolver;
         certs.${fqdn} = {
           domain = "*.${fqdn}";
-          dnsProvider = cfg.acme.dnsProvider;
+          inherit (cfg.acme) dnsProvider environmentFile;
           dnsPropagationCheck = true;
-          environmentFile = cfg.acme.environmentFile;
         };
       };
       users.users.nginx.extraGroups = ["acme"];

@@ -188,101 +188,102 @@
   };
 
   # Host specific settings for certain roles
-  roles.alloy.withSyslogListener = true;
+  roles = {
+    alloy.withSyslogListener = true;
 
-  # Enable forgejo service
-  roles.navidrome.enable = true;
+    navidrome.enable = true;
 
-  roles.nginx-proxy = {
-    enable = true;
-    acme = {
+    nginx-proxy = {
       enable = true;
-      email = "jeremy@jhauschildt.com";
-      dnsProvider = "digitalocean";
-      dnsResolver = "8.8.8.8";
-      environmentFile = "/home/doot/secret_test/acme/env";
+      acme = {
+        enable = true;
+        email = "jeremy@jhauschildt.com";
+        dnsProvider = "digitalocean";
+        dnsResolver = "8.8.8.8";
+        environmentFile = "/home/doot/secret_test/acme/env";
+      };
+      proxies = [
+        {
+          name = "pihole";
+          port = 2000;
+          extraConfig = ''rewrite ^/$ /admin permanent;'';
+        }
+        {
+          name = "pihole2";
+          proxyPassHost = "http://192.168.1.60";
+          port = 2000;
+          extraConfig = ''rewrite ^/$ /admin permanent;'';
+        }
+        {
+          name = "freshrss";
+          port = 8666;
+        }
+        {
+          name = "librenms";
+          port = 7000;
+        }
+        {
+          name = "maloja";
+          port = 42010;
+        }
+        {
+          name = "ms";
+          port = 9078;
+        }
+        {
+          name = "cadvisor";
+          port = 8080;
+        }
+        {
+          name = "plex";
+          port = 32400;
+          extraConfig = ''rewrite ^/$ /web permanent;'';
+        }
+        {
+          name = "tautulli";
+          port = 8181;
+        }
+        {
+          name = "audiobook";
+          inherit (config.services.audiobookshelf) port;
+        }
+        {
+          name = "immich";
+          # TODO: this can't be a good way to do this, try to find a cleaner way
+          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          inherit (config.services.immich) port;
+          extraConfig = ''
+            client_max_body_size 50000M;
+            proxy_read_timeout   600s;
+            proxy_send_timeout   600s;
+            send_timeout         600s;
+          '';
+        }
+        {
+          name = "readeck";
+          inherit (config.services.readeck.settings.server) port;
+        }
+        {
+          name = "karakeep";
+          port = config.services.karakeep.extraEnvironment.PORT;
+        }
+        {
+          name = "pinchflat";
+          inherit (config.services.pinchflat) port;
+        }
+        {
+          name = "git";
+          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          port = outputs.nixosConfigurations.nix-shitfucker.config.services.forgejo.settings.server.HTTP_PORT;
+          extraConfig = ''
+            client_max_body_size 512M;
+          '';
+        }
+        {
+          name = "navidrome";
+          port = config.services.navidrome.settings.Port;
+        }
+      ];
     };
-    proxies = [
-      {
-        name = "pihole";
-        port = 2000;
-        extraConfig = ''rewrite ^/$ /admin permanent;'';
-      }
-      {
-        name = "pihole2";
-        proxyPassHost = "http://192.168.1.60";
-        port = 2000;
-        extraConfig = ''rewrite ^/$ /admin permanent;'';
-      }
-      {
-        name = "freshrss";
-        port = 8666;
-      }
-      {
-        name = "librenms";
-        port = 7000;
-      }
-      {
-        name = "maloja";
-        port = 42010;
-      }
-      {
-        name = "ms";
-        port = 9078;
-      }
-      {
-        name = "cadvisor";
-        port = 8080;
-      }
-      {
-        name = "plex";
-        port = 32400;
-        extraConfig = ''rewrite ^/$ /web permanent;'';
-      }
-      {
-        name = "tautulli";
-        port = 8181;
-      }
-      {
-        name = "audiobook";
-        port = config.services.audiobookshelf.port;
-      }
-      {
-        name = "immich";
-        # TODO: this can't be a good way to do this, try to find a cleaner way
-        proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
-        port = config.services.immich.port;
-        extraConfig = ''
-          client_max_body_size 50000M;
-          proxy_read_timeout   600s;
-          proxy_send_timeout   600s;
-          send_timeout         600s;
-        '';
-      }
-      {
-        name = "readeck";
-        port = config.services.readeck.settings.server.port;
-      }
-      {
-        name = "karakeep";
-        port = config.services.karakeep.extraEnvironment.PORT;
-      }
-      {
-        name = "pinchflat";
-        port = config.services.pinchflat.port;
-      }
-      {
-        name = "git";
-        proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
-        port = outputs.nixosConfigurations.nix-shitfucker.config.services.forgejo.settings.server.HTTP_PORT;
-        extraConfig = ''
-          client_max_body_size 512M;
-        '';
-      }
-      {
-        name = "navidrome";
-        port = config.services.navidrome.settings.Port;
-      }
-    ];
   };
 }

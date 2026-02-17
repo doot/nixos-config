@@ -3,7 +3,7 @@
 #   - Uses user systemd unit
 #   - Session is shared with above mentioned session, so it's a little wierd to set a resolution that is ideal for both
 #   - Maybe look into using a separate, dummy, display?
-{...}: {
+_: {
   users.users.doot.extraGroups = [
     "input" # sunshine
     "video" # sunshine

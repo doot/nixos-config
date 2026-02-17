@@ -209,8 +209,7 @@
 
   networking = {
     hostName = hostname;
-    domain = domain;
-    fqdn = fqdn;
+    inherit domain fqdn;
     firewall = {
       allowedTCPPorts = [
         config.services.eternal-terminal.port
