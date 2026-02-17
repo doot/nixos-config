@@ -198,7 +198,7 @@
   #       };
   #     };
   #   };
-  # in newNginxVHost { name = "maybe"; fqdn = fqdn; port = 3060; };
+  # in newNginxVHost { name = "freshrss"; fqdn = fqdn; port = 8666; };
 
   # Add certain arion/docker services to nginx proxy
   services = {
@@ -281,10 +281,6 @@
           }
         )
         [
-          {
-            name = "maybe";
-            port = 3060;
-          }
           {
             name = "pihole";
             port = 2000;
