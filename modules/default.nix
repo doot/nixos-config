@@ -4,5 +4,6 @@
     ./neovim
     ./forgejo
     ./navidrome
+    ./nginx-proxy
   ];
 }

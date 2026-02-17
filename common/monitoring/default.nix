@@ -345,32 +345,26 @@ in {
 
     nginx = {
       enable = true;
-      virtualHosts."grafana.${fqdn}" = {
-        default = true;
-        useACMEHost = fqdn;
-        forceSSL = true;
-        locations."/" = {
-          proxyPass = "http://127.0.0.1:${toString config.services.grafana.settings.server.http_port}";
-          proxyWebsockets = true;
-        };
-      };
-      virtualHosts."prom.${fqdn}" = {
-        useACMEHost = fqdn;
-        forceSSL = true;
-        locations."/" = {
-          proxyPass = "http://127.0.0.1:${toString config.services.prometheus.port}";
-          proxyWebsockets = true;
-        };
-      };
-      virtualHosts."uptime-kuma.${fqdn}" = {
-        useACMEHost = fqdn;
-        forceSSL = true;
-        locations."/" = {
-          proxyPass = "http://127.0.0.1:${toString config.services.uptime-kuma.settings.PORT}";
-          proxyWebsockets = true;
-        };
-      };
     };
+  };
+
+  roles.nginx-proxy = {
+    enable = true;
+    proxies = [
+      {
+        name = "grafana";
+        port = config.services.grafana.settings.server.http_port;
+        default = true;
+      }
+      {
+        name = "prom";
+        port = config.services.prometheus.port;
+      }
+      {
+        name = "uptime-kuma";
+        port = config.services.uptime-kuma.settings.PORT;
+      }
+    ];
   };
 
   networking.firewall.allowedTCPPorts = [

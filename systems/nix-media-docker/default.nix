@@ -152,22 +152,6 @@
     enable32Bit = true;
   };
 
-  # TODO: this works, but ultimately we want this to be part of a module instead
-  # services.nginx =
-  # let
-  #   newNginxVHost = args:
-  #   {
-  #     virtualHosts."${args.name}.${args.fqdn}" = {
-  #       useACMEHost = args.fqdn;
-  #       forceSSL = true;
-  #       locations."/" = {
-  #         proxyPass = "http://127.0.0.1:${toString args.port}";
-  #         proxyWebsockets = true;
-  #       };
-  #     };
-  #   };
-  # in newNginxVHost { name = "freshrss"; fqdn = fqdn; port = 8666; };
-
   # Add certain arion/docker services to nginx proxy
   services = {
     audiobookshelf = {
@@ -218,120 +202,6 @@
     nginx = {
       enable = true;
       statusPage = true;
-      virtualHosts = builtins.listToAttrs (
-        # This is a mess, but it iterates over a list of attribute sets, whose attributes are arguments, and creates a virtualHosts attribute set with those arguments for each one
-        # for example { name = "pihole"; port = 2000;} turns into:
-        #   {
-        #     "pihole.nmd.jhauschildt.com" = {
-        #       useACMEHost = "nmd.jhauschildt.com";
-        #       forceSSL = true;
-        #       locations."/" = {
-        #         proxyPass = "http://127.0.0.1:2000";
-        #         proxyWebsockets = true;
-        #       };
-        #     };
-        #   }
-        # TODO: This should be a temporary solution until I can create a module that does this in a cleaner way.
-        #       Ideally the module would let me set the bare minumum attributes anywhere in the config, then extrapolate using these defaults
-        builtins.map (
-          arg: {
-            name = "${arg.name}.${fqdn}";
-            value = {
-              default = arg.default or false;
-              useACMEHost = fqdn;
-              forceSSL = true;
-              locations."/" = {
-                proxyPass = "${arg.proxyPassHost or "http://127.0.0.1"}:${toString arg.port}";
-                proxyWebsockets = true;
-                extraConfig = arg.extraConfig or '''';
-              };
-            };
-          }
-        )
-        [
-          {
-            name = "pihole";
-            port = 2000;
-            extraConfig = ''rewrite ^/$ /admin permanent;'';
-          }
-          {
-            name = "pihole2";
-            proxyPassHost = "http://192.168.1.60";
-            port = 2000;
-            extraConfig = ''rewrite ^/$ /admin permanent;'';
-          }
-          {
-            name = "freshrss";
-            port = 8666;
-          }
-          {
-            name = "librenms";
-            port = 7000;
-          }
-          {
-            name = "maloja";
-            port = 42010;
-          }
-          {
-            name = "ms";
-            port = 9078;
-          }
-          {
-            name = "cadvisor";
-            port = 8080;
-          }
-          {
-            name = "plex";
-            port = 32400;
-            extraConfig = ''rewrite ^/$ /web permanent;'';
-          }
-          {
-            name = "tautulli";
-            port = 8181;
-          }
-          {
-            name = "audiobook";
-            port = config.services.audiobookshelf.port;
-          }
-          {
-            name = "immich";
-            # TODO: this can't be a good way to do this, try to find a cleaner way
-            proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
-            # proxyPassHost = "http://nsf.jhauschildt.com";
-            port = config.services.immich.port;
-            extraConfig = ''
-              client_max_body_size 50000M;
-              proxy_read_timeout   600s;
-              proxy_send_timeout   600s;
-              send_timeout         600s;
-            '';
-          }
-          {
-            name = "readeck";
-            port = config.services.readeck.settings.server.port;
-          }
-          {
-            name = "karakeep";
-            port = config.services.karakeep.extraEnvironment.PORT;
-          }
-          {
-            name = "pinchflat";
-            port = config.services.pinchflat.port;
-          }
-          {
-            name = "git";
-            proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
-            port = outputs.nixosConfigurations.nix-shitfucker.config.services.forgejo.settings.server.HTTP_PORT;
-            extraConfig = ''
-              client_max_body_size 512M;
-            '';
-          }
-          {
-            name = "navidrome";
-            port = config.services.navidrome.settings.Port;
-          }
-        ]
-      );
     };
   };
 
@@ -340,4 +210,90 @@
 
   # Enable forgejo service
   roles.navidrome.enable = true;
+
+  roles.nginx-proxy = {
+    enable = true;
+    proxies = [
+      {
+        name = "pihole";
+        port = 2000;
+        extraConfig = ''rewrite ^/$ /admin permanent;'';
+      }
+      {
+        name = "pihole2";
+        proxyPassHost = "http://192.168.1.60";
+        port = 2000;
+        extraConfig = ''rewrite ^/$ /admin permanent;'';
+      }
+      {
+        name = "freshrss";
+        port = 8666;
+      }
+      {
+        name = "librenms";
+        port = 7000;
+      }
+      {
+        name = "maloja";
+        port = 42010;
+      }
+      {
+        name = "ms";
+        port = 9078;
+      }
+      {
+        name = "cadvisor";
+        port = 8080;
+      }
+      {
+        name = "plex";
+        port = 32400;
+        extraConfig = ''rewrite ^/$ /web permanent;'';
+      }
+      {
+        name = "tautulli";
+        port = 8181;
+      }
+      {
+        name = "audiobook";
+        port = config.services.audiobookshelf.port;
+      }
+      {
+        name = "immich";
+        # TODO: this can't be a good way to do this, try to find a cleaner way
+        proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+        port = config.services.immich.port;
+        extraConfig = ''
+          client_max_body_size 50000M;
+          proxy_read_timeout   600s;
+          proxy_send_timeout   600s;
+          send_timeout         600s;
+        '';
+      }
+      {
+        name = "readeck";
+        port = config.services.readeck.settings.server.port;
+      }
+      {
+        name = "karakeep";
+        port = config.services.karakeep.extraEnvironment.PORT;
+      }
+      {
+        name = "pinchflat";
+        port = config.services.pinchflat.port;
+      }
+      {
+        name = "git";
+        proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+        port = outputs.nixosConfigurations.nix-shitfucker.config.services.forgejo.settings.server.HTTP_PORT;
+        extraConfig = ''
+          client_max_body_size 512M;
+        '';
+      }
+      {
+        name = "navidrome";
+        port = config.services.navidrome.settings.Port;
+      }
+    ];
+  };
 }
