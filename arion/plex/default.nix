@@ -12,8 +12,8 @@ in {
       ];
       environment = {
         TZ = common.tz;
-        PUID = "1029";
-        PGID = "100";
+        PUID = common.puid;
+        PGID = common.pgid;
         VERSION = "latest";
       };
       volumes = [
@@ -49,8 +49,8 @@ in {
       network_mode = "service:plex";
       environment = {
         TZ = common.tz;
-        PUID = "1029";
-        PGID = "100";
+        PUID = common.puid;
+        PGID = common.pgid;
       };
       volumes = [
         "/docker-nfs/plexpy:/config"

@@ -19,8 +19,8 @@ in {
         "/docker-nfs/scrobble/maloja/cache:/config/cache"
       ];
       environment = {
-        PUID = 1029;
-        PGID = 100;
+        PUID = common.puid;
+        PGID = common.pgid;
         TZ = common.tz;
       };
       healthcheck = {
@@ -45,8 +45,8 @@ in {
         "/docker-nfs/scrobble/multi-scrobbler:/config"
       ];
       environment = {
-        PUID = 1029;
-        PGID = 100;
+        PUID = common.puid;
+        PGID = common.pgid;
         TZ = common.tz;
         # set if using a source/client with redirect URI that you have not explicitly set and MS is NOT running on the same machine that you will view the dashboard from
         # EX: You will view MS dashboard at 'http://192.168.0.101:9078' -> set BASE_URL=http://192.168.0.101:9078

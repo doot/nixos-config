@@ -13,8 +13,8 @@ in {
         "8666:80"
       ];
       environment = {
-        PUID = 1029;
-        PGID = 1029;
+        PUID = common.puid;
+        PGID = "1029"; # Differs from common.pgid ("100"); intentional for freshrss
         TZ = common.tz;
       };
     };

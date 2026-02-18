@@ -3,6 +3,10 @@
   # Default timezone
   tz = "America/Los_Angeles";
 
+  # Default user/group IDs (strings for Docker env var compatibility)
+  puid = "1029";
+  pgid = "100";
+
   # Default out.service overrides with sensible defaults.
   # Usage: out.service = common.outDefaults // { cpu_shares = 2048; };
   # Or just: out.service = common.outDefaults;
