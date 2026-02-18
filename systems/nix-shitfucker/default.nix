@@ -65,9 +65,11 @@
 
     getty.autologinUser = lib.mkDefault "doot";
 
-    immich = {
+    immich = let
+      network = import ../../common/network.nix;
+    in {
       enable = true;
-      host = "192.168.1.110";
+      host = network.ips.nix-shitfucker;
       openFirewall = true;
       mediaLocation = "/mnt/pictures-nfs/immich/";
       accelerationDevices = null; # `null` gives access to all devices.

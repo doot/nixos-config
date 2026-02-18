@@ -6,7 +6,9 @@
   outputs,
   inputs,
   ...
-}: {
+}: let
+  network = import ../../common/network.nix;
+in {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ./hardware-configuration.nix # Include the results of the hardware scan.
@@ -47,7 +49,7 @@
 
   # Disable stub and override default nameservers, pihole use port 53 instead
   networking = {
-    nameservers = ["192.168.1.88" "192.168.1.60"]; # override due to disabled stub listener
+    nameservers = [network.ips.nix-media-docker network.ips.shitholder]; # override due to disabled stub listener
     firewall.allowedTCPPorts = [
       32400 # Plex
     ];
@@ -210,7 +212,7 @@
         }
         {
           name = "pihole2";
-          proxyPassHost = "http://192.168.1.60";
+          proxyPassHost = "http://${network.ips.shitholder}";
           port = 2000;
           extraConfig = ''rewrite ^/$ /admin permanent;'';
         }

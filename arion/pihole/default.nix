@@ -1,5 +1,6 @@
 let
   common = import ../common.nix;
+  network = import ../../common/network.nix;
 in {
   project.name = "pihole";
 
@@ -21,7 +22,7 @@ in {
           TZ = common.tz;
           FTLCONF_dns_listeningMode = "all";
           # FTLCONF_dns_upstreams = "9.9.9.9;149.112.112.112;2620:fe::fe;2620:fe::9";
-          FTLCONF_dns_upstreams = "192.168.1.1";
+          FTLCONF_dns_upstreams = network.ips.gateway;
           FTLCONF_dns_dnssec = "false"; # Temporarily disabled as it causes some issues with plex and other services
         };
         capabilities.NET_ADMIN = true;

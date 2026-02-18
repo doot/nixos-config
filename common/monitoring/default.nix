@@ -6,6 +6,7 @@
   domain,
   ...
 }: let
+  network = import ../network.nix;
   loki_port = 3100;
   nsf_fqdn = "nsf.${domain}";
   sh_fqdn = "sh2.${domain}";
@@ -115,9 +116,9 @@ in {
           enable = true;
           pingInterval = "15s";
           hosts = [
-            "192.168.1.88"
-            "192.168.1.60"
-            "192.168.1.1"
+            network.ips.nix-media-docker
+            network.ips.shitholder
+            network.ips.gateway
             "pihole.nmd.jhauschildt.com"
             "google.com"
             "1.1.1.1"
@@ -134,7 +135,7 @@ in {
             {
               user = "unifipoller";
               pass = "/etc/nixos/shared_secret_test/unpoller/pass";
-              url = "https://192.168.1.1:443";
+              url = "https://${network.ips.gateway}:443";
               verify_ssl = false;
               save_dpi = true; # May be resource intensive, disable if it causes problems
               # enable loki and then try out the following:
