@@ -24,13 +24,7 @@ in {
         cpu_shares = 512;
         mem_limit = "1g";
         memswap_limit = "1g";
-        healthcheck = {
-          test = ["CMD-SHELL" "curl --fail localhost:80/ || exit 1"];
-          interval = "30s";
-          timeout = "15s";
-          retries = 3;
-          start_period = "1m";
-        };
+        healthcheck = common.mkHealthcheck 80;
       };
   };
 }

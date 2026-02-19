@@ -60,13 +60,7 @@ in {
       depends_on = {
         plex.condition = "service_healthy";
       };
-      healthcheck = {
-        test = ["CMD-SHELL" "curl --fail localhost:8181/ || exit 1"];
-        interval = "30s";
-        timeout = "15s";
-        retries = 3;
-        start_period = "1m";
-      };
+      healthcheck = common.mkHealthcheck 8181;
     };
     out.service = common.outDefaults;
   };

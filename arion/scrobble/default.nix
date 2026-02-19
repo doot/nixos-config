@@ -23,13 +23,7 @@ in {
         PGID = common.pgid;
         TZ = common.tz;
       };
-      healthcheck = {
-        test = ["CMD-SHELL" "curl --fail localhost:42010/ || exit 1"];
-        interval = "30s";
-        timeout = "15s";
-        retries = 3;
-        start_period = "1m";
-      };
+      healthcheck = common.mkHealthcheck 42010;
     };
     out.service = common.outDefaults;
   };
