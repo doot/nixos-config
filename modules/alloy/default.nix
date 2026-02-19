@@ -6,9 +6,6 @@
   ...
 }: let
   cfg = config.roles.alloy;
-  alloy_port = 3030;
-  syslog_port = 1514;
-  loki_host = "nmd.jhauschildt.com";
 in {
   options.roles.alloy = {
     enable =
@@ -17,24 +14,43 @@ in {
         default = true;
       };
     withSyslogListener = lib.mkEnableOption "Whether to enable the alloy syslog listener (opens port) ";
-    # TODO move ports to options here, with defaults...
+    alloyPort = lib.mkOption {
+      type = lib.types.port;
+      default = 3030;
+      description = "Port for the Alloy HTTP server.";
+    };
+    syslogPort = lib.mkOption {
+      type = lib.types.port;
+      default = 1514;
+      description = "Port for the syslog listener.";
+    };
+    lokiHost = lib.mkOption {
+      type = lib.types.str;
+      default = "nmd.jhauschildt.com";
+      description = "Hostname of the Loki instance.";
+    };
+    lokiPort = lib.mkOption {
+      type = lib.types.port;
+      default = 3100;
+      description = "Port of the Loki instance.";
+    };
   };
   config = lib.mkIf cfg.enable {
     services.alloy = {
       enable = true;
       package = pkgs.unstable.grafana-alloy;
       extraFlags = [
-        "--server.http.listen-addr=0.0.0.0:${toString alloy_port}"
+        "--server.http.listen-addr=0.0.0.0:${toString cfg.alloyPort}"
         "--disable-reporting"
       ];
     };
 
     networking.firewall.allowedTCPPorts =
       [
-        alloy_port # Alloy web ui
+        cfg.alloyPort # Alloy web ui
       ]
       ++ lib.optionals cfg.withSyslogListener [
-        syslog_port # syslog listen port
+        cfg.syslogPort # syslog listen port
       ];
 
     environment.etc."alloy/config.alloy".text = ''
@@ -56,7 +72,7 @@ in {
       }
       loki.write "grafana_loki" {
         endpoint {
-          url = "http://${loki_host}:3100/loki/api/v1/push"
+          url = "http://${cfg.lokiHost}:${toString cfg.lokiPort}/loki/api/v1/push"
         }
       }
 
@@ -92,7 +108,7 @@ in {
 
         loki.source.syslog "syslog" {
           listener {
-            address = "${loki_host}:${toString syslog_port}"
+            address = "${cfg.lokiHost}:${toString cfg.syslogPort}"
             label_structured_data = true
             labels = {
               job  = "syslog",
