@@ -72,22 +72,26 @@ in {
   config = lib.mkMerge [
     (lib.mkIf cfg.enable {
       networking.firewall.allowedTCPPorts = [80 443];
-      services.nginx.virtualHosts = builtins.listToAttrs (
-        builtins.map (proxy: {
-          name = "${proxy.name}.${fqdn}";
-          value = {
-            inherit (proxy) default;
-            useACMEHost = fqdn;
-            forceSSL = true;
-            locations."/" = {
-              proxyPass = "${proxy.proxyPassHost}:${toString proxy.port}";
-              proxyWebsockets = true;
-              inherit (proxy) extraConfig;
+      services.nginx = {
+        enable = true;
+        statusPage = true;
+        virtualHosts = builtins.listToAttrs (
+          builtins.map (proxy: {
+            name = "${proxy.name}.${fqdn}";
+            value = {
+              inherit (proxy) default;
+              useACMEHost = fqdn;
+              forceSSL = true;
+              locations."/" = {
+                proxyPass = "${proxy.proxyPassHost}:${toString proxy.port}";
+                proxyWebsockets = true;
+                inherit (proxy) extraConfig;
+              };
             };
-          };
-        })
-        cfg.proxies
-      );
+          })
+          cfg.proxies
+        );
+      };
     })
     (lib.mkIf (cfg.enable && cfg.acme.enable) {
       security.acme = {

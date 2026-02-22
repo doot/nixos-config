@@ -136,7 +136,6 @@ in {
     enable32Bit = true;
   };
 
-  # Add certain arion/docker services to nginx proxy
   services = {
     audiobookshelf = {
       enable = true;
@@ -163,7 +162,9 @@ in {
         CRAWLER_STORE_PDF = "true";
       };
     };
+
     meilisearch.package = pkgs.meilisearch;
+
     readeck = {
       package = pkgs.unstable.readeck;
       enable = false; # TODO: Temporarily disable as I am not actively using it

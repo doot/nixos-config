@@ -345,10 +345,6 @@ in {
         PORT = "8023";
       };
     };
-
-    nginx = {
-      enable = true;
-    };
   };
 
   roles.nginx-proxy = {
