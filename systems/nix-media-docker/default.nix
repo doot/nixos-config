@@ -193,6 +193,7 @@ in {
         "/etc/group"
         "/etc/machine-id"
         "/etc/passwd"
+        "/docker-local/freshrss"
         "/home/doot/secret_test"
         "/home/doot/nixos-config-priv"
         "/root/media-nfs.files.txt"
