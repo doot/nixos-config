@@ -230,6 +230,12 @@ in {
         echo "Done listing files to /root/media-nfs.files.txt."
       '';
     };
+
+    actual = {
+      enable = true;
+      settings.port = 9345;
+      package = pkgs.unstable.actual;
+    };
   };
 
   # Host specific settings for certain roles
@@ -327,6 +333,10 @@ in {
         {
           name = "navidrome";
           port = config.services.navidrome.settings.Port;
+        }
+        {
+          name = "actual";
+          inherit (config.services.actual.settings) port;
         }
       ];
     };
