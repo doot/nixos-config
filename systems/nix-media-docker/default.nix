@@ -234,7 +234,7 @@ in {
     actual = {
       enable = true;
       settings.port = 9345;
-      package = pkgs.unstable.actual;
+      package = pkgs.unstable.actual-server;
     };
   };
 
