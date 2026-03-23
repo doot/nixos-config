@@ -155,7 +155,9 @@
 
     netbird = {
       enable = true;
-      package = pkgs.unstable.netbird;
+      # TODO: Switch back to unstable after unstable builds are fixed
+      # package = pkgs.unstable.netbird;
+      package = pkgs.netbird;
     };
 
     eternal-terminal.enable = true;
