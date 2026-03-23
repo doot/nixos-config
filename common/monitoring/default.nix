@@ -4,6 +4,7 @@
   lib,
   fqdn,
   domain,
+  inputs,
   ...
 }: let
   network = import ../network.nix;
@@ -12,6 +13,12 @@
   sh_fqdn = "sh2.${domain}";
   pve_fqdn = "pve.${domain}";
 in {
+  imports = [
+    # TODO: Temporarily use unstable version of grafana module (remove after next NixOS release)
+    "${inputs.nixpkgs-unstable}/nixos/modules/services/monitoring/grafana.nix"
+  ];
+  disabledModules = ["services/monitoring/grafana.nix"];
+
   # This is necessary since the NixOS Prometheus services does not have an easy way to set the data directory
   fileSystems."/var/lib/prometheus2/data" = {
     depends = [
@@ -57,7 +64,8 @@ in {
       #   # natel-discrete-panel
       # ];
       settings = {
-        # TODO for now database exists in default of /var/lib/grafana/data/grafana.db and is not backed up, except for snapshots. Get a proper set up working. Fucking permissions.
+        security.secret_key = "SW2YcwTIb9zpOOhoPsMm"; # Note that this is the old hard coded default. Should be changed in the future, but does not pose any risk.
+        # TODO: for now database exists in default of /var/lib/grafana/data/grafana.db and is not backed up, except for snapshots. Get a proper set up working. Fucking permissions.
         # database.path = "/docker-nfs/monitoring/grafana/grafana.db";
         analytics.reporting_enabled = false;
         server = {
@@ -79,6 +87,14 @@ in {
 
           # Toggles experimental dynamic dashboards
           dashboardNewLayouts = true;
+        };
+
+        # TODO: Needed for 12.4 migration
+        "unified_storage.folders.folder.grafana.app" = {
+          enableMigration = true;
+        };
+        "unified_storage.dashboards.dashboard.grafana.app" = {
+          enableMigration = true;
         };
       };
       # provision.datasources.settings.deleteDatasources = [{name="Prometheus2"; orgId = 1;}];
