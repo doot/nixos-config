@@ -47,7 +47,7 @@
 
 
     def fetch_messages():
-        url = f"{NTFY_URL}/{TOPIC}/json?poll=1&since=30d"
+        url = f"{NTFY_URL}/{TOPIC}/json?poll=1&since=43200m"
         try:
             with urllib.request.urlopen(url, timeout=10) as resp:
                 messages = []
