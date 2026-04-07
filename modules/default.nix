@@ -6,5 +6,6 @@
     ./forgejo
     ./navidrome
     ./nginx-proxy
+    ./nixos-changelog
   ];
 }

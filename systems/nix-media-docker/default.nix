@@ -5,6 +5,7 @@
   config,
   outputs,
   inputs,
+  fqdn,
   ...
 }: let
   network = import ../../common/network.nix;
@@ -137,6 +138,16 @@ in {
   };
 
   services = {
+    ntfy-sh = {
+      enable = true;
+      settings = {
+        base-url = "https://ntfy.${fqdn}";
+        listen-http = ":2586";
+        behind-proxy = true;
+        cache-duration = "720h";
+      };
+    };
+
     audiobookshelf = {
       enable = true;
     };
@@ -244,6 +255,8 @@ in {
 
     navidrome.enable = true;
 
+    nixos-changelog.atomFeed.enable = true;
+
     nginx-proxy = {
       enable = true;
       acme = {
@@ -337,6 +350,10 @@ in {
         {
           name = "actual";
           inherit (config.services.actual.settings) port;
+        }
+        {
+          name = "ntfy";
+          port = 2586;
         }
       ];
     };
