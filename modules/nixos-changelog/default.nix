@@ -10,7 +10,7 @@
   cfg = config.roles.nixos-changelog;
 
   notifyScript = pkgs.writeShellScript "nixos-changelog-notify" ''
-    profiles=$(ls -dv /nix/var/nix/profiles/system-*-link 2>/dev/null | tail -2)
+    profiles=$(ls -Hdv /nix/var/nix/profiles/system-*-link 2>/dev/null | tail -2)
     if [ "$(echo "$profiles" | wc -l)" -lt 2 ]; then
       echo "Not enough system profiles to diff, skipping"
       exit 0
