@@ -19,7 +19,7 @@
     old=$(echo "$profiles" | head -1)
     new=$(echo "$profiles" | tail -1)
 
-    diff=$(${lib.getExe pkgs.nvd} diff "$old" "$new" 2>&1 | ${pkgs.gnused}/bin/sed 's/\x1b\[[0-9;]*m//g')
+    diff=$(${lib.getExe pkgs.nvd} --color=never diff "$old" "$new" 2>&1)
 
     if ! printf '%s' "$diff" | ${pkgs.gnugrep}/bin/grep -qE "^(Version changes:|Added packages:|Removed packages:)"; then
       echo "No package changes, skipping notification"
