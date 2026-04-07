@@ -4,10 +4,10 @@
   pkgs,
   fqdn,
   hostname,
+  domain,
   ...
 }: let
   cfg = config.roles.nixos-changelog;
-  network = import ../../common/network.nix;
 
   notifyScript = pkgs.writeShellScript "nixos-changelog-notify" ''
     profiles=$(ls -dv /nix/var/nix/profiles/system-*-link 2>/dev/null | tail -2)
@@ -110,7 +110,7 @@ in {
       };
     ntfyUrl = lib.mkOption {
       type = lib.types.str;
-      default = "http://${network.ips.nix-media-docker}:2586";
+      default = "https://ntfy.nmd.${domain}";
       description = "URL of the ntfy server";
     };
     ntfyTopic = lib.mkOption {
