@@ -134,6 +134,7 @@ in {
         description = "Post NixOS upgrade changelog to ntfy";
         after = ["nixos-upgrade.service"];
         wantedBy = ["nixos-upgrade.service"];
+        path = [pkgs.nix];
         serviceConfig = {
           Type = "oneshot";
           ExecStart = notifyScript;
