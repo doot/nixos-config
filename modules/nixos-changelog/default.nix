@@ -81,10 +81,10 @@
         elif line.startswith("&lt;&lt;&lt;") or line.startswith("&gt;&gt;&gt;") or line.startswith("Closure size:"):
             color = "#9ca3af"
         elif line.startswith("Version changes:") or line.startswith("Added packages:") or line.startswith("Removed packages:"):
-            return f'<span style="font-weight:bold">{line}</span>'
+            return f'&lt;span style="font-weight:bold"&gt;{line}&lt;/span&gt;'
         else:
             return line
-        return f'<span style="color:{color}">{line}</span>'
+        return f'&lt;span style="color:{color}"&gt;{line}&lt;/span&gt;'
 
 
     def to_rfc3339(ts):
