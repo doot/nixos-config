@@ -69,8 +69,32 @@
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+    def colorize_line(line):
+        if line.startswith("[U") or line.startswith("[A"):
+            color = "#22c55e"
+        elif line.startswith("[R"):
+            color = "#ef4444"
+        elif line.startswith("[D"):
+            color = "#eab308"
+        elif line.startswith("[C"):
+            color = "#06b6d4"
+        elif line.startswith("&lt;&lt;&lt;") or line.startswith("&gt;&gt;&gt;") or line.startswith("Closure size:"):
+            color = "#9ca3af"
+        elif line.startswith("Version changes:") or line.startswith("Added packages:") or line.startswith("Removed packages:"):
+            return f'<span style="font-weight:bold">{line}</span>'
+        else:
+            return line
+        return f'<span style="color:{color}">{line}</span>'
+
+
     def to_rfc3339(ts):
         return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+    def render_content(message):
+        escaped = xml_escape(message)
+        body = "\n".join(colorize_line(line) for line in escaped.split("\n"))
+        return f"&lt;pre style=\"font-family:monospace;font-size:13px\"&gt;{body}&lt;/pre&gt;"
 
 
     messages = sorted(fetch_messages(), key=lambda m: m.get("time", 0), reverse=True)
@@ -81,7 +105,7 @@
         <id>{xml_escape(m.get("id", ""))}</id>
         <title>{xml_escape(m.get("title", "NixOS update"))}</title>
         <updated>{to_rfc3339(m.get("time", 0))}</updated>
-        <content type="text">{xml_escape(m.get("message", ""))}</content>
+        <content type="html">{render_content(m.get("message", ""))}</content>
       </entry>"""
         for m in messages
     )
