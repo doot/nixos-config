@@ -222,7 +222,7 @@
 
   nix = {
     # Use Lix in place of Nix
-    # package = pkgs.unstable.lixPackageSets.latest.lix;
+    package = pkgs.unstable.lixPackageSets.latest.lix;
 
     settings = {
       experimental-features = ["nix-command" "flakes"];
