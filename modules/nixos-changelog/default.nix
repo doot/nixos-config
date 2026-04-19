@@ -56,6 +56,13 @@
                         try:
                             msg = json.loads(line)
                             if msg.get("event") == "message":
+                                attachment = msg.get("attachment") or {}
+                                if attachment.get("url") and msg.get("message", "").startswith("You received a file"):
+                                    try:
+                                        with urllib.request.urlopen(attachment["url"], timeout=15) as att_resp:
+                                            msg["message"] = att_resp.read().decode("utf-8", errors="replace")
+                                    except Exception as e:
+                                        print(f"Error fetching attachment {attachment.get('url')}: {e}", file=sys.stderr)
                                 messages.append(msg)
                         except json.JSONDecodeError:
                             pass
