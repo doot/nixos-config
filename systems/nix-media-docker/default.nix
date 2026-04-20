@@ -145,7 +145,7 @@ in {
         listen-http = ":2586";
         behind-proxy = true;
         cache-duration = "720h";
-        message-size-limit = "32KiB";
+        message-size-limit = "32K";
       };
     };
 
