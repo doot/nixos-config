@@ -356,6 +356,10 @@ in {
           name = "ntfy";
           port = 2586;
         }
+        {
+          name = "gitea-mirror";
+          port = 4321;
+        }
       ];
     };
   };
