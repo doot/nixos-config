@@ -22,7 +22,7 @@
       # See https://wiki.hyprland.org/Configuring/Monitors/
       monitor = ",1920x1080,0x0,1";
       exec-once = [
-        "waypaper --backend swww --restore"
+        "waypaper --backend awww --restore"
       ];
       bind = [
         # Mostly defaults, see: https://wiki.hyprland.org/Configuring/Binds/ for more

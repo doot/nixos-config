@@ -13,7 +13,7 @@
     kitty
     podman-compose
     python3
-    swww
+    awww
     waypaper
     wl-clipboard
     wofi
