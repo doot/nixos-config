@@ -360,6 +360,11 @@ in {
           name = "gitea-mirror";
           port = 4321;
         }
+        {
+          name = "nc";
+          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          port = 80; # TODO: Put into variable to share with nextcloud setup in nsf, move to another port
+        }
       ];
     };
   };
