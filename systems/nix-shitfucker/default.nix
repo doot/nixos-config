@@ -97,6 +97,21 @@
         Option         "DPMS"
       '';
     };
+
+    nextcloud = {
+      # TODO: Create a nextcloud module and set up as a nixos container
+      # TODO: Migrate from sqlite to postgres
+      # TODO: Move to another port, instead of default of 80
+      enable = true;
+      hostName = "nc.nmd.jhauschildt.com";
+      # database.createLocally = true;
+      package = pkgs.nextcloud33;
+      config = {
+        # dbtype = "pgsql";
+        dbtype = "sqlite";
+        adminpassFile = "/home/doot/secret_test/nextcloud/admin-pass";
+      };
+    };
   };
 
   users = {
@@ -150,6 +165,7 @@
   networking = {
     firewall.allowedTCPPorts = [
       config.services.forgejo.settings.server.HTTP_PORT
+      80 # nextcloud
     ];
   };
 
