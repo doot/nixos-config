@@ -93,6 +93,12 @@ in {
           "/home/doot/secret_test/monitoring/env"
         ];
       };
+      out.service =
+        common.outDefaults
+        // {
+          mem_limit = "1g";
+          memswap_limit = "1g";
+        };
     };
   };
 }
