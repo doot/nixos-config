@@ -365,6 +365,10 @@ in {
           proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
           port = 80; # TODO: Put into variable to share with nextcloud setup in nsf, move to another port
         }
+        {
+          name = "wealthfolio";
+          port = 8088; # TODO: Put into variable
+        }
       ];
     };
   };

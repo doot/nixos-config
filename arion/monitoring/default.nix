@@ -100,5 +100,33 @@ in {
           memswap_limit = "1g";
         };
     };
+    wealthfolio = {
+      service = {
+        image = "ghcr.io/wealthfolio/wealthfolio:latest";
+        restart = "unless-stopped";
+        ports = [
+          "8088:8088"
+        ];
+        user = "1029";
+        volumes = [
+          "/docker-local/wealthfolio:/data"
+        ];
+        environment = {
+          WF_DB_PATH = "/data/wealthfolio.db";
+          # WF_SECRET_KEY=your-generated-secret-key \
+          # WF_AUTH_PASSWORD_HASH='$argon2id$v=19$...' \
+          WF_CORS_ALLOW_ORIGINS = "https://wealthfolio.nmd.jhauschildt.com";
+        };
+        env_file = [
+          "/home/doot/secret_test/monitoring/env"
+        ];
+      };
+      out.service =
+        common.outDefaults
+        // {
+          mem_limit = "1g";
+          memswap_limit = "1g";
+        };
+    };
   };
 }
