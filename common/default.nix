@@ -138,11 +138,7 @@
     openssh = {
       enable = true;
       settings = {
-        # TODO: Remove after next release
-        AcceptEnv =
-          if (lib.trivial.release == "25.11")
-          then lib.mkForce "TERM_PROGRAM COLORTERM TERM_PROGRAM_VERSION TERM WEZTERM_REMOTE_PANE GIT_PROTOCOL"
-          else lib.mkForce ["TERM_PROGRAM" "COLORTERM" "TERM_PROGRAM_VERSION" "TERM WEZTERM_REMOTE_PANE" "GIT_PROTOCOL"];
+        AcceptEnv = lib.mkForce ["TERM_PROGRAM" "COLORTERM" "TERM_PROGRAM_VERSION" "TERM WEZTERM_REMOTE_PANE" "GIT_PROTOCOL"];
       };
     };
 
@@ -151,7 +147,7 @@
     fstrim.enable = true;
 
     # Entirely disalbe fallback DNS servers in resolved
-    resolved.fallbackDns = [];
+    resolved.settings.Resolve.FallbackDNS = [];
 
     netbird = {
       enable = true;

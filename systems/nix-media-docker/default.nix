@@ -55,9 +55,7 @@ in {
       32400 # Plex
     ];
   };
-  services.resolved.extraConfig = ''
-    DNSStubListener=no
-  '';
+  services.resolved.settings.Resolve.DNSStubListener = "no";
 
   virtualisation = {
     docker = {
