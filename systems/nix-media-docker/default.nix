@@ -284,6 +284,10 @@ in {
         {
           name = "librenms";
           port = 7000;
+          extraConfig = ''
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+          '';
         }
         {
           name = "maloja";
