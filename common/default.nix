@@ -218,7 +218,7 @@
 
   nix = {
     # Use Lix in place of Nix
-    package = pkgs.unstable.lixPackageSets.latest.lix;
+    # package = pkgs.unstable.lixPackageSets.latest.lix;  # TODO: Temporary disable again, as it is causing issues?
 
     settings = {
       experimental-features = ["nix-command" "flakes"];
