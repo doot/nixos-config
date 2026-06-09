@@ -15,6 +15,8 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05-small";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable-small";
+    # nixpkgs.url = "https://channels.nixos.org/nixos-26.05/nixexprs.tar.xz";
+    # nixpkgs-unstable.url = "https://channels.nixos.org/nixos-unstable-small/nixexprs.tar.xz";
 
     alejandra = {
       url = "github:kamadorueda/alejandra/4.0.0";
@@ -49,6 +51,16 @@
       url = "github:nix-community/neovim-nightly-overlay";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    # gitea-mirror = {
+    #   url = "github:RayLabsHQ/gitea-mirror";
+    #   inputs.nixpkgs.follows = "nixpkgs-unstable";
+    # };
+
+    hermes-agent = {
+      url = "github:NousResearch/hermes-agent";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = {
@@ -63,10 +75,13 @@
     wezterm,
     # deadnix: skip
     neovim-nightly-overlay,
+    # gitea-mirror,
+    hermes-agent,
   } @ inputs: let
     inherit (self) outputs;
     host_nmd = "nix-media-docker";
     host_nsf = "nix-shitfucker";
+    host_slop = "nix-slopfucker";
     domain = "jhauschildt.com";
     unstableOverlay = {
       nixpkgs.overlays = [
@@ -96,6 +111,7 @@
             ./common
             ./common/users
             unstableOverlay
+            # gitea-mirror.nixosModules.default
             {nix.registry.nixpkgs.flake = hostNixpkgs;}
           ]
           ++ extraModules;
@@ -134,10 +150,21 @@
           }
         ];
       };
+
+      ${host_slop} = mkHost {
+        hostname = host_slop;
+        shortname = "nhm";
+        hostNixpkgs = nixpkgs-unstable;
+        extraModules = [
+          ./systems/nix-slopfucker/proxmox.nix
+          hermes-agent.nixosModules.default
+        ];
+      };
     };
 
     packages.x86_64-linux = {
       nsf-proxmox = self.nixosConfigurations.nix-shitfucker.config.system.build.images.proxmox;
+      slop-proxmox = self.nixosConfigurations.nix-slopfucker.config.system.build.images.proxmox;
     };
   };
 }
