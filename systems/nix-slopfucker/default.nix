@@ -11,7 +11,13 @@
   system.stateVersion = "26.05";
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  services.qemuGuest.enable = true;
+  environment.systemPackages = with pkgs; [neovim];
+
+  services = {
+    qemuGuest.enable = true;
+
+    getty.autologinUser = lib.mkDefault "doot";
+  };
 
   # Isolation: do not join the mesh VPN that bridges this host into the rest of the network.
   # The threat model is capability containment — hermes-agent is treated as hostile code, so

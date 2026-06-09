@@ -11,15 +11,22 @@
         name = "nix-slopfucker";
         cores = 2;
         memory = 4096;
-        additionalSpace = "2G";
-        # virtio0 = "local-zfs:vm-500-disk-0";
-        virtio0 = "big-fucking-lvm-1:vm-130-disk-0";
+        # cptofs (lkl) fills the image inside a 100M in-process kernel — values above ~10G
+        # exhaust that pool and OOM the build. For a larger runtime disk, resize virtio0
+        # in Proxmox post-restore (`qm resize <vmid> virtio0 +XG`) and reboot; growPartition
+        # + autoResize (hardware-configuration.nix) expand root on next boot automatically.
+        additionalSpace = "10G";
+        virtio0 = "local-zfs:vm-500-disk-0";
         scsihw = "virtio-scsi-single";
       };
-      cloudInit.defaultStorage = "local-zfs";
+      cloudInit = {
+        # Cloud-Init is not used in this case, but setting the storage is required to prevent build failures
+        enable = false;
+        defaultStorage = "local-zfs";
+      };
     };
-    users.users.root.password = "nixos"; # Initial password, change after first login
-    services.getty.autologinUser = lib.mkForce "root";
+    users.users.root.password = "nixos"; # Initial password, must be changed after first login
+    services.getty.autologinUser = lib.mkForce "root"; # Auto-login from proxmox console, may be needed for first boot?
     services.qemuGuest.enable = true;
   };
 }

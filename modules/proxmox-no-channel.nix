@@ -64,7 +64,16 @@
   postVM = ''
     ${vma}/bin/vma create "${config.image.baseName}.vma" \
       -c ${
-      cfgFile "qemu-server.conf" (cfg.qemuConf // cfg.qemuExtraConf)
+      cfgFile "qemu-server.conf" (
+        # additionalSpace, bootSize, diskSize are build params consumed by
+        # make-disk-image; they don't belong in the runtime VM conf and cause
+        # "unable to parse config" warnings when Proxmox reads the VMA.
+        builtins.removeAttrs (cfg.qemuConf // cfg.qemuExtraConf) [
+          "additionalSpace"
+          "bootSize"
+          "diskSize"
+        ]
+      )
     }/qemu-server.conf drive-virtio0=$diskImage
     rm $diskImage
     ${pkgs.zstd}/bin/zstd "${config.image.baseName}.vma"

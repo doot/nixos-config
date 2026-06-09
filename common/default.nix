@@ -7,7 +7,58 @@
   domain,
   fqdn,
   ...
-}: {
+}: let
+  mainUser = config.users.users.doot;
+  nixosConfigDir = "${mainUser.home}/nixos-config";
+  dotfilesDir = "${mainUser.home}/.dotfiles";
+
+  # Shared factory for repo-clone oneshots.
+  # Idempotent: ConditionPathExists skips the unit when `dir` already exists (on
+  # every boot and manual systemctl start), so it's always a no-op once cloned.
+  # Atomic: clones into a tmpdir and only mv's into place on full success — a
+  # partial clone never tricks the condition into a "false already-done" state.
+  # All git ops run as root on the root-owned tree before chown so root-git never
+  # trips "detected dubious ownership" on the final doot-owned directory.
+  mkCloneService = {
+    url,
+    dir,
+    sshRemote,
+    cloneArgs ? "",
+  }: {
+    after = ["network-online.target"];
+    wants = ["network-online.target"];
+    wantedBy = ["multi-user.target"];
+    unitConfig.ConditionPathExists = "!${dir}";
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    path = [pkgs.git];
+    script = ''
+      set -euo pipefail
+      tmpdir=$(mktemp -d ${mainUser.home}/.clone.XXXXXXXX)
+      trap "rm -rf $tmpdir" EXIT
+      target="$tmpdir/repo"
+
+      # network-online.target with scripted dhcpcd doesn't guarantee DNS is up;
+      # retry so a transient failure self-heals rather than failing the unit.
+      for attempt in $(seq 1 30); do
+        rm -rf "$target"
+        if git clone ${cloneArgs} ${url} "$target"; then
+          break
+        fi
+        [ "$attempt" -eq 30 ] && { echo "clone of ${dir} failed after 30 attempts" >&2; exit 1; }
+        sleep 10
+      done
+
+      git -C "$target" remote set-url origin ${sshRemote}
+
+      trap - EXIT
+      mv "$target" ${dir}
+      chown -R ${mainUser.name}:${mainUser.group} ${dir}
+    '';
+  };
+in {
   environment = {
     systemPackages = with pkgs; [
       alejandra
@@ -261,40 +312,40 @@
       echo "----------"
     '';
 
-    userActivationScripts = {
-      # Clone and install dotfiles
-      cloneDotfiles = ''
-        if [ ! -d "/home/doot/.dotfiles" ]; then
-          source ${config.system.build.setEnvironment}
-          echo "Cloning dotfiles..."
-          git clone --recurse-submodules https://github.com/doot/dotfiles.git /home/doot/.dotfiles
-          cd /home/doot/.dotfiles
-          git remote remove origin
-          git remote add origin git@github.com:doot/dotfiles.git
-          echo ":/"
-        fi
-      '';
-    };
-
     activationScripts = {
-      # Clone and symlink nixos-configs
+      # Symlink nixos-config flake into /etc/nixos once the repo is present.
+      # The clone itself happens in clone-nixos-config.service (after networking).
       cloneNixosConfig = ''
-        if [ ! -d "/home/doot/nixos-config" ]; then
-          (
-            source ${config.system.build.setEnvironment}
-            echo "Cloning nixos-config..."
-            git clone https://github.com/doot/nixos-config.git /home/doot/nixos-config
-            cd /home/doot/nixos-config
-            git remote remove origin
-            git remote add origin git@github.com:doot/nixos-config.git
-          ) || true
-        fi
-        if [ ! -f /etc/nixos/flake.nix ]; then
-          echo "Adding symlink to /etc/nixos/flake.nix"
-          ln -s /home/doot/nixos-config/flake.nix /etc/nixos/flake.nix
+        if [ -d "${nixosConfigDir}" ] && [ ! -f /etc/nixos/flake.nix ]; then
+          ln -s ${nixosConfigDir}/flake.nix /etc/nixos/flake.nix
         fi
       '';
     };
+  };
+
+  systemd.services = {
+    clone-nixos-config =
+      mkCloneService {
+        url = "https://github.com/doot/nixos-config.git";
+        sshRemote = "git@github.com:doot/nixos-config.git";
+        dir = nixosConfigDir;
+      }
+      // {
+        description = "Clone nixos-config repository";
+        # Also create the /etc/nixos symlink once the clone lands.
+        postStart = ''
+          [ -f /etc/nixos/flake.nix ] || ln -sf ${nixosConfigDir}/flake.nix /etc/nixos/flake.nix
+        '';
+      };
+
+    clone-dotfiles =
+      mkCloneService {
+        url = "https://github.com/doot/dotfiles.git";
+        sshRemote = "git@github.com:doot/dotfiles.git";
+        dir = dotfilesDir;
+        cloneArgs = "--recurse-submodules";
+      }
+      // {description = "Clone dotfiles repository";};
   };
 
   time.timeZone = "America/Los_Angeles";

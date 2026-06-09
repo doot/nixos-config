@@ -12,9 +12,10 @@
   allowedInternalHosts = [];
 in {
   roles = {
+    # Neovim role adds access to npm, which we do not want on this host
     neovim.enable = lib.mkForce false;
-    alloy.enable = lib.mkForce false;
-    nixos-changelog.enable = lib.mkForce false;
+    # alloy.enable = lib.mkForce false;
+    # nixos-changelog.enable = lib.mkForce false;
   };
   services.hermes-agent = {
     # Off for the image build: the uv2nix Python closure (~5 GB across thousands
