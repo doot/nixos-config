@@ -15,8 +15,6 @@
 
   services = {
     qemuGuest.enable = true;
-
-    getty.autologinUser = lib.mkDefault "doot";
   };
 
   # Isolation: do not join the mesh VPN that bridges this host into the rest of the network.

@@ -26,7 +26,6 @@
       };
     };
     users.users.root.password = "nixos"; # Initial password, must be changed after first login
-    services.getty.autologinUser = lib.mkForce "root"; # Auto-login from proxmox console, may be needed for first boot?
     services.qemuGuest.enable = true;
   };
 }
