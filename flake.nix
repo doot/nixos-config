@@ -49,6 +49,11 @@
       url = "github:nix-community/neovim-nightly-overlay";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    hermes-agent = {
+      url = "github:NousResearch/hermes-agent";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = {
@@ -63,10 +68,12 @@
     wezterm,
     # deadnix: skip
     neovim-nightly-overlay,
+    hermes-agent,
   } @ inputs: let
     inherit (self) outputs;
     host_nmd = "nix-media-docker";
     host_nsf = "nix-shitfucker";
+    host_slop = "nix-slopfucker";
     domain = "jhauschildt.com";
     unstableOverlay = {
       nixpkgs.overlays = [
@@ -134,10 +141,21 @@
           }
         ];
       };
+
+      ${host_slop} = mkHost {
+        hostname = host_slop;
+        shortname = "nhm";
+        hostNixpkgs = nixpkgs-unstable;
+        extraModules = [
+          ./systems/nix-slopfucker/proxmox.nix
+          hermes-agent.nixosModules.default
+        ];
+      };
     };
 
     packages.x86_64-linux = {
       nsf-proxmox = self.nixosConfigurations.nix-shitfucker.config.system.build.images.proxmox;
+      slop-proxmox = self.nixosConfigurations.nix-slopfucker.config.system.build.images.proxmox;
     };
   };
 }
