@@ -12,7 +12,7 @@
 
   boot = {
     initrd = {
-      availableKernelModules = ["virtio_pci" "virtio_blk" "virtio_scsi" "sd_mod" "ext4" "ata_piix" "uhci_hcd"];
+      availableKernelModules = ["ata_piix" "uhci_hcd" "virtio_pci" "sr_mod" "virtio_blk"];
       kernelModules = [];
     };
     kernelModules = ["kvm-intel"];
@@ -21,7 +21,7 @@
       timeout = lib.mkForce 5;
       grub = {
         enable = true;
-        device = "/dev/sda";
+        device = "nodev";
       };
     };
     growPartition = lib.mkDefault true;
