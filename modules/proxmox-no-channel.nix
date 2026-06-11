@@ -11,7 +11,9 @@
 # proxmox-image.nix but with copyChannel = false.
 #
 # Import this inside image.modules.proxmox in each host's proxmox.nix.
-# Needs to be kept in sync with proxmox-image.nix when the nixpkgs vma version/hash changes.
+# upstreamHash below pins the sha256 of nixos/modules/virtualisation/proxmox-image.nix at the
+# nixpkgs rev in flake.lock. If that file changes, the image build fails with a re-sync prompt
+# instead of silently drifting. Update: diff the new upstream, port changes here, bump the hash.
 {
   config,
   lib,
@@ -91,14 +93,19 @@
     format = "raw";
     inherit config lib pkgs;
   };
+  upstreamModule = "${pkgs.path}/nixos/modules/virtualisation/proxmox-image.nix";
+  upstreamHash = "f4ae5f565099cb2bc8733d9b4ab5112e88c6e38387706f90192cff118acebc8f";
 in {
   system.build.VMA = lib.mkForce (
-    import "${pkgs.path}/nixos/lib/make-disk-image.nix" (
-      pveBaseConfigs
-      // {
-        inherit postVM;
-        copyChannel = false;
-      }
-    )
+    assert lib.assertMsg
+    (builtins.hashFile "sha256" upstreamModule == upstreamHash)
+    "modules/proxmox-no-channel.nix duplicates ${upstreamModule}, which changed upstream. Diff the new version, port any relevant changes here, then update upstreamHash.";
+      import "${pkgs.path}/nixos/lib/make-disk-image.nix" (
+        pveBaseConfigs
+        // {
+          inherit postVM;
+          copyChannel = false;
+        }
+      )
   );
 }
