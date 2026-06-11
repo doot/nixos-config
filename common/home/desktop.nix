@@ -15,6 +15,7 @@
   };
 
   wayland.windowManager.hyprland = {
+    configType = "lua";
     enable = true;
     settings = {
       "$mod" = "SUPER";
