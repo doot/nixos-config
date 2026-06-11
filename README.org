@@ -28,11 +28,29 @@ docker rm nix_generators
 
 *** Generate a Proxmox image
 
+Each host with a ~systems/<host>/proxmox.nix~ exposes a VMA image. Build it via its package output
+(or ~nixos-rebuild build-image~), copy the ~.vma.zst~ to a Proxmox node's dump storage, then
+~qmrestore~ it into a VMID. Builds use the locked ~priv~ input; to build against local ~priv~
+changes, append ~--override-input priv ./priv~.
+
+**** nix-shitfucker
 #+BEGIN_SRC sh
 nix build .#nsf-proxmox
-# or:
-nixos-rebuild build-image --image-variant iso --flake .#nix-shitfucker
+# or, via nixos-rebuild build-image:
+#   nixos-rebuild build-image --image-variant proxmox --flake .#nix-shitfucker
+#   nixos-rebuild build-image --image-variant iso     --flake .#nix-shitfucker
 # Image generated to ./result/vzdump-qemu-nix-shitfucker.vma.zst
 scp ./result/vzdump-qemu-nix-shitfucker.vma.zst pve:/mnt/pve/sh2-nfs/dump/
 ssh pve qmrestore /mnt/pve/sh2-nfs/dump/vzdump-qemu-nix-shitfucker.vma.zst 130 --unique true
 #+END_SRC
+
+Post-restore:
++ The console does *not* auto-log in. Log in as ~root~ with the initial password ~nixos~ and change it after first boot.
++ The image ships with ~10G free. cptofs (lkl) populates the build image inside a hardcoded ~mem=100M~ kernel, so a
+  larger disk can't be baked. For more space, grow the disk in Proxmox and reboot — ~growPartition~ + ~autoResize~
+  expand root automatically:
+  #+BEGIN_SRC sh
+  ssh pve qm resize <vmid> virtio0 +40G
+  #+END_SRC
++ On first boot, the ~clone-nixos-config~ and ~clone-dotfiles~ systemd units clone the repos into ~doot~'s home once
+  networking is up (retrying until DNS resolves).
