@@ -1,12 +1,13 @@
 {lib, ...}: {
   image.modules.proxmox = {
+    imports = [../../modules/proxmox-no-channel.nix];
     boot.loader.systemd-boot.enable = lib.mkForce false;
     proxmox = {
       qemuConf = {
         name = "nix-shitfucker";
         cores = 4;
         memory = 12288;
-        additionalSpace = "50G";
+        additionalSpace = "10G";
         virtio0 = "big-fucking-lvm-1:vm-130-disk-0";
         scsihw = "virtio-scsi-single";
       };
