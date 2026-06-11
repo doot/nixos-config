@@ -288,6 +288,9 @@ in {
       automatic = true;
       options = "--delete-older-than 14d";
     };
+
+    # Disable channels since this is a flake-based config
+    channel.enable = false;
   };
 
   system = {
