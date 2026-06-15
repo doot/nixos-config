@@ -2,6 +2,7 @@
   # Import all common modules here
   imports = [
     ./alloy
+    ./borg
     ./neovim
     ./forgejo
     ./navidrome
