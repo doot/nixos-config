@@ -38,7 +38,6 @@ in {
 
   boot = {
     isContainer = true;
-    loader.efi.canTouchEfiVariables = true;
   };
 
   # Disable stub and override default nameservers, pihole use port 53 instead
