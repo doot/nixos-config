@@ -4,7 +4,6 @@
   modulesPath,
   config,
   outputs,
-  inputs,
   fqdn,
   ...
 }: let
@@ -13,12 +12,6 @@ in {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ./hardware-configuration.nix # Include the results of the hardware scan.
-    # TODO: Temporarily override angrr service with unstable version since options in stable are not compatible. Replace after next release.
-    "${inputs.nixpkgs-unstable}/nixos/modules/services/misc/angrr.nix"
-  ];
-
-  disabledModules = [
-    "services/misc/angrr.nix" # disable stable angrr module that is overriden above
   ];
 
   environment.systemPackages = with pkgs; [
