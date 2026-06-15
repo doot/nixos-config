@@ -8,17 +8,9 @@
   cfg = config.roles.nginx-proxy;
 in {
   options.roles.nginx-proxy = {
-    enable =
-      lib.mkEnableOption "nginx reverse proxy role"
-      // {
-        default = false;
-      };
+    enable = lib.mkEnableOption "nginx reverse proxy role";
     acme = {
-      enable =
-        lib.mkEnableOption "ACME wildcard certificate"
-        // {
-          default = false;
-        };
+      enable = lib.mkEnableOption "ACME wildcard certificate";
       email = lib.mkOption {
         type = lib.types.str;
         description = "Email for ACME account";

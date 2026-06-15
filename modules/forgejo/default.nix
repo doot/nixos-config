@@ -9,11 +9,7 @@
   net = import ../../common/network.nix;
 in {
   options.roles.forgejo = {
-    enable =
-      lib.mkEnableOption "forgejo role"
-      // {
-        default = false;
-      };
+    enable = lib.mkEnableOption "forgejo role";
   };
   config = lib.mkIf cfg.enable {
     environment = {
