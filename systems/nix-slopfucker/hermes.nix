@@ -4,6 +4,16 @@
   inputs,
   ...
 }: let
+  # Single source of truth for the hermes uid/gid. The host hermes user is
+  # pinned to these, and the container's hermes user mirrors the SAME bindings
+  # (threaded in via specialArgs), so both independent NixOS systems agree on
+  # the numeric owner of the shared state. See the host users block below for
+  # why pinning is necessary (privateUsers = "no" + activation-time uid
+  # allocation makes the value unreadable across the boundary otherwise).
+  # Value adopted from this host's existing allocation; the number is incidental.
+  hermesUid = 994;
+  hermesGid = 992;
+
   # Internal hosts the agent IS allowed to reach, despite the LAN-wide deny
   # below. Each becomes an ACCEPT in the hermes-egress chain, ahead of the
   # RFC1918 drops. DEFAULT IS EMPTY — the agent is treated as hostile and must
@@ -61,9 +71,19 @@ in {
   roles.neovim.enable = lib.mkForce false;
 
   # Host-side hermes user/group: owns the bind-mounted state on disk and lets
-  # regular users in the hermes group share the workspace. No hardcoded uid/gid
-  # — NixOS keeps the existing allocation stable, and shared uids (privateUsers
-  # = "no") make host and container ownership identical.
+  # regular users in the hermes group share the workspace.
+  #
+  # The uid/gid are pinned here and the container mirrors these SAME values by
+  # reference (see hermesUid/hermesGid below), so host and container agree on
+  # the numeric owner. This is required because privateUsers = "no" shares the
+  # uid namespace 1:1, yet host and container are independent NixOS systems that
+  # would otherwise each auto-allocate a DIFFERENT hermes uid (they drifted to
+  # 994 vs 999 — and 999 collides with the host's dhcpcd). Auto-allocated system
+  # uids are assigned at activation, so they are null at eval time and cannot be
+  # read across the container boundary; pinning is the only way both sides can
+  # share one value. This host's hermes already owns its state at 994:992, so we
+  # adopt those — the specific number is incidental; what matters is one
+  # definition, referenced, not duplicated.
   #
   # createHome + homeMode 2770 are REQUIRED: on a fresh deploy /var/lib/hermes
   # may not exist host-side, and systemd-nspawn would auto-create the bind
@@ -72,9 +92,10 @@ in {
   # homeMode 2770 (setgid + group-rwx) is essential: the default 0700 would lock
   # the hermes group out, so users like doot could not access the shared state.
   users = {
-    groups.hermes = {};
+    groups.hermes.gid = hermesGid;
     users.hermes = {
       isSystemUser = true;
+      uid = hermesUid;
       group = "hermes";
       home = "/var/lib/hermes";
       createHome = true;
@@ -100,18 +121,21 @@ in {
     # equal host uids. This is REQUIRED for `machinectl shell` to allocate a PTY
     # into the container — a private user namespace ("pick") makes machined fail
     # with "Failed to get shell PTY: Access denied", breaking the interactive
-    # TUI below. With shared uids, bind-mounted state ownership is coherent
-    # without any id-mapping, and host `hermes` (= container `hermes`) owns it
-    # directly.
+    # TUI below. With shared uids, the host and container hermes are pinned to
+    # the same uid/gid (below), so bind-mounted state ownership is coherent
+    # without any id-mapping.
     #
     # Containment note: a container escape therefore lands as host uid `hermes`
     # (not an unmapped high uid). The systemd-nspawn boundary still provides a
     # separate network/mount/pid namespace, capability drop, and the host-side
     # egress isolation below — the agent is unprivileged on the host either way.
 
-    # Thread the flake inputs into the container's nested evaluation so it can
-    # import the hermes-agent module (containers don't inherit host specialArgs).
-    specialArgs = {inherit inputs;};
+    # Thread the flake inputs + the shared hermes uid/gid into the container's
+    # nested evaluation. The uid/gid mirror the host's hermes user (defined
+    # once, above) so the container's hermes resolves to the SAME numeric owner
+    # as the bind-mounted state on the host. (Containers don't inherit host
+    # specialArgs, so these must be passed explicitly.)
+    specialArgs = {inherit inputs hermesUid hermesGid;};
 
     # Shared state + the secret, bound from the host. Shared uids make ownership
     # map 1:1, so plain bindMounts suffice (no id-mapping needed). The state dir
@@ -132,9 +156,20 @@ in {
     config = {
       lib,
       inputs,
+      hermesUid,
+      hermesGid,
       ...
     }: {
       imports = [inputs.hermes-agent.nixosModules.default];
+
+      # Pin the container's hermes user/group to the SAME ids as the host's
+      # (threaded in via specialArgs above). The hermes-agent module declares
+      # this user with isSystemUser and no uid, so it would otherwise auto-
+      # allocate a different number than the host — leaving the bind-mounted
+      # state (owned by the host's hermes) unreadable to the agent. mkForce
+      # because the module already defines the user/group.
+      users.users.hermes.uid = lib.mkForce hermesUid;
+      users.groups.hermes.gid = lib.mkForce hermesGid;
 
       # No nix daemon → no `nix build`/`nix-shell`/`nix run` self-install.
       # No python/pip/uv on PATH either. This is the package-install lockdown.
