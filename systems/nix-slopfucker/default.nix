@@ -11,7 +11,10 @@
   system.stateVersion = "26.05";
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  environment.systemPackages = with pkgs; [neovim];
+  environment.systemPackages = with pkgs; [
+    neovim
+    github-cli
+  ];
 
   services = {
     qemuGuest.enable = true;
