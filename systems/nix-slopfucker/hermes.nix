@@ -52,11 +52,10 @@ in {
   };
 
   # ── The agent runs ONLY inside this declarative container ─────────────────
-  # IMAGE-BUILD NOTE: defining the container pulls the ~5 GB hermes uv2nix
-  # closure into the system closure. `nix flake check` only EVALUATES it (fine),
-  # but realising the Proxmox image (`nix build .#slop-proxmox`) would OOM the
-  # cptofs step. The VM itself builds it fine (4G RAM) via autoUpgrade. If you
-  # ever rebuild the image, temporarily comment out `containers.hermes`.
+  # The ~5 GB hermes uv2nix closure is excluded from the Proxmox IMAGE build in
+  # proxmox.nix (boot.enableContainers = false there), which keeps the 1 GB
+  # cptofs builder from OOMing. The live VM builds it fine (4 G RAM); the agent
+  # arrives on first post-boot autoUpgrade. `nix flake check` only evaluates.
   containers.hermes = {
     autoStart = true;
 
@@ -103,9 +102,12 @@ in {
       nix.enable = false;
 
       networking = {
-        # Public resolvers via host NAT; no route to the LAN resolver by design.
+        # DNS goes THROUGH the host resolver (systemd-resolved listening on the
+        # veth host address, configured below), so the container is subject to
+        # whatever DNS filtering/blocking the host network enforces. It does NOT
+        # talk to public resolvers directly — that would bypass network policy.
         useHostResolvConf = false;
-        nameservers = ["1.1.1.1" "9.9.9.9"];
+        nameservers = [hostAddress];
         # Leaf system: it does not manage the host firewall.
         firewall.enable = lib.mkForce false;
       };
@@ -153,8 +155,8 @@ in {
         extraPackages = [];
       };
 
-      # Defense-in-depth hardening carried over from the former native service.
-      # (Egress filtering now lives host-side as NAT + firewall DROP, below.)
+      # Defense-in-depth hardening on the gateway unit (cap-drop + kernel/proc
+      # protections). Egress filtering lives host-side as NAT + firewall DROP.
       systemd.services.hermes-agent.serviceConfig = {
         CapabilityBoundingSet = "";
         AmbientCapabilities = "";
@@ -173,6 +175,12 @@ in {
     };
   };
 
+  # Make the host's systemd-resolved stub also listen on the veth host address,
+  # so the container can resolve THROUGH it (and inherit host/network DNS
+  # policy) instead of reaching public resolvers. The host normally only listens
+  # on 127.0.0.53; this adds the container-facing address.
+  services.resolved.settings.Resolve.DNSStubListenerExtra = [hostAddress];
+
   # ── Host-side egress policy (the agent cannot reach or change this) ───────
   networking = {
     # NAT the container link out the uplink (enables ip_forward + masquerade).
@@ -182,28 +190,44 @@ in {
       internalInterfaces = [vethHost];
     };
 
-    # LAN isolation: DROP container→RFC1918 forwarded traffic, inserted at the
-    # TOP of FORWARD (before nat's accept). Uses the existing iptables-nft
-    # firewall — no backend switch, no SSH-lockout risk.
-    # Verify after rebuild: `iptables -L FORWARD -n --line-numbers`.
-    firewall.extraCommands =
-      lib.concatMapStringsSep "\n" (cidr: ''
-        iptables -I FORWARD 1 -i ${vethHost} -d ${cidr} -j DROP
-      '')
-      lanDenyCidrs;
+    firewall = {
+      # Allow the container to reach the resolved stub on the veth (DNS only).
+      interfaces.${vethHost} = {
+        allowedUDPPorts = [53];
+        allowedTCPPorts = [53];
+      };
 
-    firewall.extraStopCommands =
-      lib.concatMapStringsSep "\n" (cidr: ''
-        iptables -D FORWARD -i ${vethHost} -d ${cidr} -j DROP 2>/dev/null || true
-      '')
-      lanDenyCidrs;
+      # LAN isolation: DROP container→RFC1918 forwarded traffic, inserted at the
+      # TOP of FORWARD (before nat's accept). We use extraCommands (raw iptables)
+      # deliberately: the native typed alternative
+      # (networking.firewall.extraForwardRules + filterForward) REQUIRES the
+      # nftables firewall backend, and this host runs the iptables-nft backend
+      # that fail2ban + the NAT rules above already depend on. Switching backends
+      # for this one rule risks the SSH path, so we add to the existing chain.
+      # Verify after rebuild: `iptables -L FORWARD -n --line-numbers`.
+      extraCommands =
+        lib.concatMapStringsSep "\n" (cidr: ''
+          iptables -I FORWARD 1 -i ${vethHost} -d ${cidr} -j DROP
+        '')
+        lanDenyCidrs;
+
+      extraStopCommands =
+        lib.concatMapStringsSep "\n" (cidr: ''
+          iptables -D FORWARD -i ${vethHost} -d ${cidr} -j DROP 2>/dev/null || true
+        '')
+        lanDenyCidrs;
+    };
   };
 
   # Interactive TUI for doot + seamless `machinectl shell` for wheel members.
+  # The polkit rule is scoped to the `hermes` machine specifically (via
+  # action.lookup("machine")) so it does not grant passwordless shell into any
+  # other machine that might be registered with systemd-machined later.
   environment.systemPackages = [hermesTui];
   security.polkit.extraConfig = ''
     polkit.addRule(function(action, subject) {
       if (action.id == "org.freedesktop.machine1.shell" &&
+          action.lookup("machine") == "hermes" &&
           subject.isInGroup("wheel")) {
         return polkit.Result.YES;
       }
