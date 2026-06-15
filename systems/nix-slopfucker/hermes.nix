@@ -54,12 +54,22 @@ in {
   # doot share the workspace via the group. NO hardcoded uid/gid — NixOS keeps
   # the existing allocation stable through its uid-map (hermes already exists),
   # and the container bridges ownership by-owner (owneridmap), never by number.
+  #
+  # createHome is REQUIRED for a fresh deploy: the container bind-mounts
+  # /var/lib/hermes with `owneridmap`, which maps the HOST inode owner to the
+  # in-container hermes user. If the directory does not already exist on the
+  # host (no legacy state), systemd-nspawn auto-creates the bind source as
+  # root:root → owneridmap then maps it to container-root, NOT the hermes the
+  # agent runs as, and the agent cannot write its state. createHome makes
+  # activation create /var/lib/hermes owned hermes:hermes BEFORE the container
+  # binds it, so the deploy self-bootstraps regardless of pre-existing state.
   users = {
     groups.hermes = {};
     users.hermes = {
       isSystemUser = true;
       group = "hermes";
       home = "/var/lib/hermes";
+      createHome = true;
     };
     users.doot.extraGroups = ["hermes"];
   };
