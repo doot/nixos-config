@@ -61,18 +61,16 @@ in {
   roles.neovim.enable = lib.mkForce false;
 
   # Host-side hermes user/group: owns the bind-mounted state on disk and lets
-  # doot share the workspace via the group. NO hardcoded uid/gid — NixOS keeps
-  # the existing allocation stable through its uid-map (hermes already exists),
-  # and the container bridges ownership by-owner (owneridmap), never by number.
+  # regular users in the hermes group share the workspace. No hardcoded uid/gid
+  # — NixOS keeps the existing allocation stable, and shared uids (privateUsers
+  # = "no") make host and container ownership identical.
   #
-  # createHome is REQUIRED for a fresh deploy: the container bind-mounts
-  # /var/lib/hermes with `owneridmap`, which maps the HOST inode owner to the
-  # in-container hermes user. If the directory does not already exist on the
-  # host (no legacy state), systemd-nspawn auto-creates the bind source as
-  # root:root → owneridmap then maps it to container-root, NOT the hermes the
-  # agent runs as, and the agent cannot write its state. createHome makes
-  # activation create /var/lib/hermes owned hermes:hermes BEFORE the container
-  # binds it, so the deploy self-bootstraps regardless of pre-existing state.
+  # createHome + homeMode 2770 are REQUIRED: on a fresh deploy /var/lib/hermes
+  # may not exist host-side, and systemd-nspawn would auto-create the bind
+  # source as root:root → the agent (hermes) couldn't write its state. createHome
+  # makes activation create it owned hermes:hermes BEFORE the container binds it.
+  # homeMode 2770 (setgid + group-rwx) is essential: the default 0700 would lock
+  # the hermes group out, so users like doot could not access the shared state.
   users = {
     groups.hermes = {};
     users.hermes = {
@@ -80,6 +78,7 @@ in {
       group = "hermes";
       home = "/var/lib/hermes";
       createHome = true;
+      homeMode = "2770";
     };
     users.doot.extraGroups = ["hermes"];
   };
@@ -97,31 +96,38 @@ in {
     privateNetwork = true;
     inherit hostAddress localAddress;
 
-    # Private user namespace: container uids are offset into a high host range,
-    # so a container escape lands on a powerless, unmapped host uid — NOT the
-    # host hermes uid, and container-root is NOT host root.
-    privateUsers = "pick";
+    # Shared uid namespace (privateUsers = "no", the default): container uids
+    # equal host uids. This is REQUIRED for `machinectl shell` to allocate a PTY
+    # into the container — a private user namespace ("pick") makes machined fail
+    # with "Failed to get shell PTY: Access denied", breaking the interactive
+    # TUI below. With shared uids, bind-mounted state ownership is coherent
+    # without any id-mapping, and host `hermes` (= container `hermes`) owns it
+    # directly.
+    #
+    # Containment note: a container escape therefore lands as host uid `hermes`
+    # (not an unmapped high uid). The systemd-nspawn boundary still provides a
+    # separate network/mount/pid namespace, capability drop, and the host-side
+    # egress isolation below — the agent is unprivileged on the host either way.
 
     # Thread the flake inputs into the container's nested evaluation so it can
     # import the hermes-agent module (containers don't inherit host specialArgs).
     specialArgs = {inherit inputs;};
 
-    # State + secret are bound via extraFlags (not `bindMounts`) so we can pick
-    # the id-mapping mode that keeps ownership coherent under privateUsers="pick"
-    # WITHOUT hardcoding any uid:
-    #   • state  → owneridmap: in-container owner (hermes) ↔ host inode owner
-    #              (host hermes), purely by ownership — no numbers anywhere.
-    #   • secret → rootidmap: container-root (runs activation + reads the env
-    #              file) ↔ host root (the file's owner). Read-only.
-    # RUNTIME-VERIFY on first boot (cannot be checked at eval time): the agent
-    # must see its own state, not `nobody`:
-    #   machinectl shell hermes@hermes \
-    #     /run/current-system/sw/bin/stat -c '%U:%G' /var/lib/hermes
-    #   → hermes:hermes   (if nobody:nogroup, the idmap mode needs adjusting)
-    extraFlags = [
-      "--bind=/var/lib/hermes:/var/lib/hermes:owneridmap"
-      "--bind-ro=/var/lib/hermes-secrets/agent.env:/var/lib/hermes-secrets/agent.env:rootidmap"
-    ];
+    # Shared state + the secret, bound from the host. Shared uids make ownership
+    # map 1:1, so plain bindMounts suffice (no id-mapping needed). The state dir
+    # is read-WRITE (the agent persists sessions/skills/config there); the secret
+    # is read-only. NB: bindMounts default isReadOnly = true, so the state mount
+    # must set it false explicitly.
+    bindMounts = {
+      "/var/lib/hermes" = {
+        hostPath = "/var/lib/hermes";
+        isReadOnly = false;
+      };
+      "/var/lib/hermes-secrets/agent.env" = {
+        hostPath = "/var/lib/hermes-secrets/agent.env";
+        isReadOnly = true;
+      };
+    };
 
     config = {
       lib,
@@ -270,18 +276,22 @@ in {
     };
   };
 
-  # Interactive TUI for regular users + seamless `machinectl shell` for wheel members.
-  # The polkit rule is scoped to the `hermes` machine specifically (via
-  # action.lookup("machine")) so it does not grant passwordless shell into any
-  # other machine that might be registered with systemd-machined later.
+  # Interactive TUI for regular users via `machinectl shell` into the container.
+  # polkit MUST be enabled for a non-root user (in wheel) to open the shell
+  # without an interactive auth prompt. The rule is scoped to the `hermes`
+  # machine specifically (via action.lookup("machine")) so it does not grant
+  # passwordless shell into any other machine registered with systemd-machined.
   environment.systemPackages = [hermesTui];
-  security.polkit.extraConfig = ''
-    polkit.addRule(function(action, subject) {
-      if (action.id == "org.freedesktop.machine1.shell" &&
-          action.lookup("machine") == "hermes" &&
-          subject.isInGroup("wheel")) {
-        return polkit.Result.YES;
-      }
-    });
-  '';
+  security.polkit = {
+    enable = true;
+    extraConfig = ''
+      polkit.addRule(function(action, subject) {
+        if (action.id == "org.freedesktop.machine1.shell" &&
+            action.lookup("machine") == "hermes" &&
+            subject.isInGroup("wheel")) {
+          return polkit.Result.YES;
+        }
+      });
+    '';
+  };
 }
