@@ -11,12 +11,6 @@
   sh_fqdn = network.hosts.synology.fqdn;
   pve_fqdn = network.hosts.proxmox.fqdn;
 in {
-  imports = [
-    # TODO: Temporarily use unstable version of grafana module (remove after next NixOS release)
-    "${inputs.nixpkgs-unstable}/nixos/modules/services/monitoring/grafana.nix"
-  ];
-  disabledModules = ["services/monitoring/grafana.nix"];
-
   # This is necessary since the NixOS Prometheus services does not have an easy way to set the data directory
   fileSystems."/var/lib/prometheus2/data" = {
     depends = [
