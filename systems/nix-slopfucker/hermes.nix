@@ -112,6 +112,17 @@ in {
   containers.hermes = {
     autoStart = true;
 
+    # Ephemeral root: the container boots from an empty root filesystem each
+    # start, so its /var/lib/nixos uid-map is regenerated from THIS config every
+    # time. Without this, the map persists the uid the container first
+    # auto-allocated (999) and NixOS honours that existing entry over the
+    # declared uid = 994 below — so the pin never takes effect and the agent
+    # can't read its host-owned state. Ephemeral makes the declarative uid
+    # authoritative on every boot. The agent's real state is the bind-mounted
+    # /var/lib/hermes (below), which is unaffected; nothing the container writes
+    # to its own root needs to survive a restart — a containment plus.
+    ephemeral = true;
+
     # One shared namespace for gateway + TUI. Egress policy is enforced
     # host-side (below), where the agent cannot reach or rewrite it.
     privateNetwork = true;
