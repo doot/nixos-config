@@ -3,15 +3,13 @@
   pkgs,
   lib,
   fqdn,
-  domain,
-  inputs,
   ...
 }: let
   network = import ../network.nix;
   loki_port = 3100;
-  nsf_fqdn = "nsf.${domain}";
-  sh_fqdn = "sh2.${domain}";
-  pve_fqdn = "pve.${domain}";
+  nsf_fqdn = network.hosts.nix-shitfucker.fqdn;
+  sh_fqdn = network.hosts.synology.fqdn;
+  pve_fqdn = network.hosts.proxmox.fqdn;
 in {
   imports = [
     # TODO: Temporarily use unstable version of grafana module (remove after next NixOS release)
@@ -214,7 +212,7 @@ in {
           job_name = "docker";
           static_configs = [
             {
-              targets = ["${fqdn}:${toString (lib.tail (lib.splitString ":" config.virtualisation.docker.daemon.settings.metrics-addr))}"];
+              targets = ["${fqdn}:${toString (lib.last (lib.splitString ":" config.virtualisation.docker.daemon.settings.metrics-addr))}"];
             }
           ];
         }

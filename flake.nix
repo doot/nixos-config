@@ -63,13 +63,14 @@
     wezterm,
     # deadnix: skip
     neovim-nightly-overlay,
+    # gitea-mirror,
     hermes-agent,
   } @ inputs: let
     inherit (self) outputs;
     host_nmd = "nix-media-docker";
     host_nsf = "nix-shitfucker";
     host_slop = "nix-slopfucker";
-    domain = "jhauschildt.com";
+    inherit (import ./common/network.nix) domain;
     unstableOverlay = {
       nixpkgs.overlays = [
         (_: prev: {

@@ -295,8 +295,7 @@ in {
         }
         {
           name = "immich";
-          # TODO: this can't be a good way to do this, try to find a cleaner way
-          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          proxyPassHost = "http://${network.hosts.nix-shitfucker.fqdn}";
           inherit (config.services.immich) port;
           extraConfig = ''
             client_max_body_size 50000M;
@@ -319,7 +318,7 @@ in {
         }
         {
           name = "git";
-          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          proxyPassHost = "http://${network.hosts.nix-shitfucker.fqdn}";
           port = outputs.nixosConfigurations.nix-shitfucker.config.services.forgejo.settings.server.HTTP_PORT;
           extraConfig = ''
             client_max_body_size 512M;
@@ -343,7 +342,7 @@ in {
         }
         {
           name = "nc";
-          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          proxyPassHost = "http://${network.hosts.nix-shitfucker.fqdn}";
           port = 80; # TODO: Put into variable to share with nextcloud setup in nsf, move to another port
         }
         {
