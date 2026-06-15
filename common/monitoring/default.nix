@@ -317,7 +317,7 @@ in {
             kvstore = {store = "inmemory";};
           };
           replication_factor = 1;
-          path_prefix = "/tmp/loki";
+          path_prefix = "/var/lib/loki";
         };
         schema_config = {
           configs = [
