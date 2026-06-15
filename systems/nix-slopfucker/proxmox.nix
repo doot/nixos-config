@@ -4,6 +4,7 @@
 
     boot = {
       loader.systemd-boot.enable = lib.mkForce false;
+
       # Classic bash-based initrd. systemd-initrd (the nixos-unstable default)
       # fails switch-root on this image — the CHASE_PROHIBIT_SYMLINKS path
       # lookup in systemd 260.x can't find a usable init. The bash initrd has

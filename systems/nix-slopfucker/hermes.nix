@@ -158,14 +158,18 @@ in {
       # Defense-in-depth hardening on the gateway unit (cap-drop + kernel/proc
       # protections). Egress filtering lives host-side as NAT + firewall DROP.
       systemd.services.hermes-agent.serviceConfig = {
+        # Drop all capabilities — agent runs unprivileged and NoNewPrivileges is already set.
         CapabilityBoundingSet = "";
         AmbientCapabilities = "";
+
+        # Kernel / host protections.
         ProtectKernelTunables = true;
         ProtectKernelModules = true;
         ProtectKernelLogs = true;
         ProtectControlGroups = true;
         ProtectClock = true;
         ProtectProc = "invisible";
+
         LockPersonality = true;
         RestrictRealtime = true;
         RestrictSUIDSGID = true;
@@ -219,7 +223,7 @@ in {
     };
   };
 
-  # Interactive TUI for doot + seamless `machinectl shell` for wheel members.
+  # Interactive TUI for regular users + seamless `machinectl shell` for wheel members.
   # The polkit rule is scoped to the `hermes` machine specifically (via
   # action.lookup("machine")) so it does not grant passwordless shell into any
   # other machine that might be registered with systemd-machined later.
