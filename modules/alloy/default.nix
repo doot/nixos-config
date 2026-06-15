@@ -6,6 +6,7 @@
   ...
 }: let
   cfg = config.roles.alloy;
+  net = import ../../common/network.nix;
 in {
   options.roles.alloy = {
     enable =
@@ -26,7 +27,7 @@ in {
     };
     lokiHost = lib.mkOption {
       type = lib.types.str;
-      default = "nmd.jhauschildt.com";
+      default = net.hosts.nix-media-docker.fqdn;
       description = "Hostname of the Loki instance.";
     };
     lokiPort = lib.mkOption {

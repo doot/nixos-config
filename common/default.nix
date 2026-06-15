@@ -189,7 +189,7 @@ in {
     openssh = {
       enable = true;
       settings = {
-        AcceptEnv = lib.mkForce ["TERM_PROGRAM" "COLORTERM" "TERM_PROGRAM_VERSION" "TERM WEZTERM_REMOTE_PANE" "GIT_PROTOCOL"];
+        AcceptEnv = lib.mkForce ["TERM_PROGRAM" "COLORTERM" "TERM_PROGRAM_VERSION" "TERM" "WEZTERM_REMOTE_PANE" "GIT_PROTOCOL"];
       };
     };
 
@@ -197,7 +197,7 @@ in {
 
     fstrim.enable = true;
 
-    # Entirely disalbe fallback DNS servers in resolved
+    # Entirely disable fallback DNS servers in resolved
     resolved.settings.Resolve.FallbackDNS = [];
 
     netbird = {
@@ -278,8 +278,8 @@ in {
       # Get rid of download buffer is full errors
       # download-buffer-size = 524288000;
       # TODO: might not be supported with Lix
-      substituters = ["https://nix-community.cachix.org" "https://wezterm.cachix.org"];
-      trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=" "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="];
+      substituters = ["https://cachix.cachix.org" "https://nix-community.cachix.org" "https://wezterm.cachix.org"];
+      trusted-public-keys = ["cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM=" "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=" "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="];
     };
 
     optimise.automatic = true; # Automatic daily optimisation of nix store

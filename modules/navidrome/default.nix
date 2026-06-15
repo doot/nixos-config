@@ -1,4 +1,4 @@
-# Module enable Forgejo
+# Module to enable Navidrome
 {
   config,
   lib,
@@ -8,11 +8,7 @@
   cfg = config.roles.navidrome;
 in {
   options.roles.navidrome = {
-    enable =
-      lib.mkEnableOption "navidrome role"
-      // {
-        default = false;
-      };
+    enable = lib.mkEnableOption "navidrome role";
   };
   config = lib.mkIf cfg.enable {
     services = {

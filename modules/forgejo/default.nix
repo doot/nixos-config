@@ -2,18 +2,14 @@
 {
   config,
   lib,
-  outputs,
   pkgs,
   ...
 }: let
   cfg = config.roles.forgejo;
+  net = import ../../common/network.nix;
 in {
   options.roles.forgejo = {
-    enable =
-      lib.mkEnableOption "forgejo role"
-      // {
-        default = false;
-      };
+    enable = lib.mkEnableOption "forgejo role";
   };
   config = lib.mkIf cfg.enable {
     environment = {
@@ -30,7 +26,7 @@ in {
         # lfs.enable = false;
         settings = {
           server = {
-            DOMAIN = "git.${outputs.nixosConfigurations.nix-media-docker._module.specialArgs.fqdn}";
+            DOMAIN = "git.${net.hosts.nix-media-docker.fqdn}";
             ROOT_URL = "https://${config.services.forgejo.settings.server.DOMAIN}/";
             HTTP_PORT = 3333;
           };

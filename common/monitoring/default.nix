@@ -3,22 +3,14 @@
   pkgs,
   lib,
   fqdn,
-  domain,
-  inputs,
   ...
 }: let
   network = import ../network.nix;
   loki_port = 3100;
-  nsf_fqdn = "nsf.${domain}";
-  sh_fqdn = "sh2.${domain}";
-  pve_fqdn = "pve.${domain}";
+  nsf_fqdn = network.hosts.nix-shitfucker.fqdn;
+  sh_fqdn = network.hosts.synology.fqdn;
+  pve_fqdn = network.hosts.proxmox.fqdn;
 in {
-  imports = [
-    # TODO: Temporarily use unstable version of grafana module (remove after next NixOS release)
-    "${inputs.nixpkgs-unstable}/nixos/modules/services/monitoring/grafana.nix"
-  ];
-  disabledModules = ["services/monitoring/grafana.nix"];
-
   # This is necessary since the NixOS Prometheus services does not have an easy way to set the data directory
   fileSystems."/var/lib/prometheus2/data" = {
     depends = [
@@ -214,7 +206,7 @@ in {
           job_name = "docker";
           static_configs = [
             {
-              targets = ["${fqdn}:${toString (lib.tail (lib.splitString ":" config.virtualisation.docker.daemon.settings.metrics-addr))}"];
+              targets = ["${fqdn}:${toString (lib.last (lib.splitString ":" config.virtualisation.docker.daemon.settings.metrics-addr))}"];
             }
           ];
         }
@@ -325,7 +317,7 @@ in {
             kvstore = {store = "inmemory";};
           };
           replication_factor = 1;
-          path_prefix = "/tmp/loki";
+          path_prefix = "/var/lib/loki";
         };
         schema_config = {
           configs = [

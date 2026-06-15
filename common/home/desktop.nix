@@ -1,4 +1,8 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  inputs,
+  ...
+}: {
   # Basic/partial home manager config. This only configures a few things that will only ever be used on nixos hosts. Main dotfile repo is more generic and should contain anything that may be used by work/macos hosts.
   # Right now just configures: hyprland, waybar
 
@@ -198,8 +202,7 @@
     wezterm = {
       enable = true;
       enableBashIntegration = true;
-      # TODO: Nightly wezterm breaks the build for some reason. Investigate further...
-      #   package = inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      package = inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default;
     };
 
     waybar = {

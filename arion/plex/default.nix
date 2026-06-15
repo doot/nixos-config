@@ -7,9 +7,6 @@ in {
       image = "lscr.io/linuxserver/plex:latest";
       restart = "unless-stopped";
       network_mode = "host";
-      ports = [
-        "8181:8181"
-      ];
       environment = {
         TZ = common.tz;
         PUID = common.puid;

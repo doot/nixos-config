@@ -4,10 +4,12 @@
   nixConfig = {
     extra-substituters = [
       "https://cachix.cachix.org"
+      "https://nix-community.cachix.org"
       "https://wezterm.cachix.org"
     ];
     extra-trusted-public-keys = [
       "cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
     ];
   };
@@ -15,11 +17,6 @@
   inputs = {
     nixpkgs.url = "https://channels.nixos.org/nixos-26.05/nixexprs.tar.xz";
     nixpkgs-unstable.url = "https://channels.nixos.org/nixos-unstable-small/nixexprs.tar.xz";
-
-    alejandra = {
-      url = "github:kamadorueda/alejandra/4.0.0";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
 
     arion = {
       url = "github:hercules-ci/arion";
@@ -61,20 +58,19 @@
     nixpkgs,
     nixpkgs-unstable,
     arion,
-    # deadnix: skip
-    alejandra,
     priv,
     home-manager,
     wezterm,
     # deadnix: skip
     neovim-nightly-overlay,
+    # gitea-mirror,
     hermes-agent,
   } @ inputs: let
     inherit (self) outputs;
     host_nmd = "nix-media-docker";
     host_nsf = "nix-shitfucker";
     host_slop = "nix-slopfucker";
-    domain = "jhauschildt.com";
+    inherit (import ./common/network.nix) domain;
     unstableOverlay = {
       nixpkgs.overlays = [
         (_: prev: {

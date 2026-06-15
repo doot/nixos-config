@@ -4,7 +4,6 @@
   modulesPath,
   config,
   outputs,
-  inputs,
   fqdn,
   ...
 }: let
@@ -13,12 +12,6 @@ in {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ./hardware-configuration.nix # Include the results of the hardware scan.
-    # TODO: Temporarily override angrr service with unstable version since options in stable are not compatible. Replace after next release.
-    "${inputs.nixpkgs-unstable}/nixos/modules/services/misc/angrr.nix"
-  ];
-
-  disabledModules = [
-    "services/misc/angrr.nix" # disable stable angrr module that is overriden above
   ];
 
   environment.systemPackages = with pkgs; [
@@ -45,7 +38,6 @@ in {
 
   boot = {
     isContainer = true;
-    loader.efi.canTouchEfiVariables = true;
   };
 
   # Disable stub and override default nameservers, pihole use port 53 instead
@@ -194,53 +186,6 @@ in {
       package = pkgs.unstable.pinchflat;
     };
 
-    # Extra offsite backup for small subset of data
-    borgbackup.jobs.borg-nmd = {
-      paths = [
-        "/var/lib/karakeep"
-        "/var/lib/grafana/data"
-        "/var/lib/nixos"
-        "/etc/group"
-        "/etc/machine-id"
-        "/etc/passwd"
-        "/docker-local/freshrss"
-        "/home/doot/secret_test"
-        "/home/doot/nixos-config-priv"
-        "/root/media-nfs.files.txt"
-      ];
-      encryption.mode = "none";
-      environment.BORG_RSH = "ssh -o 'StrictHostKeyChecking=no' -o 'BatchMode=yes' -i /root/.ssh/id_ed25519";
-      repo = "ssh://proxmox-borg@192.168.1.60:2222/volume1/proxmox-nfs/borg-nmd";
-      archiveBaseName = "borg-nmd";
-      extraArgs = [
-        "--remote-path=/usr/local/bin/borg"
-      ];
-      extraCreateArgs = [
-        "--stats"
-        "--show-rc"
-        "--exclude-caches"
-      ];
-      prune.keep = {
-        daily = 7;
-        weekly = 2;
-        monthly = 4;
-      };
-      extraPruneArgs = [
-        "--show-rc"
-        "--stats"
-        "--save-space"
-      ];
-      compression = "auto,zstd";
-      startAt = "daily";
-      persistentTimer = true;
-      # Backup directory structure of media-nfs to a file for backup
-      preHook = ''
-        echo "Backing up directory structure of /media-nfs..."
-        find /media-nfs/ 2>/dev/null > /root/media-nfs.files.txt || true
-        echo "Done listing files to /root/media-nfs.files.txt."
-      '';
-    };
-
     actual = {
       enable = true;
       settings.port = 9345;
@@ -251,6 +196,32 @@ in {
   # Host specific settings for certain roles
   roles = {
     alloy.withSyslogListener = true;
+
+    # Extra offsite backup for a small subset of data
+    borg = {
+      enable = true;
+      jobName = "borg-nmd";
+      repo = "ssh://proxmox-borg@192.168.1.60:2222/volume1/proxmox-nfs/borg-nmd";
+      paths = [
+        "/var/lib/karakeep"
+        "/var/lib/grafana/data"
+        "/var/lib/actual"
+        "/var/lib/nixos"
+        "/etc/group"
+        "/etc/machine-id"
+        "/etc/passwd"
+        "/docker-local/freshrss"
+        "/home/doot/secret_test"
+        "/home/doot/nixos-config-priv"
+        "/root/media-nfs.files.txt"
+      ];
+      # Back up the directory structure of /media-nfs to a file (the media itself is not backed up here)
+      preHook = ''
+        echo "Backing up directory structure of /media-nfs..."
+        find /media-nfs/ 2>/dev/null > /root/media-nfs.files.txt || true
+        echo "Done listing files to /root/media-nfs.files.txt."
+      '';
+    };
 
     navidrome.enable = true;
 
@@ -316,8 +287,7 @@ in {
         }
         {
           name = "immich";
-          # TODO: this can't be a good way to do this, try to find a cleaner way
-          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          proxyPassHost = "http://${network.hosts.nix-shitfucker.fqdn}";
           inherit (config.services.immich) port;
           extraConfig = ''
             client_max_body_size 50000M;
@@ -340,7 +310,7 @@ in {
         }
         {
           name = "git";
-          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          proxyPassHost = "http://${network.hosts.nix-shitfucker.fqdn}";
           port = outputs.nixosConfigurations.nix-shitfucker.config.services.forgejo.settings.server.HTTP_PORT;
           extraConfig = ''
             client_max_body_size 512M;
@@ -364,7 +334,7 @@ in {
         }
         {
           name = "nc";
-          proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+          proxyPassHost = "http://${network.hosts.nix-shitfucker.fqdn}";
           port = 80; # TODO: Put into variable to share with nextcloud setup in nsf, move to another port
         }
         {
