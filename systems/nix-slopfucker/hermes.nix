@@ -5,19 +5,19 @@
   ...
 }: let
   # Internal hosts the agent IS allowed to reach, despite the LAN-wide deny
-  # below. Each becomes a host-side ACCEPT rule placed ABOVE the RFC1918 drops.
-  # DEFAULT IS EMPTY — the agent is treated as hostile and must have zero LAN
-  # access unless a host is added here deliberately. (DNS does NOT require an
-  # entry: the container queries systemd-resolved on the veth host address, and
-  # the HOST forwards upstream — the container never reaches a LAN resolver.)
+  # below. Each becomes an ACCEPT in the hermes-egress chain, ahead of the
+  # RFC1918 drops. DEFAULT IS EMPTY — the agent is treated as hostile and must
+  # have zero LAN access unless a host is added here deliberately. (DNS does NOT
+  # require an entry: the container queries systemd-resolved on the veth host
+  # address, and the HOST forwards upstream — it never reaches a LAN resolver.)
   # To grant a specific host, add its IP, e.g. from the shared constants:
   #   allowedInternalHosts = [ (import ../../common/network.nix).ips.nix-media-docker ];
   # Caveat: per-host (all ports on that host), not per-service.
   allowedInternalHosts = [];
 
   # Private (RFC1918 / link-local / CGNAT) IPv4 ranges the agent must NOT reach,
-  # EXCEPT the allowlisted hosts above. Enforced host-side as FORWARD rules on
-  # the container's veth. IPv6 is not provisioned for the container.
+  # EXCEPT the allowlisted hosts above. Enforced host-side in the hermes-egress
+  # chain on the container's veth. IPv6 is not provisioned for the container.
   lanDenyCidrs = [
     "10.0.0.0/8"
     "172.16.0.0/12"
@@ -26,21 +26,31 @@
     "100.64.0.0/10" # CGNAT
   ];
 
+  # Body of the `hermes-egress` iptables chain: allow the explicit hosts first,
+  # then deny the private ranges. Evaluated top-to-bottom, so allow wins over
+  # deny; anything not matched falls through to the internet.
+  egressRules = lib.concatStringsSep "\n" (
+    (map (host: "iptables -A hermes-egress -d ${host} -j ACCEPT") allowedInternalHosts)
+    ++ (map (cidr: "iptables -A hermes-egress -d ${cidr} -j DROP") lanDenyCidrs)
+  );
+
   # Host↔container point-to-point veth (a /30 link, never forwarded → not LAN).
+  # Both addresses are consumed by containers.hermes below (nixos-containers
+  # configures the veth pair and the container's default route from them).
   hostAddress = "10.100.0.1";
   localAddress = "10.100.0.2";
   externalInterface = "ens18";
   vethHost = "ve-hermes";
 
-  # Interactive TUI for doot: drops into the container as the hermes user with a
-  # real PTY, so doot drives the SAME agent the gateway runs — one config, one
-  # state dir, one boundary. There is no separate native CLI path to bypass.
+  # Interactive TUI for regular users: drops into the container as the hermes
+  # user with a real PTY, so they drive the SAME agent the gateway runs — one
+  # config, one state dir, one boundary. No separate native CLI path to bypass.
   # `hermes@hermes` = user `hermes` @ machine `hermes`. (machinectl shell does
   # not propagate the child's exit code — fine for an interactive TUI.)
   hermesTui = pkgs.writeShellScriptBin "hermes" ''
     set -euo pipefail
-    if ! ${pkgs.systemd}/bin/machinectl show hermes >/dev/null 2>&1; then
-      echo "hermes container not running. Start it with: sudo machinectl start hermes" >&2
+    if [ "$(${pkgs.systemd}/bin/machinectl show hermes -p State --value 2>/dev/null)" != "running" ]; then
+      echo "hermes container is not running. Start it with: sudo machinectl start hermes" >&2
       exit 1
     fi
     exec ${pkgs.systemd}/bin/machinectl shell hermes@hermes \
@@ -125,11 +135,10 @@ in {
       nix.enable = false;
 
       networking = {
-        # DNS goes to the HOST-SIDE forwarder on the veth (hostAddress:53), which
-        # relays to the network's resolvers on the container's behalf. The
-        # container therefore needs ZERO direct LAN access for DNS — it only ever
-        # talks to the host. This is the only way the agent resolves names; the
-        # LAN resolvers themselves stay blocked by the deny rules below.
+        # DNS goes to the host's systemd-resolved stub on the veth (hostAddress),
+        # which resolves on the container's behalf. The container needs ZERO
+        # direct LAN access for DNS — it only ever talks to the host, which then
+        # queries upstream. The LAN resolvers stay blocked by the deny rules.
         useHostResolvConf = false;
         nameservers = [hostAddress];
         # Leaf system: it does not manage the host firewall.
@@ -162,7 +171,7 @@ in {
           privacy.redact_pii = true;
           dashboard.theme = "ember";
           agent = {
-            environment_hint = "You are running inside a locked-down NixOS container (no nix daemon; internet access only, no LAN access).";
+            environment_hint = "You are running inside a locked-down NixOS container: no nix daemon, no package managers, and network access restricted to the internet only (no local network).";
             personality = "noir";
           };
           terminal.cwd = "/var/lib/hermes/workspace";
@@ -179,8 +188,9 @@ in {
         extraPackages = [];
       };
 
-      # Defense-in-depth hardening on the gateway unit (cap-drop + kernel/proc
-      # protections). Egress filtering lives host-side as NAT + firewall DROP.
+      # Defense-in-depth on top of the module baseline (which already sets
+      # NoNewPrivileges, ProtectSystem=strict, PrivateTmp): drop all capabilities
+      # and add kernel/proc protections. Egress filtering lives host-side.
       systemd.services.hermes-agent.serviceConfig = {
         # Drop all capabilities — agent runs unprivileged and NoNewPrivileges is already set.
         CapabilityBoundingSet = "";
@@ -227,40 +237,36 @@ in {
     };
 
     firewall = {
-      # Let the container reach the host-side DNS forwarder on the veth (this is
-      # host INPUT, not LAN forwarding). DNS is the ONLY host service exposed.
+      # Let the container reach the host's DNS stub on the veth (this is host
+      # INPUT, not LAN forwarding). DNS is the ONLY host service exposed.
       interfaces.${vethHost} = {
         allowedUDPPorts = [53];
         allowedTCPPorts = [53];
       };
 
-      # LAN isolation, enforced on the container's veth in the FORWARD chain.
-      # Order is the crux: insert the RFC1918/CGNAT DROPs first, THEN insert any
-      # allowlisted-host ACCEPTs — `-I FORWARD 1` prepends, so the ACCEPTs land
-      # ABOVE the drops and win. allowedInternalHosts is EMPTY by default, so the
-      # container reaches the internet and nothing on the LAN. (Raw iptables, not
-      # the typed extraForwardRules, which needs the nftables backend this host
-      # doesn't run — see PR notes.)
-      # Verify after rebuild: `iptables -L FORWARD -n --line-numbers`.
-      extraCommands =
-        (lib.concatMapStringsSep "\n" (cidr: ''
-            iptables -I FORWARD 1 -i ${vethHost} -d ${cidr} -j DROP
-          '')
-          lanDenyCidrs)
-        + (lib.concatMapStringsSep "\n" (host: ''
-            iptables -I FORWARD 1 -i ${vethHost} -d ${host} -j ACCEPT
-          '')
-          allowedInternalHosts);
+      # LAN isolation for the container's forwarded traffic, in a dedicated
+      # `hermes-egress` chain so the rule order is explicit and self-contained
+      # (no dependence on insertion position vs. the nat module's FORWARD jump):
+      # the chain is evaluated top-to-bottom — ACCEPT the allowlisted hosts,
+      # then DROP the private ranges, then fall through to internet. With
+      # allowedInternalHosts empty (default), the container reaches the internet
+      # and nothing on the LAN. Raw iptables because the typed extraForwardRules
+      # needs the nftables backend this host doesn't run (see PR notes).
+      # Verify after rebuild: `iptables -L hermes-egress -n`.
+      extraCommands = ''
+        # create-or-flush — idempotent across firewall reloads
+        iptables -N hermes-egress 2>/dev/null || iptables -F hermes-egress
+        ${egressRules}
+        # jump from FORWARD exactly once (guard against stacking on reload)
+        iptables -C FORWARD -i ${vethHost} -j hermes-egress 2>/dev/null \
+          || iptables -A FORWARD -i ${vethHost} -j hermes-egress
+      '';
 
-      extraStopCommands =
-        (lib.concatMapStringsSep "\n" (cidr: ''
-            iptables -D FORWARD -i ${vethHost} -d ${cidr} -j DROP 2>/dev/null || true
-          '')
-          lanDenyCidrs)
-        + (lib.concatMapStringsSep "\n" (host: ''
-            iptables -D FORWARD -i ${vethHost} -d ${host} -j ACCEPT 2>/dev/null || true
-          '')
-          allowedInternalHosts);
+      extraStopCommands = ''
+        iptables -D FORWARD -i ${vethHost} -j hermes-egress 2>/dev/null || true
+        iptables -F hermes-egress 2>/dev/null || true
+        iptables -X hermes-egress 2>/dev/null || true
+      '';
     };
   };
 
