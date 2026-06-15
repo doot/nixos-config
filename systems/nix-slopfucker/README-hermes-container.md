@@ -49,10 +49,20 @@ reach.
   it breaks `hermes config set` / `/model` from the TUI.
 - **Arbitrary code can still run** (bundled node, a fetched tarball, etc.). This
   raises the bar a lot; it is not a wall. You accepted this.
-- **uid sharing.** `privateUsers = false` so bind-mounted state ownership is
-  coherent (host `hermes` = 994:992 = container `hermes`). A compromise of the
-  container is therefore a compromise of uid 994 on the host. Stronger:
-  `privateUsers = true` + idmapped mounts (future upgrade).
+- **uid isolation (private users).** `privateUsers = "pick"` puts the container
+  in its own user namespace: container uids are offset into a high host range,
+  so a container escape lands on a powerless, unmapped host uid — **not** host
+  uid 994, and container-root is **not** host root. The host-owned state
+  (`/var/lib/hermes`, 994:992) is bound with the `:idmap` mount option so
+  container-`hermes` still sees it owned correctly. Requires the ext4 backing
+  fs (confirmed) for id-mapped mounts.
+  - **Runtime check (cannot be verified at eval time):** on first boot confirm
+    the agent sees its own state, not `nobody`:
+    ```sh
+    machinectl shell --uid=hermes hermes@hermes \
+      /run/current-system/sw/bin/stat -c '%U:%G' /var/lib/hermes
+    # → hermes:hermes   (if nobody:nogroup, switch the bind option to owneridmap)
+    ```
 
 ## Rollout — test-first, never `switch` blind
 
@@ -69,7 +79,9 @@ sudoedit /var/lib/hermes-secrets/agent.env      # COPILOT_GITHUB_TOKEN=... (or r
 
 # 1. Enable the container in systems/nix-slopfucker/hermes-container.nix:
 #       slop.hermesContainer.enable = true;
-#    and disable the host-native service in hermes.nix (services.hermes-agent.enable = false).
+#    (The host-native services.hermes-agent is auto-disabled via mkForce when
+#     the container is on, so the two never double-run — no hermes.nix edit
+#     needed. Leave hermes.nix's enable as-is.)
 
 # 2. Build WITHOUT activating — catches eval/build errors with zero risk:
 sudo nixos-rebuild build --flake .#nix-slopfucker
@@ -119,7 +131,9 @@ hermes            # the wrapper → machinectl shell into the container
   (Breaks TUI-side `hermes config set`; that's the trade.)
 - **Block npm/pip registries** — container-local dnsmasq with
   `address=/registry.npmjs.org/0.0.0.0` (+ pypi.org, files.pythonhosted.org).
-- **Stronger uid isolation** — `privateUsers = true` + idmapped bind mounts.
+- **Even stronger uid isolation** — a fixed `privateUsers = <uid-base>` instead
+  of `"pick"` (deterministic offset you control), or `owneridmap` bind mounts if
+  the state ever shows `nobody` ownership at runtime.
 - **Egress allowlist** — if you later want true "only these domains", put a
   filtering CONNECT proxy in the host netns and force the container through it;
   the container can't bypass it because its only route out is the veth.

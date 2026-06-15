@@ -133,6 +133,15 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    # ── Cutover: never run the agent twice ────────────────────────────────
+    # When this container is enabled, force-disable the HOST-NATIVE
+    # services.hermes-agent (configured in hermes.nix). Both share one
+    # HERMES_HOME (/var/lib/hermes/.hermes) and one workspace; running the
+    # gateway on the host AND in the container would mean two agents racing on
+    # the same sessions DB, cron, and config.yaml. mkForce overrides whatever
+    # hermes.nix sets, so enabling the container is a single, safe switch.
+    services.hermes-agent.enable = lib.mkForce false;
+
     # ── Host identity for bind-mount coherence ────────────────────────────
     # The service runs INSIDE the container, but we keep a host-side hermes
     # user/group at the same numeric ids so the bind-mounted state directory
@@ -156,32 +165,38 @@ in {
       privateNetwork = true;
       inherit hostAddress localAddress;
 
-      # uids shared with host (no userns) so bind-mounted state ownership is
-      # coherent. Stronger isolation ("pick" + idmapped mounts) is a documented
-      # future upgrade; out of scope for the two accepted goals.
-      # NB: nixpkgs 26.11 changed this from bool to an enum ("no"/"identity"/
-      # "pick" or a uid base) — "no" == the old `false` (shared uids).
-      privateUsers = "no";
+      # Private user namespace: container uids are offset into a high host
+      # range, so a process that escapes the container lands on a powerless,
+      # unmapped host uid (NOT host uid 994, and container-root is NOT host
+      # root). This is the defense-in-depth the hostile-agent model wants.
+      # "pick" deterministically derives the offset from the machine name, so
+      # it is stable across reboots (on-disk ownership doesn't drift).
+      # NB: nixpkgs 26.11 made this an enum ("no"/"identity"/"pick" or a uid
+      # base); "pick" is the auto-allocated range.
+      privateUsers = "pick";
 
       # Pass the flake inputs into the container's nested NixOS evaluation so
       # it can import the hermes-agent module. (nixos-containers do NOT inherit
       # the host's specialArgs automatically.)
       specialArgs = {inherit inputs;};
 
-      bindMounts = {
-        # Live agent state + workspace, shared with the host so `doot` can
-        # collaborate on the workspace and the existing sessions/skills/auth
-        # carry over. Read-write.
-        "/var/lib/hermes" = {
-          hostPath = "/var/lib/hermes";
-          isReadOnly = false;
-        };
-        # Secrets (API token) — read-only. Out-of-repo, root-owned on the host.
-        "/var/lib/hermes-secrets/agent.env" = {
-          hostPath = "/var/lib/hermes-secrets/agent.env";
-          isReadOnly = true;
-        };
-      };
+      # State + secret are bound via extraFlags rather than `bindMounts` ON
+      # PURPOSE: under privateUsers = "pick", the stock bindMounts path emits a
+      # plain `--bind=` with no id-mapping, so host-994-owned state would appear
+      # as `nobody` inside the container and the agent could not read its own
+      # files. The `:idmap` mount option (ext4 supports it; the module already
+      # uses it for the /nix store) maps container-uid z ↔ host-uid z for this
+      # mount, so container-hermes (994) ↔ host-hermes (994) and container-root
+      # (0) ↔ host-root (0) for the root-owned secret. If runtime ever shows
+      # nobody-ownership, `owneridmap` is the documented fallback.
+      #   RUNTIME-VERIFY on first boot (cannot be checked at eval time):
+      #     machinectl shell --uid=hermes hermes@hermes \
+      #       /run/current-system/sw/bin/stat -c '%U:%G' /var/lib/hermes
+      #   → must print `hermes:hermes`, not `nobody:nogroup`.
+      extraFlags = [
+        "--bind=/var/lib/hermes:/var/lib/hermes:idmap"
+        "--bind-ro=/var/lib/hermes-secrets/agent.env:/var/lib/hermes-secrets/agent.env:idmap"
+      ];
 
       config = {
         lib,
