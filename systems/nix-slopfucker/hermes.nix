@@ -230,7 +230,8 @@ in {
         };
 
         # API key lives ONLY in this out-of-repo file (root:root 0600, never
-        # committed), bind-mounted in read-only via rootidmap above:
+        # committed), bind-mounted in read-only (shared uids, so container-root
+        # reads it as the host root that owns it):
         #   sudo install -d -m 0700 -o root -g root /var/lib/hermes-secrets
         #   sudo install -m 0600 /dev/null /var/lib/hermes-secrets/agent.env
         #   sudoedit /var/lib/hermes-secrets/agent.env   # COPILOT_GITHUB_TOKEN=...
