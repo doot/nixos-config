@@ -189,7 +189,7 @@ in {
     openssh = {
       enable = true;
       settings = {
-        AcceptEnv = lib.mkForce ["TERM_PROGRAM" "COLORTERM" "TERM_PROGRAM_VERSION" "TERM WEZTERM_REMOTE_PANE" "GIT_PROTOCOL"];
+        AcceptEnv = lib.mkForce ["TERM_PROGRAM" "COLORTERM" "TERM_PROGRAM_VERSION" "TERM" "WEZTERM_REMOTE_PANE" "GIT_PROTOCOL"];
       };
     };
 
@@ -197,7 +197,7 @@ in {
 
     fstrim.enable = true;
 
-    # Entirely disalbe fallback DNS servers in resolved
+    # Entirely disable fallback DNS servers in resolved
     resolved.settings.Resolve.FallbackDNS = [];
 
     netbird = {
