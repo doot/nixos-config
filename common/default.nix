@@ -88,6 +88,7 @@ in {
       unstable.git-who # `git who` command to show blame for file trees
       go
       cachix
+      tree
 
       # General diagnostic tools
       bcc
