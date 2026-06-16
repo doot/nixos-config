@@ -169,6 +169,30 @@
     ];
   };
 
-  # Enable forgejo service
-  roles.forgejo.enable = true;
+  roles = {
+    # Enable forgejo service
+    forgejo.enable = true;
+
+    # Offsite backup of the irreplaceable state on this host. Distinct repo from nmd's
+    # (borg does not support multiple machines sharing one repo).
+    borg = {
+      enable = true;
+      jobName = "borg-nsf";
+      repo = "ssh://proxmox-borg@192.168.1.60:2222/volume1/proxmox-nfs/borg-nsf";
+      paths = [
+        "/var/lib/forgejo" # git repos, LFS, and the forgejo sqlite DB
+        "/var/lib/nextcloud" # nextcloud data + sqlite DB
+        "/var/backup/immich" # immich Postgres dump written by preHook below
+      ];
+      # Immich uses Postgres, so a live file copy would be inconsistent — dump it instead.
+      # forgejo/nextcloud are sqlite and backed up at the file level (same approach as nmd's
+      # other sqlite services); point-in-time, with the usual live-sqlite caveat.
+      preHook = ''
+        install -d -m 0700 /var/backup/immich
+        ${pkgs.util-linux}/bin/runuser -u ${config.services.postgresql.superUser} -- \
+          ${config.services.postgresql.package}/bin/pg_dump ${config.services.immich.database.name} \
+          > /var/backup/immich/immich.sql
+      '';
+    };
+  };
 }
