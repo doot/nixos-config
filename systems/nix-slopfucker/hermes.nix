@@ -196,6 +196,34 @@ in {
         # Leaf system: it does not manage the host firewall.
         firewall.enable = lib.mkForce false;
       };
+      environment.systemPackages = with pkgs; [
+        git
+        github-cli
+        forgejo-cli
+        alejandra
+        bat
+        delta
+        devenv # This is probably a dumb idea...
+        eza
+        fd
+        file
+        htop
+        jq
+        ncdu
+        nix-tree # TUI to browse nix dependency graph/sizes
+        unstable.nix-sweep # CLI to analyse nix store usage
+        nvd
+        ripgrep
+        tmux
+        vim
+        yq
+        unstable.git-who # `git who` command to show blame for file trees
+        cachix
+        tree
+        btop
+        dig
+        iperf3
+      ];
 
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
@@ -323,12 +351,15 @@ in {
     };
   };
 
-  # Interactive TUI for regular users via `machinectl shell` into the container.
+  environment.systemPackages = [
+    # Interactive TUI for regular users via `machinectl shell` into the container.
+    hermesTui
+  ];
+
   # polkit MUST be enabled for a non-root user (in wheel) to open the shell
   # without an interactive auth prompt. The rule is scoped to the `hermes`
   # machine specifically (via action.lookup("machine")) so it does not grant
   # passwordless shell into any other machine registered with systemd-machined.
-  environment.systemPackages = [hermesTui];
   security.polkit = {
     enable = true;
     extraConfig = ''
