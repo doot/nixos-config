@@ -166,6 +166,7 @@ in {
 
     config = {
       lib,
+      pkgs,
       inputs,
       hermesUid,
       hermesGid,
@@ -240,6 +241,13 @@ in {
           memory = {
             memory_enabled = true;
             user_profile_enabled = true;
+            # Holographic provider: a bundled, fully-local memory plugin storing
+            # structured facts in SQLite at $HERMES_HOME/memory_store.db. Runs
+            # alongside built-in memory (never replaces it), adds entity
+            # resolution, trust scoring, and HRR compositional retrieval. Needs
+            # no API key, no LLM, and no network — the embedding/HRR math is the
+            # only dependency, satisfied by numpy in extraPythonPackages below.
+            provider = "holographic";
           };
           display = {
             skin = "slate";
@@ -267,6 +275,14 @@ in {
 
         # No compilers or package managers visible to the agent.
         extraPackages = [];
+
+        # numpy enables the holographic memory provider's full HRR (Holographic
+        # Reduced Representation) retrieval — the reason/related/contradict
+        # compositional queries. Without it the provider still loads but
+        # silently degrades to FTS5 keyword search only. This lands on the
+        # agent's PYTHONPATH (not the sealed venv rebuild) and is a pure-Python
+        # wheel — no compiler or package manager is exposed to the agent.
+        extraPythonPackages = [pkgs.python312Packages.numpy];
       };
 
       # Defense-in-depth on top of the module baseline (which already sets
