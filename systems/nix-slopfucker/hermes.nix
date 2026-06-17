@@ -280,8 +280,9 @@ in {
         # Reduced Representation) retrieval — the reason/related/contradict
         # compositional queries. Without it the provider still loads but
         # silently degrades to FTS5 keyword search only. This lands on the
-        # agent's PYTHONPATH (not the sealed venv rebuild) and is a pure-Python
-        # wheel — no compiler or package manager is exposed to the agent.
+        # agent's PYTHONPATH (not the sealed venv rebuild). numpy ships
+        # pre-compiled native (C/Cython) extensions via nixpkgs, so no build
+        # toolchain or package manager is exposed to the agent at runtime.
         extraPythonPackages = [pkgs.python312Packages.numpy];
       };
 
