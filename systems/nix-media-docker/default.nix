@@ -130,12 +130,33 @@ in {
   services = {
     ntfy-sh = {
       enable = true;
+      # Users (bcrypt hashes) and the agent's access token live ONLY in this
+      # out-of-repo EnvironmentFile (root:root 0600), never committed. It
+      # provisions NTFY_AUTH_USERS + NTFY_AUTH_TOKENS, which the auth-access
+      # ACL below references, so this file must exist before deploy:
+      #   ntfy user hash                          # bcrypt a password (hermes, doot)
+      #   ntfy token generate                     # random tk_... for the agent
+      #   NTFY_AUTH_USERS='hermes:$2a$10$...:user,doot:$2a$10$...:user'
+      #   NTFY_AUTH_TOKENS='hermes:tk_...:agent comms'
+      environmentFile = "/home/doot/secret_test/ntfy/env";
       settings = {
         base-url = "https://ntfy.${fqdn}";
         listen-http = ":2586";
         behind-proxy = true;
         cache-duration = "720h";
         message-size-limit = "32K";
+        # Private instance: deny by default, grant per topic. Users and tokens
+        # come from environmentFile above; this ACL (the authorization
+        # structure) stays in-repo for reviewability — it names no secrets.
+        auth-default-access = "deny-all";
+        auth-access = [
+          # Agent comms channel: agent (token) + phone (password), read-write.
+          "hermes:hermes-agent:rw"
+          "doot:hermes-agent:rw"
+          # Anonymous read-write for the changelog flow: every host's notifier
+          # publishes here and the atom reader on this host polls it.
+          "everyone:nixos-changelog:rw"
+        ];
       };
     };
 
