@@ -23,7 +23,12 @@
   # To grant a specific host, add its IP, e.g. from the shared constants:
   #   allowedInternalHosts = [ (import ../../common/network.nix).ips.nix-media-docker ];
   # Caveat: per-host (all ports on that host), not per-service.
-  allowedInternalHosts = [];
+  #
+  # nix-media-docker (nmd) is allowed so the agent can reach the self-hosted
+  # Forgejo at git.nmd.jhauschildt.com (its knowledge-base git remote). Per the
+  # caveat above this opens ALL ports on nmd to the agent, not just Forgejo —
+  # an accepted tradeoff until per-service egress (SNI proxy / mesh) exists.
+  allowedInternalHosts = [(import ../../common/network.nix).ips.nix-media-docker];
 
   # Private (RFC1918 / link-local / CGNAT) IPv4 ranges the agent must NOT reach,
   # EXCEPT the allowlisted hosts above. Enforced host-side in the hermes-egress
