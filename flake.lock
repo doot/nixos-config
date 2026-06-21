@@ -165,11 +165,11 @@
         "uv2nix": "uv2nix_2"
       },
       "locked": {
-        "lastModified": 1781939785,
-        "narHash": "sha256-s4tXQ7wzjqgFsIpNS/cZn9VG8oIj+etTMNXgvj+MBoA=",
+        "lastModified": 1782030208,
+        "narHash": "sha256-+gEgVD13D7QMX79SDfGr6sbrQfzrijdczxfLbOaeN5w=",
         "owner": "NousResearch",
         "repo": "hermes-agent",
-        "rev": "15852722d47b2b50d6815b3831891663076b5865",
+        "rev": "f57ff7aef1d3d447e159511f3a3e9ed8ae0c7298",
         "type": "github"
       },
       "original": {
@@ -185,11 +185,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781906751,
-        "narHash": "sha256-6Ld1PqmptFtFKblE+SynhRgyBApUWcmrISetWqWHeeo=",
+        "lastModified": 1781989573,
+        "narHash": "sha256-npfH7Zv7t1akX/ArqCNro4zU4ViPlghLaPnbEfHbCxk=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "37f21dfa5d27e71b75bacd9418b156f9265e312e",
+        "rev": "78e7d8b13ecd7f5256a5c11ce216876164099d9f",
         "type": "github"
       },
       "original": {
@@ -268,11 +268,11 @@
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1781836206,
-        "narHash": "sha256-jMMjiKcwRm8imjozh4r3TBOybdRYxsjj8m5zbWkm900=",
-        "rev": "d4fea6b6bfce7b55c6df36fb973205b89d7fe761",
+        "lastModified": 1782014548,
+        "narHash": "sha256-P/WemHI+wVWyn4h1n5FbwGqgSUOX4t0/6GiVM44LoMs=",
+        "rev": "72349305fb839e27697873de7a4ce3a98c378f48",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/unstable-small/nixos-26.11pre1018873.d4fea6b6bfce/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixos/unstable-small/nixos-26.11pre1019718.72349305fb83/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
@@ -308,11 +308,11 @@
       },
       "locked": {
         "dir": "priv",
-        "lastModified": 1781864475,
-        "narHash": "sha256-9Egwja7TNKwYA8eYyWFcWe4QCCSFFiE22WM/aJzpXRw=",
+        "lastModified": 1781945436,
+        "narHash": "sha256-EVM+iTYguiDAG9tNM5QvvkwtJBR6dSv95Snho65LtRc=",
         "owner": "doot",
         "repo": "nixos-config",
-        "rev": "0be9b9deb473a56f0daf8b3a2cbb037b221064ca",
+        "rev": "ad710b269df0f4ffa9434ec7c8014f28b3de385d",
         "type": "github"
       },
       "original": {
