@@ -49,6 +49,13 @@ in {
         };
         # mailerPasswordFile = config.age.secrets.forgejo-mailer-password.path;
       };
+      # gitea-mirror = {
+      #   # enable = true; #TODO: Fails build :(
+      #   enable = false;
+      #   # betterAuthUrl = "https://gitea-mirror.${outputs.nixosConfigurations.nix-media-docker._module.specialArgs.fqdn}";
+      #   # betterAuthTrustedOrigins = "https://gitea-mirror.${outputs.nixosConfigurations.nix-media-docker._module.specialArgs.fqdn}";
+      #   openFirewall = false;
+      # };
     };
   };
 }

@@ -1,6 +1,7 @@
 {
   lib,
   pkgs,
+  inputs,
   ...
 }: {
   imports = [
@@ -12,7 +13,7 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   environment.systemPackages = with pkgs; [
-    neovim
+    inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default
     github-cli
   ];
 

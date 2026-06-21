@@ -328,6 +328,11 @@ in {
           name = "ntfy";
           port = 2586;
         }
+        # {
+        #   name = "gitea-mirror";
+        #   proxyPassHost = "http://${outputs.nixosConfigurations.nix-shitfucker._module.specialArgs.fqdn}";
+        #   port = outputs.nixosConfigurations.nix-shitfucker.config.services.gitea-mirror.port;
+        # }
         {
           name = "gitea-mirror";
           port = 4321;

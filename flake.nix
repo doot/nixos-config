@@ -47,6 +47,12 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
+    # TODO: Upstream breaks nix build, using docker image for now
+    # gitea-mirror = {
+    #   url = "github:RayLabsHQ/gitea-mirror";
+    #   inputs.nixpkgs.follows = "nixpkgs-unstable";
+    # };
+
     hermes-agent = {
       url = "github:NousResearch/hermes-agent";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -99,6 +105,7 @@
             ./common
             ./common/users
             unstableOverlay
+            # gitea-mirror.nixosModules.default
             {nix.registry.nixpkgs.flake = hostNixpkgs;}
           ]
           ++ extraModules;
