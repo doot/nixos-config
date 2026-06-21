@@ -217,13 +217,13 @@ in {
         jq
         ncdu
         nix-tree # TUI to browse nix dependency graph/sizes
-        unstable.nix-sweep # CLI to analyse nix store usage
+        nix-sweep # CLI to analyse nix store usage
         nvd
         ripgrep
         tmux
         vim
         yq
-        unstable.git-who # `git who` command to show blame for file trees
+        git-who # `git who` command to show blame for file trees
         cachix
         tree
         btop
