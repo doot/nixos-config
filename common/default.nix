@@ -181,10 +181,17 @@ in {
     angrr = {
       # Automatically remove old GC roots that haven't been touched in the last 14 days
       enable = true;
-      settings = {
-        period = "14d";
-      };
       package = pkgs.unstable.angrr;
+
+      # TODO: Remove conditional after 26.11 is released and we can drop support for 26.05 specific option.
+      settings =
+        if (lib.trivial.release == "26.05")
+        then {period = "14d";}
+        else {};
+      period =
+        if (lib.trivial.release != "26.05")
+        then "14d"
+        else null;
     };
 
     openssh = {
