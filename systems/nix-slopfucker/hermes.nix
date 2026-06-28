@@ -270,12 +270,37 @@ in {
           terminal.cwd = "/var/lib/hermes/workspace";
         };
 
-        # API key lives ONLY in this out-of-repo file (root:root 0600, never
+        # Non-secret wiring for the ntfy gateway platform (a bundled plugin; it
+        # auto-enables as soon as NTFY_TOPIC is present in the env — no
+        # plugins.enabled entry needed). These are deliberately NOT secrets: the
+        # topic name already appears in nmd's ntfy auth-access ACL, so it stays
+        # in-repo where a reviewer can confirm both sides name the same topic.
+        # The access token is the only real secret and lives in agent.env below.
+        #
+        # NTFY_ALLOWED_USERS pins the gateway's inbound allowlist to this topic.
+        # The gateway is fail-CLOSED: the ntfy adapter maps an inbound message's
+        # user_id to the topic name, and with no allowlist set the gateway DROPS
+        # every inbound message rather than fail open. Without this line the
+        # agent could publish OUT but would silently ignore every command IN,
+        # even though the token authenticates fine at the ntfy layer.
+        #
+        # NTFY_TOPIC must match the auth-access entries in
+        # systems/nix-media-docker/default.nix (services.ntfy-sh.settings).
+        environment = {
+          NTFY_SERVER_URL = "https://ntfy.${(import ../../common/network.nix).hosts.nix-media-docker.fqdn}";
+          NTFY_TOPIC = "hermes-agent";
+          NTFY_ALLOWED_USERS = "hermes-agent";
+          NTFY_HOME_CHANNEL = "hermes-agent";
+        };
+
+        # Secrets live ONLY in this out-of-repo file (root:root 0600, never
         # committed), bind-mounted in read-only (shared uids, so container-root
         # reads it as the host root that owns it):
         #   sudo install -d -m 0700 -o root -g root /var/lib/hermes-secrets
         #   sudo install -m 0600 /dev/null /var/lib/hermes-secrets/agent.env
-        #   sudoedit /var/lib/hermes-secrets/agent.env   # COPILOT_GITHUB_TOKEN=...
+        #   sudoedit /var/lib/hermes-secrets/agent.env
+        #     COPILOT_GITHUB_TOKEN=...
+        #     NTFY_TOKEN=tk_...   # matches nmd's NTFY_AUTH_TOKENS for user hermes
         environmentFiles = ["/var/lib/hermes-secrets/agent.env"];
 
         # No compilers or package managers visible to the agent.
