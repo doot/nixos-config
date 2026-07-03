@@ -59,6 +59,9 @@
     '';
   };
 in {
+  # TODO: Remove this one pnpm is updated in uptream packages (karakeep is currently the problem)
+  nixpkgs.config.permittedInsecurePackages = ["pnpm-9.15.9"];
+
   environment = {
     systemPackages = with pkgs; [
       alejandra
