@@ -153,6 +153,11 @@
         extraModules = [
           ./systems/nix-slopfucker/proxmox.nix
           hermes-agent.nixosModules.default
+          # Private overlay: the public stub by default; overridden at deploy
+          # (--override-input priv <path>) with the real sops-nix secrets module
+          # that renders the agent's credentials. Without this import the
+          # override has nothing to consume and /run/secrets stays empty.
+          priv.nixosModules.stub
         ];
       };
     };
