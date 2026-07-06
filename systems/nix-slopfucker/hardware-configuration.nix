@@ -41,14 +41,12 @@
       neededForBoot = true;
       autoResize = true;
     };
-    # NOTE: /nix will be moved to a separate 50G disk post-deploy.
-    # After attaching a second virtio disk in Proxmox and moving the nix store, add:
-    # "/nix" = {
-    #   device = "/dev/disk/by-label/nix-store";
-    #   fsType = "xfs";
-    #   options = ["noatime"];
-    #   neededForBoot = true;
-    # };
+    "/nix" = {
+      device = "/dev/disk/by-label/nix-store";
+      fsType = "xfs";
+      options = ["noatime"];
+      neededForBoot = true;
+    };
   };
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
