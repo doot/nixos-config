@@ -316,33 +316,18 @@ in {
     };
   };
 
-  # Ordering: the container bind-mounts the sops-rendered credentials file
-  # (config.sops.templates."hermes-agent.env".path, under /run/secrets/rendered),
-  # which only exists after sops-nix decrypts+renders it. The host unit that
-  # launches the container is container@hermes.service; make it start after the
-  # render, in a form correct for BOTH sops activation modes:
-  #  - systemd mode: order after sops-install-secrets.service (harmless no-op if
-  #    that unit is absent, i.e. legacy activation-script mode).
-  #  - legacy mode: RequiresMountsFor guarantees the runtime bind source is
-  #    present before nspawn attempts the mount.
-  # Without this the container can start before the render and bind a
-  # missing/stale (unlinked) inode — observed in practice as a "//deleted" bind
-  # source needing a manual container restart after a secret change.
-  #
-  # overrideStrategy = "asDropin" is REQUIRED: container@hermes is a template
-  # INSTANCE (only the template container@.service exists as a unit file). The
-  # default strategy would emit a standalone container@hermes.service with just
-  # these directives and NO ExecStart=, shadowing the template and breaking the
-  # container. asDropin extends the template via a drop-in instead. (nixpkgs
-  # uses this for the same reason on systemd-fsck@/sshd@/etc.)
-  systemd.services."container@hermes" = {
-    overrideStrategy = "asDropin";
-    after = ["sops-install-secrets.service"];
-    wants = ["sops-install-secrets.service"];
-    # Reference the template path (not a hard-coded string) so this stays in sync
-    # with the bindMounts hostPath above if sops-nix's layout ever changes.
-    unitConfig.RequiresMountsFor = [config.sops.templates."hermes-agent.env".path];
-  };
+  # No explicit container@hermes ordering for the sops secret is needed:
+  #  - The nixos-containers module already generates container@hermes and adds
+  #    every bindMounts hostPath (incl. the sops-rendered agent.env) to its
+  #    unitConfig.RequiresMountsFor — so the mount dep exists for free. Declaring
+  #    our own systemd.services."container@hermes" collides with that generated
+  #    unit and breaks evaluation.
+  #  - At boot the render always precedes the container: sops installs secrets in
+  #    sysinit.target (systemd mode) or an activationScript (legacy), both far
+  #    earlier than machines.target where the container starts.
+  # A live secret RE-render (rebuild with changed values) is handled by the
+  # template's restartUnits = ["container@hermes.service"] in the priv overlay,
+  # which bounces the container so it picks up the new inode.
 
   # Host DNS via systemd-resolved, which also serves the container. The agent
   # sends DNS to the stub on the veth host address (hostAddress); resolved
