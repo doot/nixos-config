@@ -271,12 +271,11 @@ in {
           terminal.cwd = "/var/lib/hermes/workspace";
         };
 
-        # API key lives ONLY in this out-of-repo file (root:root 0600, never
-        # committed), bind-mounted in read-only (shared uids, so container-root
-        # reads it as the host root that owns it):
-        #   sudo install -d -m 0700 -o root -g root /var/lib/hermes-secrets
-        #   sudo install -m 0600 /dev/null /var/lib/hermes-secrets/agent.env
-        #   sudoedit /var/lib/hermes-secrets/agent.env   # COPILOT_GITHUB_TOKEN=...
+        # Credentials are the sops-nix–rendered env file, bind-mounted read-only
+        # from the host at config.sops.templates."hermes-agent.env".path (see the
+        # bindMounts block above). Decrypted host-side to /run (tmpfs, root 0400);
+        # plaintext never lands on persistent disk. Secret values live encrypted
+        # in the private overlay repo (nixos-config-priv/secrets/secrets.yaml).
         environmentFiles = ["/var/lib/hermes-secrets/agent.env"];
 
         # No compilers or package managers visible to the agent.
@@ -315,6 +314,24 @@ in {
 
       system.stateVersion = "26.05";
     };
+  };
+
+  # Ordering: the container bind-mounts the sops-rendered credentials file
+  # (config.sops.templates."hermes-agent.env".path, under /run/secrets/rendered),
+  # which only exists after sops-nix decrypts+renders it. The host unit that
+  # launches the container is container@hermes.service; make it start after the
+  # render, in a form correct for BOTH sops activation modes:
+  #  - systemd mode: order after sops-install-secrets.service (harmless no-op if
+  #    that unit is absent, i.e. legacy activation-script mode).
+  #  - legacy mode: RequiresMountsFor guarantees the runtime bind source is
+  #    present before nspawn attempts the mount.
+  # Without this the container can start before the render and bind a
+  # missing/stale (unlinked) inode — observed in practice as a "//deleted" bind
+  # source needing a manual container restart after a secret change.
+  systemd.services."container@hermes" = {
+    after = ["sops-install-secrets.service"];
+    wants = ["sops-install-secrets.service"];
+    unitConfig.RequiresMountsFor = ["/run/secrets/rendered/hermes-agent.env"];
   };
 
   # Host DNS via systemd-resolved, which also serves the container. The agent
