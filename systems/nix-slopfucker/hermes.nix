@@ -2,6 +2,7 @@
   lib,
   pkgs,
   inputs,
+  config,
   ...
 }: let
   # Single source of truth for the hermes uid/gid. The host hermes user is
@@ -164,7 +165,7 @@ in {
         isReadOnly = false;
       };
       "/var/lib/hermes-secrets/agent.env" = {
-        hostPath = "/var/lib/hermes-secrets/agent.env";
+        hostPath = config.sops.templates."hermes-agent.env".path; # /run/...
         isReadOnly = true;
       };
     };
