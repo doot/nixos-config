@@ -328,10 +328,20 @@ in {
   # Without this the container can start before the render and bind a
   # missing/stale (unlinked) inode — observed in practice as a "//deleted" bind
   # source needing a manual container restart after a secret change.
+  #
+  # overrideStrategy = "asDropin" is REQUIRED: container@hermes is a template
+  # INSTANCE (only the template container@.service exists as a unit file). The
+  # default strategy would emit a standalone container@hermes.service with just
+  # these directives and NO ExecStart=, shadowing the template and breaking the
+  # container. asDropin extends the template via a drop-in instead. (nixpkgs
+  # uses this for the same reason on systemd-fsck@/sshd@/etc.)
   systemd.services."container@hermes" = {
+    overrideStrategy = "asDropin";
     after = ["sops-install-secrets.service"];
     wants = ["sops-install-secrets.service"];
-    unitConfig.RequiresMountsFor = ["/run/secrets/rendered/hermes-agent.env"];
+    # Reference the template path (not a hard-coded string) so this stays in sync
+    # with the bindMounts hostPath above if sops-nix's layout ever changes.
+    unitConfig.RequiresMountsFor = [config.sops.templates."hermes-agent.env".path];
   };
 
   # Host DNS via systemd-resolved, which also serves the container. The agent
