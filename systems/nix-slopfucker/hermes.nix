@@ -188,7 +188,14 @@ in {
       hermesGid,
       ...
     }: {
-      imports = [inputs.hermes-agent.nixosModules.default];
+      imports = [
+        inputs.hermes-agent.nixosModules.default
+        # Declarative agent identity (SOUL.md). Resolves to a no-op stub in the
+        # public flake; the real module — which lands the private soul content
+        # into the container's $HERMES_HOME — is swapped in at deploy via the
+        # same --override-input priv that supplies the sops secrets.
+        inputs.priv.nixosModules.hermesSoul
+      ];
 
       # Pin the container's hermes user/group to the SAME ids as the host's
       # (threaded in via specialArgs above). The hermes-agent module declares
