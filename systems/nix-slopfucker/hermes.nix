@@ -281,6 +281,10 @@ in {
           terminal.cwd = "/var/lib/hermes/workspace";
         };
 
+        # Non-secret env for the agent. Points the obsidian skill at the vault
+        # clone (homelab/hermes-vault) so it resolves without a hardcoded path.
+        environment.OBSIDIAN_VAULT_PATH = "/var/lib/hermes/workspace/hermes-vault";
+
         # sops-nix–rendered env file, bind-mounted read-only from the host (see
         # bindMounts above). Decrypted to /run tmpfs (root 0400); values encrypted
         # in the priv overlay (nixos-config-priv/secrets/secrets.yaml).
