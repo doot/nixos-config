@@ -15,6 +15,9 @@
   hermesUid = 994;
   hermesGid = 992;
 
+  # nmd's fqdn — fronts the agent's observability endpoints (Grafana/Prom/Loki).
+  nmdFqdn = (import ../../common/network.nix).hosts.nix-media-docker.fqdn;
+
   # Internal hosts the agent may reach despite the LAN-wide deny below: each
   # becomes a whole-host ACCEPT in hermes-egress, ahead of the RFC1918 drops.
   # DEFAULT EMPTY — the agent is hostile; add hosts deliberately. (DNS needs no
@@ -302,6 +305,12 @@ in {
           NTFY_TOPIC = "hermes-agent";
           NTFY_ALLOWED_USERS = "hermes-agent";
           NTFY_HOME_CHANNEL = "hermes-agent";
+
+          # Observability endpoints (all on nmd, whole-host allowlisted). Grafana
+          # needs GRAFANA_TOKEN (sops template); Prometheus + Loki are anon-read.
+          GRAFANA_URL = "https://grafana.${nmdFqdn}";
+          PROMETHEUS_URL = "https://prom.${nmdFqdn}";
+          LOKI_URL = "http://${nmdFqdn}:3100";
         };
 
         # sops-nix–rendered env file, bind-mounted read-only from the host (see
