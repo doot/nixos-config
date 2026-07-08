@@ -271,11 +271,9 @@ in {
           terminal.cwd = "/var/lib/hermes/workspace";
         };
 
-        # Credentials are the sops-nix–rendered env file, bind-mounted read-only
-        # from the host at config.sops.templates."hermes-agent.env".path (see the
-        # bindMounts block above). Decrypted host-side to /run (tmpfs, root 0400);
-        # plaintext never lands on persistent disk. Secret values live encrypted
-        # in the private overlay repo (nixos-config-priv/secrets/secrets.yaml).
+        # sops-nix–rendered env file, bind-mounted read-only from the host (see
+        # bindMounts above). Decrypted to /run tmpfs (root 0400); values encrypted
+        # in the priv overlay (nixos-config-priv/secrets/secrets.yaml).
         environmentFiles = ["/var/lib/hermes-secrets/agent.env"];
 
         # No compilers or package managers visible to the agent.
@@ -316,18 +314,13 @@ in {
     };
   };
 
-  # No explicit container@hermes ordering for the sops secret is needed:
-  #  - The nixos-containers module already generates container@hermes and adds
-  #    every bindMounts hostPath (incl. the sops-rendered agent.env) to its
-  #    unitConfig.RequiresMountsFor — so the mount dep exists for free. Declaring
-  #    our own systemd.services."container@hermes" collides with that generated
-  #    unit and breaks evaluation.
-  #  - At boot the render always precedes the container: sops installs secrets in
-  #    sysinit.target (systemd mode) or an activationScript (legacy), both far
-  #    earlier than machines.target where the container starts.
-  # A live secret RE-render (rebuild with changed values) is handled by the
-  # template's restartUnits = ["container@hermes.service"] in the priv overlay,
-  # which bounces the container so it picks up the new inode.
+  # No explicit container@hermes ordering is needed: nixos-containers already
+  # generates that unit (declaring our own collides and breaks eval), and it
+  # adds every bindMounts hostPath to RequiresMountsFor. At boot sops renders
+  # (sysinit/activation) well before the container (machines.target).
+  # Known gap: changing a secret does NOT restart the container, so it keeps the
+  # old value until manually restarted (machinectl restart hermes). A restartUnits
+  # binding in the priv overlay is the intended fix, not yet wired.
 
   # Host DNS via systemd-resolved, which also serves the container. The agent
   # sends DNS to the stub on the veth host address (hostAddress); resolved
