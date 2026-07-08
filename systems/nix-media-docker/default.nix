@@ -130,12 +130,29 @@ in {
   services = {
     ntfy-sh = {
       enable = true;
+      # Secret env file providing NTFY_AUTH_USERS + NTFY_AUTH_TOKENS. Generate
+      # with `ntfy user hash` (bcrypt) and `ntfy token generate`:
+      #   NTFY_AUTH_USERS='hermes...user'
+      #   NTFY_AUTH_TOKENS='herme...gent comms'
+      environmentFile = "/home/doot/secret_test/ntfy/env";
       settings = {
         base-url = "https://ntfy.${fqdn}";
         listen-http = ":2586";
         behind-proxy = true;
         cache-duration = "720h";
         message-size-limit = "32K";
+        # Private instance: deny by default, grant per topic. Users and tokens
+        # come from environmentFile above.
+        auth-default-access = "deny-all";
+        auth-access = [
+          # Agent comms channel: agent (token) + phone (password), read-write.
+          "hermes:hermes-agent:rw"
+          "doot:hermes-agent:rw"
+          # Anonymous read-write for the changelog flow: every host's notifier
+          # publishes here and the atom reader on this host polls it. Without
+          # this explicit grant the server-global deny-all would break it.
+          "everyone:nixos-changelog:rw"
+        ];
       };
     };
 
