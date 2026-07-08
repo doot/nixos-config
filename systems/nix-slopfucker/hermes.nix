@@ -188,7 +188,10 @@ in {
       hermesGid,
       ...
     }: {
-      imports = [inputs.hermes-agent.nixosModules.default];
+      imports = [
+        inputs.hermes-agent.nixosModules.default
+        inputs.priv.nixosModules.hermesPriv
+      ];
 
       # Pin the container's hermes user/group to the SAME ids as the host's
       # (threaded in via specialArgs above). The hermes-agent module declares

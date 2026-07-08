@@ -10,5 +10,6 @@
     nixpkgs,
   }: {
     nixosModules.stub = _: {};
+    nixosModules.hermesPriv = _: {};
   };
 }
