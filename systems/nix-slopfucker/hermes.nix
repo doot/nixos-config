@@ -23,13 +23,28 @@
   # address, and the HOST forwards upstream — it never reaches a LAN resolver.)
   # To grant a specific host, add its IP, e.g. from the shared constants:
   #   allowedInternalHosts = [ (import ../../common/network.nix).ips.nix-media-docker ];
-  # Caveat: per-host (all ports on that host), not per-service.
+  # Caveat: WHOLE-HOST (all ports). For a single service, prefer the
+  # port-scoped allowedInternalServices below.
   #
-  # nix-media-docker (nmd) is allowed so the agent can reach the self-hosted
-  # Forgejo at git.nmd.jhauschildt.com (its knowledge-base git remote). Per the
-  # caveat above this opens ALL ports on nmd to the agent, not just Forgejo —
-  # an accepted tradeoff until per-service egress (SNI proxy / mesh) exists.
+  # nix-media-docker (nmd) is whole-host because the agent uses several services
+  # on it (Forgejo at git.nmd.jhauschildt.com, ntfy, …). Accepted tradeoff until
+  # every consumer is individually port-scoped.
   allowedInternalHosts = [(import ../../common/network.nix).ips.nix-media-docker];
+
+  # Port-scoped egress: {host, ports} records granting the agent ONLY the named
+  # TCP ports on that host — tighter than a whole-host entry. Emitted as ACCEPTs
+  # ahead of the RFC1918 drops, same as allowedInternalHosts. Prefer this when
+  # the agent needs exactly one service on a host.
+  #
+  # nix-shitfucker (nsf) hosts the private Forgejo repo (homelab/nixos-config-priv)
+  # the agent pushes secrets-overlay PRs to; it only needs git-over-SSH, so open
+  # TCP 22 alone — the rest of nsf stays denied.
+  allowedInternalServices = [
+    {
+      host = (import ../../common/network.nix).ips.nix-shitfucker;
+      ports = [22];
+    }
+  ];
 
   # Private (RFC1918 / link-local / CGNAT) IPv4 ranges the agent must NOT reach,
   # EXCEPT the allowlisted hosts above. Enforced host-side in the hermes-egress
@@ -42,11 +57,20 @@
     "100.64.0.0/10" # CGNAT
   ];
 
-  # Body of the `hermes-egress` iptables chain: allow the explicit hosts first,
-  # then deny the private ranges. Evaluated top-to-bottom, so allow wins over
-  # deny; anything not matched falls through to the internet.
+  # Body of the `hermes-egress` iptables chain: allow the explicit hosts and
+  # port-scoped services first, then deny the private ranges. Evaluated
+  # top-to-bottom, so allow wins over deny; anything not matched falls through
+  # to the internet.
   egressRules = lib.concatStringsSep "\n" (
     (map (host: "iptables -A hermes-egress -d ${host} -j ACCEPT") allowedInternalHosts)
+    ++ (lib.concatMap (
+        svc:
+          map (
+            port: "iptables -A hermes-egress -d ${svc.host} -p tcp --dport ${toString port} -j ACCEPT"
+          )
+          svc.ports
+      )
+      allowedInternalServices)
     ++ (map (cidr: "iptables -A hermes-egress -d ${cidr} -j DROP") lanDenyCidrs)
   );
 
