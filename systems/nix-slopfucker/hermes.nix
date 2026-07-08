@@ -314,14 +314,6 @@ in {
     };
   };
 
-  # No explicit container@hermes ordering is needed: nixos-containers already
-  # generates that unit (declaring our own collides and breaks eval), and it
-  # adds every bindMounts hostPath to RequiresMountsFor. At boot sops renders
-  # (sysinit/activation) well before the container (machines.target).
-  # Known gap: changing a secret does NOT restart the container, so it keeps the
-  # old value until manually restarted (machinectl restart hermes). A restartUnits
-  # binding in the priv overlay is the intended fix, not yet wired.
-
   # Host DNS via systemd-resolved, which also serves the container. The agent
   # sends DNS to the stub on the veth host address (hostAddress); resolved
   # forwards to the host's own upstreams and returns the answer. This is host
