@@ -15,21 +15,22 @@
   hermesUid = 994;
   hermesGid = 992;
 
-  # Internal hosts the agent IS allowed to reach, despite the LAN-wide deny
-  # below. Each becomes an ACCEPT in the hermes-egress chain, ahead of the
-  # RFC1918 drops. DEFAULT IS EMPTY — the agent is treated as hostile and must
-  # have zero LAN access unless a host is added here deliberately. (DNS does NOT
-  # require an entry: the container queries systemd-resolved on the veth host
-  # address, and the HOST forwards upstream — it never reaches a LAN resolver.)
-  # To grant a specific host, add its IP, e.g. from the shared constants:
-  #   allowedInternalHosts = [ (import ../../common/network.nix).ips.nix-media-docker ];
-  # Caveat: per-host (all ports on that host), not per-service.
-  #
-  # nix-media-docker (nmd) is allowed so the agent can reach the self-hosted
-  # Forgejo at git.nmd.jhauschildt.com (its knowledge-base git remote). Per the
-  # caveat above this opens ALL ports on nmd to the agent, not just Forgejo —
-  # an accepted tradeoff until per-service egress (SNI proxy / mesh) exists.
+  # Internal hosts the agent may reach despite the LAN-wide deny below: each
+  # becomes a whole-host ACCEPT in hermes-egress, ahead of the RFC1918 drops.
+  # DEFAULT EMPTY — the agent is hostile; add hosts deliberately. (DNS needs no
+  # entry; it goes to the host resolver on the veth.) For a single port, prefer
+  # allowedInternalServices below.
+  # nmd is whole-host: the agent uses several of its services (Forgejo, ntfy, …).
   allowedInternalHosts = [(import ../../common/network.nix).ips.nix-media-docker];
+
+  # Port-scoped ACCEPTs: {host, ports} grants only those TCP ports on that host.
+  # nsf hosts the private Forgejo repo the agent pushes to — SSH only.
+  allowedInternalServices = [
+    {
+      host = (import ../../common/network.nix).ips.nix-shitfucker;
+      ports = [22];
+    }
+  ];
 
   # Private (RFC1918 / link-local / CGNAT) IPv4 ranges the agent must NOT reach,
   # EXCEPT the allowlisted hosts above. Enforced host-side in the hermes-egress
@@ -42,11 +43,20 @@
     "100.64.0.0/10" # CGNAT
   ];
 
-  # Body of the `hermes-egress` iptables chain: allow the explicit hosts first,
-  # then deny the private ranges. Evaluated top-to-bottom, so allow wins over
-  # deny; anything not matched falls through to the internet.
+  # Body of the `hermes-egress` iptables chain: allow the explicit hosts and
+  # port-scoped services first, then deny the private ranges. Evaluated
+  # top-to-bottom, so allow wins over deny; anything not matched falls through
+  # to the internet.
   egressRules = lib.concatStringsSep "\n" (
     (map (host: "iptables -A hermes-egress -d ${host} -j ACCEPT") allowedInternalHosts)
+    ++ (lib.concatMap (
+        svc:
+          map (
+            port: "iptables -A hermes-egress -d ${svc.host} -p tcp --dport ${toString port} -j ACCEPT"
+          )
+          svc.ports
+      )
+      allowedInternalServices)
     ++ (map (cidr: "iptables -A hermes-egress -d ${cidr} -j DROP") lanDenyCidrs)
   );
 
