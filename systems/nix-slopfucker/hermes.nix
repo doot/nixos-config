@@ -281,13 +281,45 @@ in {
           terminal.cwd = "/var/lib/hermes/workspace";
         };
 
-        # Non-secret env for the agent. Points the obsidian skill at the vault
-        # clone (homelab/hermes-vault) so it resolves without a hardcoded path.
-        environment.OBSIDIAN_VAULT_PATH = "/var/lib/hermes/workspace/hermes-vault";
+        # Non-secret env for the agent, grouped here. Secrets are NOT set here —
+        # they are rendered into agent.env via the sops template (see
+        # environmentFiles below).
+        environment = {
+          # Points the obsidian skill at the vault clone (homelab/hermes-vault)
+          # so it resolves without a hardcoded path.
+          OBSIDIAN_VAULT_PATH = "/var/lib/hermes/workspace/hermes-vault";
+
+          # ntfy comms channel. The bundled ntfy gateway plugin auto-enables as
+          # soon as NTFY_TOPIC is in the env — no plugins.enabled entry needed.
+          # These are deliberately NOT secrets: the topic name already appears in
+          # nmd's ntfy auth-access ACL, so it stays in-repo where a reviewer can
+          # confirm both sides name the same topic. The access token is the only
+          # real secret and is rendered via the sops template (environmentFiles).
+          #
+          # NTFY_ALLOWED_USERS pins the gateway's inbound allowlist to this
+          # topic. The gateway is fail-CLOSED: the ntfy adapter maps an inbound
+          # message's user_id to the topic name, and with no allowlist set the
+          # gateway DROPS every inbound message rather than fail open. Without
+          # this line the agent could publish OUT but would silently ignore
+          # every command IN, even though the token authenticates fine.
+          #
+          # NTFY_TOPIC must match the auth-access entries in
+          # systems/nix-media-docker/default.nix (services.ntfy-sh.settings).
+          NTFY_SERVER_URL = "https://ntfy.${(import ../../common/network.nix).hosts.nix-media-docker.fqdn}";
+          NTFY_TOPIC = "hermes-agent";
+          NTFY_ALLOWED_USERS = "hermes-agent";
+          NTFY_HOME_CHANNEL = "hermes-agent";
+        };
 
         # sops-nix–rendered env file, bind-mounted read-only from the host (see
         # bindMounts above). Decrypted to /run tmpfs (root 0400); values encrypted
         # in the priv overlay (nixos-config-priv/secrets/secrets.yaml).
+        #
+        # For the ntfy channel, add NTFY_TOKEN to the "hermes-agent.env" sops
+        # template in the priv overlay (alongside COPILOT_GITHUB_TOKEN): encrypt
+        # the value as a new sops secret and reference it via
+        # config.sops.placeholder in the template. It must equal the tk_... in
+        # nmd's NTFY_AUTH_TOKENS for user hermes.
         environmentFiles = ["/var/lib/hermes-secrets/agent.env"];
 
         # No compilers or package managers visible to the agent.
