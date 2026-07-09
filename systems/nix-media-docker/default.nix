@@ -344,6 +344,13 @@ in {
         {
           name = "ntfy";
           port = 2586;
+          # ntfy's subscribe stream is a long-lived chunked response; default
+          # proxy_buffering withholds it from HTTP/1.1 clients (the agent), and a
+          # long read timeout stops nginx cutting the idle-but-alive stream.
+          extraConfig = ''
+            proxy_buffering off;
+            proxy_read_timeout 3600s;
+          '';
         }
         # {
         #   name = "gitea-mirror";
