@@ -33,11 +33,24 @@ in {
       default = "";
       description = "Shell run before the backup, e.g. to dump databases into a staging dir that is also listed in `paths`.";
     };
+
+    readWritePaths = lib.mkOption {
+      type = lib.types.listOf lib.types.path;
+      default = [];
+      description = ''
+        Directories the backup service is allowed to write to. The nixpkgs
+        borgbackup module runs the job under `ProtectSystem = "strict"`, so the
+        whole filesystem is read-only except borg's own cache/config. Any path a
+        `preHook` writes to (e.g. a DB-dump staging dir) MUST be listed here or
+        the preHook fails with "Read-only file system".
+      '';
+      example = ["/var/backup/mysqldump"];
+    };
   };
 
   config = lib.mkIf cfg.enable {
     services.borgbackup.jobs.${cfg.jobName} = {
-      inherit (cfg) paths repo preHook;
+      inherit (cfg) paths repo preHook readWritePaths;
       archiveBaseName = cfg.jobName;
       # TODO(secrets): switch to repokey encryption with a passphrase sourced from the
       # secrets store once that task lands. Unencrypted matches the current posture.

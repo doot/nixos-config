@@ -184,6 +184,10 @@
         "/var/lib/nextcloud" # nextcloud data + sqlite DB
         "/var/backup/immich" # immich Postgres dump written by preHook below
       ];
+      # The nixpkgs borgbackup module runs under ProtectSystem=strict, so the
+      # preHook cannot create /var/backup/immich unless it is whitelisted here.
+      # Without this the whole job hard-fails ("Read-only file system").
+      readWritePaths = ["/var/backup"];
       # Immich uses Postgres, so a live file copy would be inconsistent — dump it instead.
       # forgejo/nextcloud are sqlite and backed up at the file level (same approach as nmd's
       # other sqlite services); point-in-time, with the usual live-sqlite caveat.
