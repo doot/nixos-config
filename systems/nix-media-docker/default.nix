@@ -219,6 +219,10 @@ in {
       enable = true;
       jobName = "borg-nmd";
       repo = "ssh://proxmox-borg@192.168.1.60:2222/volume1/proxmox-nfs/borg-nmd";
+      # freshrss/grafana/etc. sqlite DBs are copied live, so borg warns "file
+      # changed while we backed it up" (exit 1) and every run is marked failed
+      # even though the archive uploads fine. Tolerate the warning here.
+      failOnWarnings = false;
       paths = [
         "/var/lib/karakeep"
         "/var/lib/grafana/data"
