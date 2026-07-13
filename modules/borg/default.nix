@@ -46,11 +46,22 @@ in {
       '';
       example = ["/var/backup/mysqldump"];
     };
+
+    failOnWarnings = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Fail the job on a borg warning (exit 1). Keep true so a warning is a
+        real signal; set false only for a job that backs up files written live
+        (e.g. an sqlite DB), where "file changed while we backed it up" is
+        expected and would otherwise mark every run failed.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
     services.borgbackup.jobs.${cfg.jobName} = {
-      inherit (cfg) paths repo preHook readWritePaths;
+      inherit (cfg) paths repo preHook readWritePaths failOnWarnings;
       archiveBaseName = cfg.jobName;
       # TODO(secrets): switch to repokey encryption with a passphrase sourced from the
       # secrets store once that task lands. Unencrypted matches the current posture.

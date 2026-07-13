@@ -165,11 +165,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1783841785,
-        "narHash": "sha256-213oCH78FjBbxMhU7K7QDSpB6nZwwk4NWhozmInjxzc=",
+        "lastModified": 1783932575,
+        "narHash": "sha256-Kmoa/9Wn6svMH2eIko0R2W9P0jmTJqegqDaghFWbMzQ=",
         "owner": "NousResearch",
         "repo": "hermes-agent",
-        "rev": "79c08064568665251dac93b79b2247082b0510ee",
+        "rev": "2bd721cebc857bdd1b052d4246f977f624ea0fff",
         "type": "github"
       },
       "original": {
@@ -255,11 +255,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1783812404,
-        "narHash": "sha256-u1d1MYLJmCxigEnIWQ7xZffuoCsmD2h8YYgY6oi25iE=",
-        "rev": "6052d7bcd77925311b75217e3a54ba7521a7c07b",
+        "lastModified": 1783901513,
+        "narHash": "sha256-F1Du+4GpFT5JFpyUNZkwJpGjW4gQu//LDeCCdKtE2u0=",
+        "rev": "74258951b6f86d69cc7c08b1860ec5e391384f59",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/26.05-small/nixos-26.05.4786.6052d7bcd779/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixos/26.05-small/nixos-26.05.4865.74258951b6f8/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
@@ -268,11 +268,11 @@
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1783804422,
-        "narHash": "sha256-wK85qOAMv1/OK57/iokESOTrRSDeu6kkLP3SNLk1iWs=",
-        "rev": "25de74a7cf86e4917018e78eea2311f806efc1d2",
+        "lastModified": 1783891814,
+        "narHash": "sha256-xXI/HW7qjhqhY7WFwzDKCTBUSTcNO5f0EvZpUcscwMk=",
+        "rev": "62290c9d1b6ff9e155da4da1de774cdd706cf48a",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/unstable-small/nixos-26.11pre1033103.25de74a7cf86/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixos/unstable-small/nixos-26.11pre1033464.62290c9d1b6f/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
@@ -308,11 +308,11 @@
       },
       "locked": {
         "dir": "priv",
-        "lastModified": 1783756192,
-        "narHash": "sha256-YPeIuU3dAXmaURn6j6EgYj17pS1TO4jZ2p8m+7t7UHY=",
+        "lastModified": 1783843839,
+        "narHash": "sha256-+d75+kdp+uJcwOeobw8wDwt8qeur2w33NM5YurPGXNI=",
         "owner": "doot",
         "repo": "nixos-config",
-        "rev": "189dc91f551b061089c0b7b9772544c824f81287",
+        "rev": "2f8cd6335a680a6380a4820176fc0e3b2529245c",
         "type": "github"
       },
       "original": {
