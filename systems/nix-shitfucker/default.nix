@@ -55,6 +55,15 @@
 
   system.stateVersion = "23.11";
 
+  # Append the private-overlay override so scheduled auto-upgrades render the
+  # sops borg key (concatenates with common's ["--refresh" "-L"]). Without this
+  # nsf upgrades against the public stub and borgKey is a no-op. Mirrors nmd.
+  system.autoUpgrade.flags = [
+    "--override-input"
+    "priv"
+    "/home/doot/nixos-config-priv"
+  ];
+
   services = {
     qemuGuest.enable = true;
 
