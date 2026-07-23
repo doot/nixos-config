@@ -66,7 +66,7 @@ in {
       # TODO(secrets): switch to repokey encryption with a passphrase sourced from the
       # secrets store once that task lands. Unencrypted matches the current posture.
       encryption.mode = "none";
-      environment.BORG_RSH = "ssh -o 'StrictHostKeyChecking=no' -o 'BatchMode=yes' -i /root/.ssh/id_ed25519";
+      environment.BORG_RSH = "ssh -o 'StrictHostKeyChecking=no' -o 'BatchMode=yes' -i /root/.ssh/borg_ed25519";
       extraArgs = ["--remote-path=/usr/local/bin/borg"];
       extraCreateArgs = [
         "--stats"
