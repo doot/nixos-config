@@ -9,7 +9,10 @@
     # deadnix: skip
     nixpkgs,
   }: {
-    nixosModules.stub = _: {};
-    nixosModules.hermesPriv = _: {};
+    nixosModules = {
+      stub = _: {};
+      hermesPriv = _: {};
+      borgKey = _: {};
+    };
   };
 }
