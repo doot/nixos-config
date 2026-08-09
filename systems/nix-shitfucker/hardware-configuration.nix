@@ -47,7 +47,12 @@
     "/mnt/pictures-nfs" = {
       device = "sh2.jhauschildt.com:/volume1/Pictures";
       fsType = "nfs4";
-      options = ["noatime"];
+      options = [
+        "noatime"
+        # Lazy mount the NFS share on first access. This should hopefully prevent them from mounting before DNS is available, or the network is fully up.
+        "x-systemd.automount"
+        "noauto"
+      ];
     };
   };
 
