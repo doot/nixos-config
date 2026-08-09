@@ -121,6 +121,21 @@ in {
   programs = {
     git.enable = true;
     direnv.enable = true;
+
+    # Let root's nixos-rebuild fetch the private priv overlay from Forgejo over
+    # git+ssh non-interactively: pin the host key (no prompt) and present the
+    # host's own SSH key, which is authorized as a read-only deploy key on the
+    # repo. Reuses "secret zero" — no new credential.
+    ssh = {
+      knownHosts."nsf-forgejo" = {
+        hostNames = ["nsf.jhauschildt.com"];
+        publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGEm1zOqhceutFGxtW6IYryiP9GH/XpgM2aqfpf7H8FH";
+      };
+      extraConfig = ''
+        Host nsf.jhauschildt.com
+          IdentityFile /etc/ssh/ssh_host_ed25519_key
+      '';
+    };
     bash.completion.enable = true;
     fzf = {
       keybindings = true;

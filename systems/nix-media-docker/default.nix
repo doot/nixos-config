@@ -28,7 +28,7 @@ in {
       flags = [
         "--override-input"
         "priv"
-        "/home/doot/nixos-config-priv"
+        "git+ssh://forgejo@nsf.jhauschildt.com/homelab/nixos-config-priv.git?ref=main"
       ];
 
       # This system is in lxc container, so it will never have kernel upgrades. All upgrades fail when this is enabled due to trying to read boot symlinks that don't exist.
