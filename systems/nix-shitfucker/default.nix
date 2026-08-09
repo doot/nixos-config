@@ -55,6 +55,15 @@
 
   system.stateVersion = "23.11";
 
+  # Append the private-overlay override so scheduled auto-upgrades render the
+  # sops borg key (concatenates with common's ["--refresh" "-L"]). Fetched from
+  # Forgejo over git+ssh (see common/default.nix ssh config). Mirrors nmd.
+  system.autoUpgrade.flags = [
+    "--override-input"
+    "priv"
+    "git+ssh://forgejo@nsf.jhauschildt.com/homelab/nixos-config-priv.git?ref=main"
+  ];
+
   services = {
     qemuGuest.enable = true;
 
