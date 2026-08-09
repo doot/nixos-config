@@ -124,6 +124,7 @@
           ./common/monitoring
           arion.nixosModules.arion
           priv.nixosModules.stub
+          priv.nixosModules.borgKey
         ];
       };
 
@@ -134,6 +135,7 @@
         extraModules = [
           ./common/sunshine
           ./systems/nix-shitfucker/proxmox.nix
+          priv.nixosModules.borgKey
           home-manager.nixosModules.home-manager
           {
             home-manager = {
