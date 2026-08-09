@@ -123,8 +123,10 @@
         extraModules = [
           ./common/monitoring
           arion.nixosModules.arion
-          priv.nixosModules.stub
-          priv.nixosModules.borgKey
+          # Private overlay bundle for this host: sops bootstrap + borg key +
+          # nmd's own services. Excludes the agent credentials, which slop alone
+          # is a sops recipient of.
+          priv.nixosModules.nmdPriv
         ];
       };
 
@@ -135,7 +137,7 @@
         extraModules = [
           ./common/sunshine
           ./systems/nix-shitfucker/proxmox.nix
-          priv.nixosModules.borgKey
+          priv.nixosModules.nsfPriv
           home-manager.nixosModules.home-manager
           {
             home-manager = {
@@ -155,11 +157,11 @@
         extraModules = [
           ./systems/nix-slopfucker/proxmox.nix
           hermes-agent.nixosModules.default
-          # Private overlay: the public stub by default; overridden at deploy
-          # (--override-input priv <path>) with the real sops-nix secrets module
-          # that renders the agent's credentials. Without this import the
-          # override has nothing to consume and /run/secrets stays empty.
-          priv.nixosModules.stub
+          # Private overlay bundle for this host: sops bootstrap + the agent's
+          # credentials. Overridden at deploy (--override-input priv <url>);
+          # without this import the override has nothing to consume and
+          # /run/secrets stays empty.
+          priv.nixosModules.slopPriv
         ];
       };
     };
