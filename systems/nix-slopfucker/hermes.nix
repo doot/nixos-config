@@ -259,7 +259,7 @@ in {
         settings = {
           model = {
             provider = "copilot";
-            default = "claude-opus-4.8";
+            default = "claude-opus-5";
           };
           memory = {
             memory_enabled = true;
