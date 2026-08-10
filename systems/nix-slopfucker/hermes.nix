@@ -284,6 +284,7 @@ in {
           agent = {
             environment_hint = "You are running inside a locked-down NixOS container: no nix daemon, no package managers, and network access restricted to the internet only (no local network).";
             personality = "noir";
+            reasoning_effort = "xhigh";
           };
           terminal.cwd = "/var/lib/hermes/workspace";
         };
