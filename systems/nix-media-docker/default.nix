@@ -24,16 +24,8 @@ in {
   system = {
     stateVersion = "23.11";
 
-    autoUpgrade = {
-      flags = [
-        "--override-input"
-        "priv"
-        "git+ssh://forgejo@nsf.jhauschildt.com/homelab/nixos-config-priv.git?ref=main"
-      ];
-
-      # This system is in lxc container, so it will never have kernel upgrades. All upgrades fail when this is enabled due to trying to read boot symlinks that don't exist.
-      allowReboot = lib.mkForce false;
-    };
+    # This system is in lxc container, so it will never have kernel upgrades. All upgrades fail when this is enabled due to trying to read boot symlinks that don't exist.
+    autoUpgrade.allowReboot = lib.mkForce false;
   };
 
   boot = {

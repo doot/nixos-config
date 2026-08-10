@@ -322,6 +322,12 @@ in {
       flags = [
         "--refresh" # always fetch latest from git repo
         "-L" # print build logs
+        # Every host imports a bundle from the private overlay, so the public
+        # stub has to be replaced here or those imports resolve to no-ops.
+        # Hosts authenticate with their SSH host key (a read-only deploy key).
+        "--override-input"
+        "priv"
+        "git+ssh://forgejo@nsf.jhauschildt.com/homelab/nixos-config-priv.git?ref=main"
       ];
       allowReboot = true;
       flake = "github:doot/nixos-config#";
