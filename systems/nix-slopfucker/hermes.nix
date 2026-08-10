@@ -246,6 +246,7 @@ in {
         btop
         dig
         iperf3
+        mcp-nixos
       ];
 
       # ── THE Hermes config — single source of truth, defined once, here ────
@@ -285,6 +286,21 @@ in {
             personality = "noir";
           };
           terminal.cwd = "/var/lib/hermes/workspace";
+        };
+
+        mcpServers = {
+          nixos = {
+            command = "mcp-nixos";
+            args = ["--"];
+          };
+          devenv = {
+            # type = "stdio";
+            command = "devenv";
+            args = ["--from" "/var/lib/hermes/workspace/nixos-config" "mcp"];
+            env = {
+              DEVENV_ROOT = "/var/lib/hermes/workspace/nixos-config";
+            };
+          };
         };
 
         # Non-secret env for the agent.
