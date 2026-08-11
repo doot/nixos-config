@@ -71,6 +71,26 @@
   externalInterface = "ens18";
   vethHost = "ve-hermes";
 
+  # Terminal-identity variables the Hermes Ink TUI reads to decide whether the
+  # terminal can encode modified keys (Shift+Enter, Ctrl+Enter, Cmd+Backspace).
+  # Its detector resolves a terminal name from these, then only emits the kitty
+  # keyboard (CSI >1u) and xterm modifyOtherKeys (CSI >4;2m) enable sequences
+  # for a known-capable name. Absent those sequences the terminal has no wire
+  # encoding for Shift+Enter — it arrives as a bare CR, indistinguishable from
+  # Enter, and the TUI falls back to a trailing backslash for newlines.
+  #
+  # machinectl builds a fresh PAM session environment and forwards only TERM,
+  # so without this list the name degrades to "xterm-256color" and modified
+  # keys are unrepresentable. sshd must also accept them (services.openssh
+  # AcceptEnv in common/default.nix) and the client must send them.
+  terminalIdentityEnv = [
+    "TERM"
+    "TERM_PROGRAM"
+    "TERM_PROGRAM_VERSION"
+    "COLORTERM"
+    "WEZTERM_REMOTE_PANE"
+  ];
+
   # Interactive TUI for regular users: drops into the container as the hermes
   # user with a real PTY, so they drive the SAME agent the gateway runs — one
   # config, one state dir, one boundary. No separate native CLI path to bypass.
@@ -82,7 +102,17 @@
       echo "hermes container is not running. Start it with: sudo machinectl start hermes" >&2
       exit 1
     fi
-    exec ${pkgs.systemd}/bin/machinectl shell hermes@hermes \
+
+    # Forward only the variables that are actually set. `machinectl --setenv`
+    # rejects a bare name whose value is unset, so each is tested first.
+    setenv=()
+    for var in ${lib.concatStringsSep " " terminalIdentityEnv}; do
+      if [ -n "''${!var-}" ]; then
+        setenv+=("--setenv=$var=''${!var}")
+      fi
+    done
+
+    exec ${pkgs.systemd}/bin/machinectl shell "''${setenv[@]}" hermes@hermes \
       /run/current-system/sw/bin/hermes "$@"
   '';
 in {
