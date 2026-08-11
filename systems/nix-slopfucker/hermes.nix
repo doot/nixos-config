@@ -103,8 +103,11 @@
       exit 1
     fi
 
-    # Forward only the variables that are actually set. `machinectl --setenv`
-    # rejects a bare name whose value is unset, so each is tested first.
+    # `--setenv=NAME` (no value) inherits NAME from this process's environment,
+    # so an unset variable would be forwarded as absent or empty depending on
+    # the systemd version. Resolve each value here instead and skip the ones
+    # that are unset, so the argv is explicit and the behaviour does not depend
+    # on that detail.
     setenv=()
     for var in ${lib.concatStringsSep " " terminalIdentityEnv}; do
       if [ -n "''${!var-}" ]; then
