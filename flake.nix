@@ -68,6 +68,8 @@
     self,
     nixpkgs,
     nixpkgs-unstable,
+    # deadnix: skip
+    nixpkgs-node,
     arion,
     priv,
     home-manager,
