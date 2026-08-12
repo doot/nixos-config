@@ -71,18 +71,10 @@
   externalInterface = "ens18";
   vethHost = "ve-hermes";
 
-  # Terminal-identity variables the Hermes Ink TUI reads to decide whether the
-  # terminal can encode modified keys (Shift+Enter, Ctrl+Enter, Cmd+Backspace).
-  # Its detector resolves a terminal name from these, then only emits the kitty
-  # keyboard (CSI >1u) and xterm modifyOtherKeys (CSI >4;2m) enable sequences
-  # for a known-capable name. Absent those sequences the terminal has no wire
-  # encoding for Shift+Enter — it arrives as a bare CR, indistinguishable from
-  # Enter, and the TUI falls back to a trailing backslash for newlines.
-  #
-  # machinectl builds a fresh PAM session environment and forwards only TERM,
-  # so without this list the name degrades to "xterm-256color" and modified
-  # keys are unrepresentable. sshd must also accept them (services.openssh
-  # AcceptEnv in common/default.nix) and the client must send them.
+  # Forwarded into the container so the TUI can identify the terminal and enable
+  # modified-key reporting (Shift+Enter). Every hop must cooperate: the client
+  # sends them via SendEnv, sshd accepts them (services.openssh in
+  # common/default.nix), and machinectl forwards only TERM without this list.
   terminalIdentityEnv = [
     "TERM"
     "TERM_PROGRAM"
@@ -103,11 +95,8 @@
       exit 1
     fi
 
-    # `--setenv=NAME` (no value) inherits NAME from this process's environment,
-    # so an unset variable would be forwarded as absent or empty depending on
-    # the systemd version. Resolve each value here instead and skip the ones
-    # that are unset, so the argv is explicit and the behaviour does not depend
-    # on that detail.
+    # Resolve values here rather than passing bare `--setenv=NAME`, which
+    # inherits from this environment and would forward unset vars as empty.
     setenv=()
     for var in ${lib.concatStringsSep " " terminalIdentityEnv}; do
       if [ -n "''${!var-}" ]; then
