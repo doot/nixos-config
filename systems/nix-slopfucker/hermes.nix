@@ -71,6 +71,18 @@
   externalInterface = "ens18";
   vethHost = "ve-hermes";
 
+  # Forwarded into the container so the TUI can identify the terminal and enable
+  # modified-key reporting (Shift+Enter). Every hop must cooperate: the client
+  # sends them via SendEnv, sshd accepts them (services.openssh in
+  # common/default.nix), and machinectl forwards only TERM without this list.
+  terminalIdentityEnv = [
+    "TERM"
+    "TERM_PROGRAM"
+    "TERM_PROGRAM_VERSION"
+    "COLORTERM"
+    "WEZTERM_REMOTE_PANE"
+  ];
+
   # Interactive TUI for regular users: drops into the container as the hermes
   # user with a real PTY, so they drive the SAME agent the gateway runs — one
   # config, one state dir, one boundary. No separate native CLI path to bypass.
@@ -82,7 +94,17 @@
       echo "hermes container is not running. Start it with: sudo machinectl start hermes" >&2
       exit 1
     fi
-    exec ${pkgs.systemd}/bin/machinectl shell hermes@hermes \
+
+    # Resolve values here rather than passing bare `--setenv=NAME`, which
+    # inherits from this environment and would forward unset vars as empty.
+    setenv=()
+    for var in ${lib.concatStringsSep " " terminalIdentityEnv}; do
+      if [ -n "''${!var-}" ]; then
+        setenv+=("--setenv=$var=''${!var}")
+      fi
+    done
+
+    exec ${pkgs.systemd}/bin/machinectl shell "''${setenv[@]}" hermes@hermes \
       /run/current-system/sw/bin/hermes "$@"
   '';
 in {
