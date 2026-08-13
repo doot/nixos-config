@@ -216,7 +216,19 @@ in {
       imports = [
         inputs.hermes-agent.nixosModules.default
         inputs.priv.nixosModules.hermesPriv
+
+        # Nested container evals inherit nothing from the host, so the repo's
+        # shared vi/editor defaults must be imported explicitly. Pulled in on
+        # its own rather than via ./modules: the sibling roles there (alloy,
+        # forgejo, nginx-proxy...) are host services with no place in a
+        # single-purpose agent sandbox.
+        ../../modules/shell-defaults
       ];
+
+      # Overrides the module's nvim default: this container deliberately carries
+      # only plain vim (systemPackages below) -- the neovim role's LazyVim/mason
+      # toolchain wants a compiler and network fetches the lockdown forbids.
+      roles.shellDefaults.editor = "vim";
 
       # Pin the container's hermes user/group to the SAME ids as the host's
       # (threaded in via specialArgs above). The hermes-agent module declares

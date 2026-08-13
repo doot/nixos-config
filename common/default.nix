@@ -106,13 +106,9 @@ in {
       traceroute
     ];
 
-    variables = {
-      EDITOR = "nvim";
-      VISUAL = "nvim";
-      DO_NOT_TRACK = 1;
-    };
-
-    sessionVariables.EDITOR = "nvim";
+    # EDITOR/VISUAL come from roles.shellDefaults (modules/shell-defaults),
+    # which every host gets by default.
+    variables.DO_NOT_TRACK = 1;
   };
 
   programs = {
