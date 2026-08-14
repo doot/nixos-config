@@ -18,6 +18,11 @@
     nixpkgs.url = "https://channels.nixos.org/nixos-26.05-small/nixexprs.tar.xz";
     nixpkgs-unstable.url = "https://channels.nixos.org/nixos-unstable-small/nixexprs.tar.xz";
 
+    # Pinned to the last rev shipping nodejs_24 at 24.18.1, solely to build
+    # karakeep. 24.19.0 aborts under better-sqlite3; see systems/nix-media-docker.
+    # Drop this input once nodejs_24 in nixpkgs-unstable is safe again.
+    nixpkgs-node.url = "github:NixOS/nixpkgs/265b7e2dbbdbe2e59609fa31ed8be38cdb517d13";
+
     arion = {
       url = "github:hercules-ci/arion";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -63,6 +68,8 @@
     self,
     nixpkgs,
     nixpkgs-unstable,
+    # deadnix: skip
+    nixpkgs-node,
     arion,
     priv,
     home-manager,

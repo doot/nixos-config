@@ -165,11 +165,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1786605030,
-        "narHash": "sha256-ArXdhA25Decj3Pchp0i1VYTnbze13G+evutL9s+eyGw=",
+        "lastModified": 1786663889,
+        "narHash": "sha256-nG2H5R/rmlag6b2x8uemNxCdcD2jEOpF+L/fJd5tpPA=",
         "owner": "NousResearch",
         "repo": "hermes-agent",
-        "rev": "fe5e7799f248fabd1ebecf5a0d5e5de8831163b7",
+        "rev": "423f92e607dd51908d23b04758bc0fcd6ec5ff39",
         "type": "github"
       },
       "original": {
@@ -185,11 +185,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1786603258,
-        "narHash": "sha256-j1lYPT7YxOQc/G7NcJKqdpQ5/A5yX2aZdhVKkJR6cM4=",
+        "lastModified": 1786656209,
+        "narHash": "sha256-ybGtuwGKTUCefKYsplzvw4xcCqznto0c7BaiQhgILtA=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "0668fdbc15bd602e463cab37ff64346021193652",
+        "rev": "c554d3441f725537854e877519f01cbd60680174",
         "type": "github"
       },
       "original": {
@@ -224,11 +224,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1786579404,
-        "narHash": "sha256-u8cCRrk4j8Xm0Cd5vful9OA+Z5+vqWkkR5KHDYWtTqw=",
+        "lastModified": 1786665931,
+        "narHash": "sha256-q6OfJQzaF4sCFTdYQkVrivFtTJfn6tOXWZgh2+jSdWQ=",
         "owner": "nix-community",
         "repo": "neovim-nightly-overlay",
-        "rev": "3c7255e535760cd414f64af0ebf7715dfd683673",
+        "rev": "3e18c5a4359334e9aaaec6b3c265065c0987bf96",
         "type": "github"
       },
       "original": {
@@ -240,11 +240,11 @@
     "neovim-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1786540377,
-        "narHash": "sha256-sBQqVfoZiKaAjVTaEt/O27BX4PgnkZT2fWezQeABnxE=",
+        "lastModified": 1786664812,
+        "narHash": "sha256-dd8R90vbRRZRwx5591OeySSdN+GvowuRwgP8EYU0YHM=",
         "owner": "neovim",
         "repo": "neovim",
-        "rev": "a63393396cd0901050849b72caaa8583949b6ebf",
+        "rev": "ca88ad10c8e9eeee2f2bf1bc73466d207663c4d2",
         "type": "github"
       },
       "original": {
@@ -266,13 +266,29 @@
         "url": "https://channels.nixos.org/nixos-26.05-small/nixexprs.tar.xz"
       }
     },
+    "nixpkgs-node": {
+      "locked": {
+        "lastModified": 1786400526,
+        "narHash": "sha256-ABftAecb5leXFwM5EZodr2q4dmwuCH+tmdp8xde4ssA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "265b7e2dbbdbe2e59609fa31ed8be38cdb517d13",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "265b7e2dbbdbe2e59609fa31ed8be38cdb517d13",
+        "type": "github"
+      }
+    },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1786581322,
-        "narHash": "sha256-sGBYdsRw0uTAH+tIA1v4DOA9lgfMw5as3lrc32ilS6E=",
-        "rev": "8f4f7ae8c3c8fddf517782b653903d11f89b5c87",
+        "lastModified": 1786614121,
+        "narHash": "sha256-/AGhCqYIfWd2JNLZQ9YFePhZ0qYA/bVTMLOX+3/uBbk=",
+        "rev": "592c38b175d0c7bb9ccf1eb3b80872a7bba5f125",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/unstable-small/nixos-26.11pre1053268.8f4f7ae8c3c8/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixos/unstable-small/nixos-26.11pre1053385.592c38b175d0/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
@@ -308,11 +324,11 @@
       },
       "locked": {
         "dir": "priv",
-        "lastModified": 1786519237,
-        "narHash": "sha256-lrp1AxK4ZHz1xx6ZYFRkKR2KyocCGojtLg9mAyZNg2M=",
+        "lastModified": 1786605712,
+        "narHash": "sha256-lofHVWOeoC5FvceMCav7wlKoc97WBO19qVQ45M4JbmI=",
         "owner": "doot",
         "repo": "nixos-config",
-        "rev": "00b1f0fc1f27e09b05c8bd908055a1521028c001",
+        "rev": "a4b8f3bc20b6ae77de2c5f450623827a04ad9559",
         "type": "github"
       },
       "original": {
@@ -379,6 +395,7 @@
         "home-manager": "home-manager",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-node": "nixpkgs-node",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "priv": "priv",
         "wezterm": "wezterm"
