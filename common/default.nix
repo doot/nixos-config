@@ -12,6 +12,77 @@
   nixosConfigDir = "${mainUser.home}/nixos-config";
   dotfilesDir = "${mainUser.home}/.dotfiles";
 
+  # Every host imports a bundle from the private overlay, so the public stub has
+  # to be replaced or those imports resolve to no-ops. Hosts authenticate with
+  # their SSH host key (a read-only deploy key). Consumed by both autoUpgrade and
+  # the nrb wrapper so the two can never drift.
+  privInput = "git+ssh://forgejo@nsf.jhauschildt.com/homelab/nixos-config-priv.git?ref=main";
+
+  # nixos-rebuild resolves from PATH to the running system's own copy, matching a
+  # hand-typed invocation. Options are flags rather than env vars because this
+  # always runs under sudo, and sudo's env_reset would silently discard them.
+  rebuildWrapper = pkgs.writeShellApplication {
+    name = "nrb";
+    text = ''
+      flake=${nixosConfigDir}
+      priv=${privInput}
+
+      usage() {
+        cat >&2 <<EOF
+      usage: nrb <switch|boot|test|build|dry-activate|...> [-p PRIV] [-f FLAKE] [args...]
+        -p PRIV   priv overlay path or flakeref (default: $priv)
+        -f FLAKE  flake directory to build (default: $flake)
+      Unrecognised arguments are passed through to nixos-rebuild.
+      EOF
+      }
+
+      if [ "$#" -eq 0 ]; then
+        usage
+        exit 2
+      fi
+      case $1 in
+        -h | --help)
+          usage
+          exit 0
+          ;;
+        -*)
+          echo "nrb: first argument must be a nixos-rebuild subcommand, got '$1'" >&2
+          usage
+          exit 2
+          ;;
+      esac
+      subcommand=$1
+      shift
+
+      passthrough=()
+      while [ "$#" -gt 0 ]; do
+        case $1 in
+          -p | --priv)
+            priv=$2
+            shift 2
+            ;;
+          -f | --flake)
+            flake=$2
+            shift 2
+            ;;
+          -h | --help)
+            usage
+            exit 0
+            ;;
+          *)
+            passthrough+=("$1")
+            shift
+            ;;
+        esac
+      done
+
+      exec nixos-rebuild "$subcommand" -L \
+        --flake "$flake#" \
+        --override-input priv "$priv" \
+        ''${passthrough[@]+"''${passthrough[@]}"}
+    '';
+  };
+
   # Shared factory for repo-clone oneshots.
   # Idempotent: ConditionPathExists skips the unit when `dir` already exists (on
   # every boot and manual systemctl start), so it's always a no-op once cloned.
@@ -89,6 +160,7 @@ in {
       go
       cachix
       tree
+      rebuildWrapper
 
       # General diagnostic tools
       bcc
@@ -319,12 +391,9 @@ in {
       flags = [
         "--refresh" # always fetch latest from git repo
         "-L" # print build logs
-        # Every host imports a bundle from the private overlay, so the public
-        # stub has to be replaced here or those imports resolve to no-ops.
-        # Hosts authenticate with their SSH host key (a read-only deploy key).
         "--override-input"
         "priv"
-        "git+ssh://forgejo@nsf.jhauschildt.com/homelab/nixos-config-priv.git?ref=main"
+        privInput
       ];
       allowReboot = true;
       flake = "github:doot/nixos-config#";
