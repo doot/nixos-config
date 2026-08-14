@@ -217,25 +217,12 @@ in {
         inputs.hermes-agent.nixosModules.default
         inputs.priv.nixosModules.hermesPriv
 
-        # Nested container evals inherit nothing from the host, so the repo's
-        # shared vi/editor defaults must be imported explicitly.
-        #
-        # Imported as a single leaf, NOT via ../../modules: that aggregator also
-        # pulls roles.neovim. The host force-disables that role above, but this
-        # is a nested eval that inherits none of it, so here it would apply at
-        # its default of true -- installing gcc/rustc/cargo/nodejs/python3 and
-        # enabling nix-ld, which swaps this container's deliberate stub-ld for a
-        # working dynamic loader, turning downloaded ELF binaries from
-        # non-executable into executable. LazyVim/mason then fetch and compile
-        # plugins at runtime into $HOME, which is the *persistent* bind mount, so
-        # the ephemeral root would not even discard them. Keep this list a set of
-        # explicit leaves.
+        # The container intentionally does not inherit anything from the host,
+        # so explicitly include some very basic imports.
         ../../modules/shell-defaults
       ];
 
-      # Plain vim (systemPackages below) is the whole editor story here, for the
-      # reasons above. An nvim carrying none of its config is not meaningfully
-      # different from vim when editing a scratch prompt buffer.
+      # The neovim config pulls in undesired dependencies.
       roles.shellDefaults.editor = "vim";
 
       # Pin the container's hermes user/group to the SAME ids as the host's

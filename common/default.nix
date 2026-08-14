@@ -106,8 +106,6 @@ in {
       traceroute
     ];
 
-    # EDITOR/VISUAL come from roles.shellDefaults (modules/shell-defaults),
-    # which every host gets by default.
     variables.DO_NOT_TRACK = 1;
   };
 
