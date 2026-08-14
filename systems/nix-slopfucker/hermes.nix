@@ -221,10 +221,11 @@ in {
         # shared vi/editor defaults must be imported explicitly.
         #
         # Imported as a single leaf, NOT via ../../modules: that aggregator also
-        # pulls roles.neovim, which is enable-by-default and would breach the
-        # package lockdown below. It installs gcc/rustc/cargo/nodejs/python3 and
-        # enables nix-ld, which swaps this container's deliberate stub-ld for a
-        # working dynamic loader -- turning downloaded ELF binaries from
+        # pulls roles.neovim. The host force-disables that role above, but this
+        # is a nested eval that inherits none of it, so here it would apply at
+        # its default of true -- installing gcc/rustc/cargo/nodejs/python3 and
+        # enabling nix-ld, which swaps this container's deliberate stub-ld for a
+        # working dynamic loader, turning downloaded ELF binaries from
         # non-executable into executable. LazyVim/mason then fetch and compile
         # plugins at runtime into $HOME, which is the *persistent* bind mount, so
         # the ephemeral root would not even discard them. Keep this list a set of
