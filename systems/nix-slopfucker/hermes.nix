@@ -18,6 +18,25 @@
   # nmd's fqdn — fronts the agent's observability endpoints (Grafana/Prom/Loki).
   nmdFqdn = (import ../../common/network.nix).hosts.nix-media-docker.fqdn;
 
+  # ── The agent's git identity ───────────────────────────────────────────────
+  # Path INSIDE the container where the private SSH key is mounted
+  agentKeyPath = "/var/lib/hermes-secrets/id_hermes";
+
+  # Email used to sign git commits
+  agentEmail = "slop@jhauschildt.com";
+
+  # Public half of the sops-encrypted SSH signing key, for local verification only.
+  # Kept here because the private half is unreadable at eval time.
+  agentSigningKeyPub = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC0ybf62lh60glDS8hMnqtkknBZFUPFVqOWZrfgATZWZ";
+
+  # Allow verifying specific SSH signatures locally
+  allowedSigners = pkgs.writeText "hermes-allowed-signers" ''
+    ${agentEmail} namespaces="git" ${agentSigningKeyPub}
+    jhauschildt@linkedin.com namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID2faMGyx7bfdnVYtXrqEJicP/q0HV441nPR9hIz8cJ7 jeremy@jhauschildt.com
+  '';
+
+  forgejoSshHost = (import ../../common/network.nix).hosts.nix-shitfucker.fqdn;
+
   # Internal hosts the agent may reach despite the LAN-wide deny below: each
   # becomes a whole-host ACCEPT in hermes-egress, ahead of the RFC1918 drops.
   # DEFAULT EMPTY — the agent is hostile; add hosts deliberately. (DNS needs no
@@ -203,6 +222,11 @@ in {
         hostPath = config.sops.templates."hermes-agent.env".path; # /run/...
         isReadOnly = true;
       };
+      # Read-only: the agent uses the key, it does not manage it.
+      ${agentKeyPath} = {
+        hostPath = config.sops.secrets.hermes-ssh-key.path; # /run/...
+        isReadOnly = true;
+      };
     };
 
     config = {
@@ -249,7 +273,6 @@ in {
         firewall.enable = lib.mkForce false;
       };
       environment.systemPackages = with pkgs; [
-        git
         github-cli
         forgejo-cli
         alejandra
@@ -277,6 +300,38 @@ in {
         iperf3
         mcp-nixos
       ];
+
+      programs = {
+        git = {
+          enable = true;
+          config = {
+            user = {
+              name = "hermes-agent";
+              email = agentEmail;
+              signingKey = agentKeyPath;
+            };
+
+            gpg = {
+              # ssh format: the same key already authenticates the Forgejo push,
+              # and no gpg keyring exists in the container.
+              format = "ssh";
+              ssh.allowedSignersFile = toString allowedSigners;
+            };
+
+            commit.gpgSign = true;
+            tag.gpgSign = true;
+          };
+        };
+
+        ssh.extraConfig = ''
+          Host ${forgejoSshHost}
+            Hostname nsf.jhauschildt.com
+            User forgejo
+            IdentityFile ${agentKeyPath}
+            IdentitiesOnly yes
+            AddKeysToAgent yes
+        '';
+      };
 
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
