@@ -238,7 +238,7 @@ in {
       # decrypted host-side by sops. Read-only: the agent uses the key, it does
       # not manage it. Declared in the priv overlay, which also restarts this
       # container on rotation — nspawn resolves a bindMount once at start.
-      "/var/lib/hermes-secrets/id_hermes" = {
+      ${agentKeyPath} = {
         hostPath = config.sops.secrets.hermes-ssh-key.path; # /run/...
         isReadOnly = true;
       };
