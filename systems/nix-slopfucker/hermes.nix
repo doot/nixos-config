@@ -216,7 +216,14 @@ in {
       imports = [
         inputs.hermes-agent.nixosModules.default
         inputs.priv.nixosModules.hermesPriv
+
+        # The container intentionally does not inherit anything from the host,
+        # so explicitly include some very basic imports.
+        ../../modules/shell-defaults
       ];
+
+      # The neovim config pulls in undesired dependencies.
+      roles.shellDefaults.editor = "vim";
 
       # Pin the container's hermes user/group to the SAME ids as the host's
       # (threaded in via specialArgs above). The hermes-agent module declares

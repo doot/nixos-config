@@ -8,5 +8,6 @@
     ./navidrome
     ./nginx-proxy
     ./nixos-changelog
+    ./shell-defaults
   ];
 }
