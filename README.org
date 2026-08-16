@@ -7,6 +7,9 @@ Initial nixos configs. I don't really know what I'm doing.
 + ~nixos-rebuild switch~ should then work without extra args due to the above symlink
 + Same as ~nixos-rebuild switch --flake $HOME/nixos-config/#~
 + ~nix flake update~ to update the lock file
++ ~sudo nrb switch~ to rebuild with the ~priv~ overlay override applied. Pass ~-p <path>~
+  to build against a local ~priv~ checkout, ~-f <dir>~ for a flake other than
+  ~$HOME/nixos-config~; any other arguments go through to ~nixos-rebuild~
 + System specific configs go in ~nixos-config/systems/<hostname>/default.nix~
   and then imported in ~flake.nix~
 + ~nix fmt~ to format entire flake using configured formatter (alejandra)
