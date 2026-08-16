@@ -18,6 +18,37 @@
   # nmd's fqdn — fronts the agent's observability endpoints (Grafana/Prom/Loki).
   nmdFqdn = (import ../../common/network.nix).hosts.nix-media-docker.fqdn;
 
+  # ── The agent's git identity ───────────────────────────────────────────────
+  # Defined once at host scope; the container's nested config closes over these
+  # lexically. `allowedSigners` is realised with the HOST pkgs, which is correct:
+  # a nixos-container shares the host nix store, so the path resolves inside.
+
+  # Where the sops-decrypted private key lands INSIDE the container (the mount
+  # point of the bindMount below). One definition, referenced by both the git
+  # signing config and the ssh client config.
+  agentKeyPath = "/var/lib/hermes-secrets/id_hermes";
+
+  # Committer address. Signature verification requires this to be a verified
+  # email on the forge account that holds the public key, so it is load-bearing
+  # rather than cosmetic: a mismatch renders every commit "Unverified".
+  agentEmail = "slop@jhauschildt.com";
+
+  # Public half of the key above, for LOCAL verification only (`git log
+  # --show-signature`). Public key material, so it is safe in the public repo —
+  # and it must be, since the private half is now sops-encrypted and cannot be
+  # read at eval time. Keep in sync if the key is ever rotated.
+  agentSigningKeyPub = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC0ybf62lh60glDS8hMnqtkknBZFUPFVqOWZrfgATZWZ";
+
+  # allowed_signers maps a principal to the keys it may sign with. Without this
+  # file git refuses to verify ANY ssh signature locally, so the agent can only
+  # learn whether its own commits verified by asking the forge.
+  allowedSigners = pkgs.writeText "hermes-allowed-signers" ''
+    ${agentEmail} namespaces="git" ${agentSigningKeyPub}
+  '';
+
+  # Forgejo's SSH endpoint — the agent's push remote.
+  forgejoSshHost = (import ../../common/network.nix).hosts.nix-shitfucker.fqdn;
+
   # Internal hosts the agent may reach despite the LAN-wide deny below: each
   # becomes a whole-host ACCEPT in hermes-egress, ahead of the RFC1918 drops.
   # DEFAULT EMPTY — the agent is hostile; add hosts deliberately. (DNS needs no
@@ -203,6 +234,14 @@ in {
         hostPath = config.sops.templates."hermes-agent.env".path; # /run/...
         isReadOnly = true;
       };
+      # The agent's git identity (signs commits, authenticates Forgejo pushes),
+      # decrypted host-side by sops. Read-only: the agent uses the key, it does
+      # not manage it. Declared in the priv overlay, which also restarts this
+      # container on rotation — nspawn resolves a bindMount once at start.
+      "/var/lib/hermes-secrets/id_hermes" = {
+        hostPath = config.sops.secrets.hermes-ssh-key.path; # /run/...
+        isReadOnly = true;
+      };
     };
 
     config = {
@@ -249,7 +288,6 @@ in {
         firewall.enable = lib.mkForce false;
       };
       environment.systemPackages = with pkgs; [
-        git
         github-cli
         forgejo-cli
         alejandra
@@ -277,6 +315,50 @@ in {
         iperf3
         mcp-nixos
       ];
+
+      # ── The agent's git identity ──────────────────────────────────────────
+      # Declared here rather than left as a hand-written ~/.gitconfig on the
+      # bind mount, so a rebuilt container comes up with a working, signing
+      # identity instead of an anonymous one.
+      programs.git = {
+        enable = true; # also puts git on PATH
+        config = {
+          user = {
+            name = "hermes-agent";
+            # Must be a VERIFIED email on the accounts holding the signing key
+            # below (GitHub `doot`, Forgejo `slop`), or the forges render the
+            # commit "Unverified" with no user associated with the committer
+            # email. A `+`-style alias is a distinct address to a forge, not an
+            # alias — it is registered and verified like any other.
+            email = agentEmail;
+            signingKey = agentKeyPath;
+          };
+
+          gpg = {
+            # ssh-format signatures: no gpg keyring, and the same key already
+            # authenticates the agent's Forgejo pushes.
+            format = "ssh";
+            # Lets `git log --show-signature` and `git verify-commit` resolve
+            # locally instead of erroring; without it the agent cannot check its
+            # own work, only the forges can.
+            ssh.allowedSignersFile = toString allowedSigners;
+          };
+
+          # Tags are signed for the same reason commits are — an unsigned tag on
+          # a signed history is the weak link.
+          commit.gpgSign = true;
+          tag.gpgSign = true;
+        };
+      };
+
+      # Reach the Forgejo remote with the same key. System-wide (not a
+      # hand-written ~/.ssh/config) so it survives a container rebuild.
+      programs.ssh.extraConfig = ''
+        Host ${forgejoSshHost}
+          User forgejo
+          IdentityFile ${agentKeyPath}
+          IdentitiesOnly yes
+      '';
 
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
