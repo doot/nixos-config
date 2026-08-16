@@ -19,22 +19,20 @@
   nmdFqdn = (import ../../common/network.nix).hosts.nix-media-docker.fqdn;
 
   # ── The agent's git identity ───────────────────────────────────────────────
-  # Path INSIDE the container: the mount point of the key's bindMount below.
+  # Path INSIDE the container where the private SSH key is mounted
   agentKeyPath = "/var/lib/hermes-secrets/id_hermes";
 
-  # Must be a verified email on the forge accounts holding the public key
-  # (GitHub `doot`, Forgejo `slop`), or both forges refuse to associate the
-  # signature with a user and render every commit Unverified.
+  # Email used to sign git commits
   agentEmail = "slop@jhauschildt.com";
 
-  # Public half of the sops-encrypted signing key, for local verification only.
+  # Public half of the sops-encrypted SSH signing key, for local verification only.
   # Kept here because the private half is unreadable at eval time.
   agentSigningKeyPub = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC0ybf62lh60glDS8hMnqtkknBZFUPFVqOWZrfgATZWZ";
 
-  # Without this file git refuses to verify any ssh signature locally, leaving
-  # the forge as the only thing that can check the agent's work.
+  # Allow verifying specific SSH signatures locally
   allowedSigners = pkgs.writeText "hermes-allowed-signers" ''
     ${agentEmail} namespaces="git" ${agentSigningKeyPub}
+    jhauschildt@linkedin.com namespaces="git" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID2faMGyx7bfdnVYtXrqEJicP/q0HV441nPR9hIz8cJ7 jeremy@jhauschildt.com
   '';
 
   forgejoSshHost = (import ../../common/network.nix).hosts.nix-shitfucker.fqdn;
