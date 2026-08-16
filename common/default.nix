@@ -24,8 +24,8 @@
   rebuildWrapper = pkgs.writeShellApplication {
     name = "nrb";
     text = ''
-      flake=${nixosConfigDir}
-      priv=${privInput}
+      flake="${nixosConfigDir}"
+      priv="${privInput}"
 
       usage() {
         cat >&2 <<EOF
