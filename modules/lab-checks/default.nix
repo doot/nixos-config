@@ -6,11 +6,12 @@
   cfg = config.roles.labChecks;
 
   flags = config.system.autoUpgrade.flags;
-  # `--override-input priv <url>` is three separate list elements.
+  # `--override-input priv <url>` is three separate list elements; pair each
+  # flag with its successor to find the adjacent `--override-input priv`.
   privOverridden =
-    lib.any
-    (i: lib.elemAt flags i == "--override-input" && lib.elemAt flags (i + 1) == "priv")
-    (lib.range 0 (lib.length flags - 2));
+    lib.elem true
+    (lib.zipListsWith (a: b: a == "--override-input" && b == "priv")
+      flags (lib.drop 1 flags));
 in {
   options.roles.labChecks = {
     enable =
