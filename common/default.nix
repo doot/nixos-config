@@ -12,15 +12,15 @@
   nixosConfigDir = "${mainUser.home}/nixos-config";
   dotfilesDir = "${mainUser.home}/.dotfiles";
 
-  # Every host imports a bundle from the private overlay, so the public stub has
-  # to be replaced or those imports resolve to no-ops. Hosts authenticate with
-  # their SSH host key (a read-only deploy key). Consumed by both autoUpgrade and
-  # the nrb wrapper so the two can never drift.
+  # Default location of the private overlay. The "priv" input is overridden by
+  # both autoUpgrade and the wrapper.
   privInput = "git+ssh://forgejo@nsf.jhauschildt.com/homelab/nixos-config-priv.git?ref=main";
 
-  # nixos-rebuild resolves from PATH to the running system's own copy, matching a
-  # hand-typed invocation. Options are flags rather than env vars because this
-  # always runs under sudo, and sudo's env_reset would silently discard them.
+  # Simple wrapper script around `nixos-rebuild` that automatically sets the
+  # local flake dir and the private override. Instead of testing out local
+  # changes with "sudo nixos-rebuild switch --flake ~/nixos-config/
+  # --override-input priv git+ssh://forgejo@nsf.jhauschildt.com/homelab/nixos-config-priv.git?ref=main",
+  # one can instead just type "nrb switch".
   rebuildWrapper = pkgs.writeShellApplication {
     name = "nrb";
     text = ''
@@ -57,12 +57,16 @@
       passthrough=()
       while [ "$#" -gt 0 ]; do
         case $1 in
-          -p | --priv)
-            priv=$2
-            shift 2
-            ;;
-          -f | --flake)
-            flake=$2
+          -p | --priv | -f | --flake)
+            if [ "$#" -lt 2 ]; then
+              echo "nrb: $1 requires an argument" >&2
+              usage
+              exit 2
+            fi
+            case $1 in
+              -p | --priv) priv=$2 ;;
+              *) flake=$2 ;;
+            esac
             shift 2
             ;;
           -h | --help)
