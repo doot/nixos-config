@@ -301,33 +301,37 @@ in {
         mcp-nixos
       ];
 
-      programs.git = {
-        enable = true;
-        config = {
-          user = {
-            name = "hermes-agent";
-            email = agentEmail;
-            signingKey = agentKeyPath;
-          };
+      programs = {
+        git = {
+          enable = true;
+          config = {
+            user = {
+              name = "hermes-agent";
+              email = agentEmail;
+              signingKey = agentKeyPath;
+            };
 
-          gpg = {
-            # ssh format: the same key already authenticates the Forgejo push,
-            # and no gpg keyring exists in the container.
-            format = "ssh";
-            ssh.allowedSignersFile = toString allowedSigners;
-          };
+            gpg = {
+              # ssh format: the same key already authenticates the Forgejo push,
+              # and no gpg keyring exists in the container.
+              format = "ssh";
+              ssh.allowedSignersFile = toString allowedSigners;
+            };
 
-          commit.gpgSign = true;
-          tag.gpgSign = true;
+            commit.gpgSign = true;
+            tag.gpgSign = true;
+          };
         };
-      };
 
-      programs.ssh.extraConfig = ''
-        Host ${forgejoSshHost}
-          User forgejo
-          IdentityFile ${agentKeyPath}
-          IdentitiesOnly yes
-      '';
+        ssh.extraConfig = ''
+          Host ${forgejoSshHost}
+            Hostname nsf.jhauschildt.com
+            User forgejo
+            IdentityFile ${agentKeyPath}
+            IdentitiesOnly yes
+            AddKeysToAgent yes
+        '';
+      };
 
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
