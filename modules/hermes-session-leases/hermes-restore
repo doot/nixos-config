@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+"""Report or restore Hermes sessions that had a terminal attached.
+
+A lease whose process is still alive is an open tab. A lease whose process is
+gone is a session that died with the host — the working set to rebuild.
+
+  hermes-restore            # show orphans (default; never mutates anything)
+  hermes-restore --restore  # spawn a wezterm tab per orphan
+  hermes-restore --prune    # drop orphan leases without restoring
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+
+LEASE_DIR = Path(os.environ.get("HERMES_LEASE_DIR", Path.home() / ".hermes" / "live"))
+
+
+@dataclass(frozen=True)
+class Orphan:
+    path: Path
+    session_id: str
+    cwd: str
+    model: str
+    age_hours: float
+
+
+def _alive(pid: int) -> bool:
+    # Presence in /proc, not signal delivery: leases are same-user but the
+    # check should stay honest if that ever changes.
+    return Path(f"/proc/{pid}").exists()
+
+
+def _load() -> tuple[list[Orphan], int, list[Path]]:
+    if not LEASE_DIR.is_dir():
+        return [], 0, []
+    orphans: list[Orphan] = []
+    live = 0
+    corrupt: list[Path] = []
+    now = time.time()
+    for path in sorted(LEASE_DIR.glob("*.json")):
+        try:
+            data = json.loads(path.read_text())
+            pid = int(data["pid"])
+            session_id = str(data["session_id"])
+        except (OSError, ValueError, KeyError, TypeError):
+            corrupt.append(path)
+            continue
+        if _alive(pid):
+            live += 1
+            continue
+        orphans.append(
+            Orphan(
+                path=path,
+                session_id=session_id,
+                cwd=str(data.get("cwd") or Path.home()),
+                model=str(data.get("model") or ""),
+                age_hours=(now - float(data.get("updated_at") or now)) / 3600.0,
+            )
+        )
+    # Newest first: the session you were mid-thought on is the one you want back.
+    orphans.sort(key=lambda o: o.age_hours)
+    return orphans, live, corrupt
+
+
+def _restore(orphans: list[Orphan]) -> int:
+    if not shutil.which("wezterm"):
+        print("error: wezterm not on PATH — run this where the mux client lives", file=sys.stderr)
+        return 1
+    failures = 0
+    for orphan in orphans:
+        cwd = orphan.cwd if Path(orphan.cwd).is_dir() else str(Path.home())
+        cmd = [
+            "wezterm", "cli", "spawn",
+            "--cwd", cwd,
+            "--", "hermes", "--resume", orphan.session_id,
+        ]
+        try:
+            subprocess.run(cmd, check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as exc:
+            failures += 1
+            print(f"  FAILED {orphan.session_id}: {exc.stderr.strip()}", file=sys.stderr)
+            continue
+        print(f"  restored {orphan.session_id}  ({cwd})")
+        orphan.path.unlink(missing_ok=True)
+    return 1 if failures else 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--restore", action="store_true", help="spawn a wezterm tab per orphan")
+    group.add_argument("--prune", action="store_true", help="delete orphan leases, restoring nothing")
+    parser.add_argument("--max-age-hours", type=float, default=None,
+                        help="ignore orphans older than this")
+    args = parser.parse_args()
+
+    orphans, live, corrupt = _load()
+    if args.max_age_hours is not None:
+        orphans = [o for o in orphans if o.age_hours <= args.max_age_hours]
+
+    for path in corrupt:
+        print(f"warning: unreadable lease {path.name}", file=sys.stderr)
+
+    if not orphans:
+        print(f"No orphaned sessions. ({live} live)")
+        return 0
+
+    print(f"{len(orphans)} orphaned session(s), {live} live:\n")
+    for orphan in orphans:
+        print(f"  {orphan.session_id}  {orphan.age_hours:6.1f}h  {orphan.cwd}")
+
+    if args.prune:
+        for orphan in orphans:
+            orphan.path.unlink(missing_ok=True)
+        print(f"\nPruned {len(orphans)} lease(s).")
+        return 0
+
+    if args.restore:
+        print()
+        return _restore(orphans)
+
+    print("\nRe-run with --restore to reopen these, or --prune to forget them.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
