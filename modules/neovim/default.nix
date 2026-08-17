@@ -17,25 +17,36 @@ in {
       // {
         default = true;
       };
+
+    imageSupport = lib.mkOption {
+      type = lib.types.bool;
+      default = config.services.xserver.enable || config.programs.hyprland.enable;
+      description = ''
+        Terminal image previews in neovim, via ueberzugpp. Only useful under a
+        graphical session, and pulls in the X11/Wayland stack, so headless hosts
+        leave it off.
+      '';
+    };
   };
   config = lib.mkIf cfg.enable {
     environment = {
-      systemPackages = with pkgs; [
-        lazygit
-        unzip
-        stylua
-        ueberzugpp
-        unstable.nodejs_26
-        tree-sitter
-        luarocks
-        sqlfluff
-        gcc
-        gh
-        rustc
-        cargo
-        nil
-        rust-analyzer
-      ];
+      systemPackages = with pkgs;
+        [
+          lazygit
+          unzip
+          stylua
+          unstable.nodejs_26
+          tree-sitter
+          luarocks
+          sqlfluff
+          gcc
+          gh
+          rustc
+          cargo
+          nil
+          rust-analyzer
+        ]
+        ++ lib.optional cfg.imageSupport ueberzugpp;
     };
     programs = {
       neovim = {
