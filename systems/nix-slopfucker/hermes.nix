@@ -378,14 +378,16 @@ in {
             command = "mcp-nixos";
             args = ["--"];
           };
-          devenv = {
-            # type = "stdio";
-            command = "devenv";
-            args = ["--from" "/var/lib/hermes/workspace/nixos-config" "mcp"];
-            env = {
-              DEVENV_ROOT = "/var/lib/hermes/workspace/nixos-config";
-            };
-          };
+          # TODO: Re-enable after memory issues are sorted out. Each spawned process consumes 4-8 GB of memory, even before it does anything...
+          # TODO: Once memory issues are sorted out, centralize these MCPs so that only one instance is needed and connect via http
+          # devenv = {
+          #   # type = "stdio";
+          #   command = "devenv";
+          #   args = ["--from" "github:doot/nixos-config" "mcp"];
+          #   # env = {
+          #   #   DEVENV_ROOT = "/var/lib/hermes/workspace/nixos-config";
+          #   # };
+          # };
         };
 
         # Non-secret env for the agent.
