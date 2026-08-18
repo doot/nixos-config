@@ -230,6 +230,7 @@ in {
     };
 
     config = {
+      config,
       lib,
       pkgs,
       inputs,
@@ -340,6 +341,16 @@ in {
         # TUI wrapper and the gateway share one state dir.
         addToSystemPackages = true;
 
+        # Rendering `settings` into configFile makes Nix the sole owner of
+        # config.yaml: the module installs it verbatim instead of deep-merging,
+        # so a key deleted here disappears on rebuild. The merge path is
+        # additive-only and strands removed keys (and any runtime TUI writes)
+        # on disk forever. Costs the module's implicit terminal.cwd default,
+        # which is why it is set explicitly below.
+        configFile =
+          pkgs.writeText "hermes-config.yaml"
+          (builtins.toJSON config.services.hermes-agent.settings);
+
         settings = {
           model = {
             provider = "copilot";
@@ -362,12 +373,14 @@ in {
             show_cost = true;
             timestamps = true;
             interface = "tui";
+            show_reasoning = true;
+            reasoning_full = true;
+            sections.thinking = "expanded";
           };
           privacy.redact_pii = true;
           dashboard.theme = "ember";
           agent = {
             environment_hint = "You are running inside a locked-down NixOS container: no nix daemon, no package managers, and network access restricted to the internet only (no local network).";
-            personality = "noir";
             reasoning_effort = "xhigh";
           };
           terminal.cwd = "/var/lib/hermes/workspace";
