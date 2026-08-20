@@ -237,7 +237,11 @@ in {
       hermesUid,
       hermesGid,
       ...
-    }: {
+    }: let
+      # Built from the container's own pkgs so the plugin matches the
+      # interpreter the agent actually runs.
+      sessionLeases = pkgs.callPackage ../../modules/hermes-session-leases {};
+    in {
       imports = [
         inputs.hermes-agent.nixosModules.default
         inputs.priv.nixosModules.hermesPriv
@@ -384,6 +388,10 @@ in {
             reasoning_effort = "xhigh";
           };
           terminal.cwd = "/var/lib/hermes/workspace";
+
+          # Plugin discovery is opt-in: a plugin on disk stays inert until named
+          # here. session-leases is installed via extraPlugins below.
+          plugins.enabled = ["session-leases"];
         };
 
         mcpServers = {
@@ -440,6 +448,12 @@ in {
 
         # No compilers or package managers visible to the agent.
         extraPackages = [];
+
+        # Hermes persists session transcripts but not which sessions had a
+        # terminal attached, so a reboot of this host loses the working set
+        # while keeping every transcript. This records that fact; the packaged
+        # store path keeps the hooks outside the agent's own writable plugin dir.
+        extraPlugins = [sessionLeases];
 
         # numpy enables the holographic memory provider's full HRR (Holographic
         # Reduced Representation) retrieval — the reason/related/contradict
