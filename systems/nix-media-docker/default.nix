@@ -153,6 +153,7 @@ in {
     };
 
     karakeep = {
+      package = pkgs.unstable.karakeep;
       enable = true;
       browser.enable = true;
       meilisearch.enable = true;

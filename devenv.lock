@@ -17,6 +17,18 @@
         "type": "github"
       }
     },
+    "devenv-slop": {
+      "flake": false,
+      "locked": {
+        "path": "../devenv-slop",
+        "type": "path"
+      },
+      "original": {
+        "path": "../devenv-slop",
+        "type": "path"
+      },
+      "parent": []
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -93,9 +105,23 @@
     "root": {
       "inputs": {
         "devenv": "devenv",
+        "devenv-slop": "devenv-slop",
         "git-hooks": "git-hooks",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "shared-config": "shared-config"
       }
+    },
+    "shared-config": {
+      "flake": false,
+      "locked": {
+        "path": "../shared-config",
+        "type": "path"
+      },
+      "original": {
+        "path": "../shared-config",
+        "type": "path"
+      },
+      "parent": []
     }
   },
   "root": "root",
