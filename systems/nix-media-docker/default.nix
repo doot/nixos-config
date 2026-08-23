@@ -5,7 +5,6 @@
   config,
   outputs,
   fqdn,
-  inputs,
   ...
 }: let
   network = import ../../common/network.nix;
@@ -154,15 +153,6 @@ in {
     };
 
     karakeep = {
-      # node 24.19.0 aborts (SIGABRT, "Assertion failed: (env) != nullptr" in
-      # RemoveEnvironmentCleanupHook) when better-sqlite3 finalizes a Statement,
-      # so karakeep-workers dies on every start. Upstream pins node for its
-      # Docker builds only, which does not help nixpkgs.
-      # https://github.com/karakeep-app/karakeep/issues/2989
-      # Drop once nixpkgs' nodejs_24 carries the node-side fix.
-      package = pkgs.unstable.karakeep.override {
-        nodejs = inputs.nixpkgs-node.legacyPackages.${pkgs.stdenv.hostPlatform.system}.nodejs_24;
-      };
       enable = true;
       browser.enable = true;
       meilisearch.enable = true;
