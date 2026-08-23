@@ -288,22 +288,6 @@
         "url": "https://channels.nixos.org/nixos-26.05-small/nixexprs.tar.xz"
       }
     },
-    "nixpkgs-node": {
-      "locked": {
-        "lastModified": 1786400526,
-        "narHash": "sha256-ABftAecb5leXFwM5EZodr2q4dmwuCH+tmdp8xde4ssA=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "265b7e2dbbdbe2e59609fa31ed8be38cdb517d13",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "265b7e2dbbdbe2e59609fa31ed8be38cdb517d13",
-        "type": "github"
-      }
-    },
     "nixpkgs-unstable": {
       "locked": {
         "lastModified": 1787234702,
@@ -417,7 +401,6 @@
         "home-manager": "home-manager_2",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-node": "nixpkgs-node",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "priv": "priv",
         "wezterm": "wezterm"
