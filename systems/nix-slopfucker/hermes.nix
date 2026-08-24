@@ -303,6 +303,7 @@ in {
         shellcheck
         lua-language-server
         basedpyright
+        pyright
         nixd
       ];
 
