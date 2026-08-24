@@ -300,6 +300,10 @@ in {
         dig
         iperf3
         mcp-nixos
+        shellcheck
+        lua-language-server
+        basedpyright
+        nixd
       ];
 
       programs = {
