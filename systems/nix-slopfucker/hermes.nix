@@ -366,11 +366,6 @@ in {
             # no API key, no LLM, and no network — the embedding/HRR math is the
             # only dependency, satisfied by numpy in extraPythonPackages below.
             provider = "holographic";
-
-            # The user profile holds standing preferences that must be in every
-            # turn, so it cannot be offloaded to the provider the way long-form
-            # technical notes can. The 1375-char default is the binding
-            # constraint; memory_char_limit stays at its default.
             user_char_limit = 2750;
           };
           display = {
