@@ -166,11 +166,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1787527736,
-        "narHash": "sha256-ouqVVxwFLsQmXl46OAaMFcoF/kZXtefWPJediUC+Pg8=",
+        "lastModified": 1787553213,
+        "narHash": "sha256-gKMSpEevK5p+FhjAe29HhUHYA/PaDGbWwKgITvpeeE4=",
         "owner": "NousResearch",
         "repo": "hermes-agent",
-        "rev": "4a3e5c4094d96c2e184dead99bccb4f4aabb2e1b",
+        "rev": "7e67f64fcee9340f40a1c6f912fc650aa4984510",
         "type": "github"
       },
       "original": {
@@ -207,11 +207,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787487906,
-        "narHash": "sha256-zIdM+8teujHm5hc5MIPDnV7k2UeOOT/pFyFtWjOCwsY=",
+        "lastModified": 1787540599,
+        "narHash": "sha256-MHwk52ty3NsLhq9a1IbIfBJZlCUJIdiUYFo52JLK9hY=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "cfba7ad5886b342b8dd63ba74354b3853ea4cfc9",
+        "rev": "03f4cd46bc1dd4f3a96da778d2ce9f7ce39dd450",
         "type": "github"
       },
       "original": {
@@ -277,11 +277,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1787457369,
-        "narHash": "sha256-esHZxYHEqp8L72dyOOQw9cSZH2b2RuquZKzh0FghTR8=",
-        "rev": "095b629f2eecc83f0f27373093e336600e886674",
+        "lastModified": 1787481426,
+        "narHash": "sha256-o6uDPCJ8ZePZU6lfSKW4DQNMQb+lgWbK1F45WvpMgBw=",
+        "rev": "9854f5e5a66dc5e42acd8ad482cdb05d7ef0431a",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/26.05-small/nixos-26.05.8286.095b629f2eec/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixos/26.05-small/nixos-26.05.8302.9854f5e5a66d/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
@@ -330,11 +330,11 @@
       },
       "locked": {
         "dir": "priv",
-        "lastModified": 1787528943,
-        "narHash": "sha256-BmZbYoj/g0IsguSv6YEGg2FqhWW2iWQchRFLIk3P/I8=",
+        "lastModified": 1787548251,
+        "narHash": "sha256-RGCdyPRWgQmo4KPrq6/nkT++VLEVCP5st437rTUOCZQ=",
         "owner": "doot",
         "repo": "nixos-config",
-        "rev": "930aa5a520d7596897095d5b5271ca9ef7b6814d",
+        "rev": "616ea3c9a74ffd6698d14c7d40bb72c458e37960",
         "type": "github"
       },
       "original": {
