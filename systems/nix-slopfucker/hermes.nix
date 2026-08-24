@@ -352,6 +352,13 @@ in {
           (builtins.toJSON config.services.hermes-agent.settings);
 
         settings = {
+          # Declares the schema this file is written against. Absent, Hermes
+          # reads the config as v0 and every startup reports a pending
+          # migration it can never perform: the migration ladder writes through
+          # save_config, which refuses managed installs. Bump alongside
+          # hermes-agent when a release adds migrations worth reviewing.
+          _config_version = 38;
+
           model = {
             provider = "copilot";
             default = "claude-opus-5";
