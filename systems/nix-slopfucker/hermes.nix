@@ -352,6 +352,10 @@ in {
           (builtins.toJSON config.services.hermes-agent.settings);
 
         settings = {
+          # Hand-bumped: managed installs refuse the config writes that would
+          # otherwise advance this on update.
+          _config_version = 38;
+
           model = {
             provider = "copilot";
             default = "claude-opus-5";
