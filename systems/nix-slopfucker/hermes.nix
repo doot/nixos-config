@@ -366,6 +366,7 @@ in {
             # no API key, no LLM, and no network — the embedding/HRR math is the
             # only dependency, satisfied by numpy in extraPythonPackages below.
             provider = "holographic";
+            user_char_limit = 2750;
           };
           display = {
             skin = "slate";
@@ -376,6 +377,7 @@ in {
             show_reasoning = true;
             reasoning_full = true;
             sections.thinking = "expanded";
+            memory_notifications = "verbose";
           };
           privacy.redact_pii = true;
           dashboard.theme = "ember";
