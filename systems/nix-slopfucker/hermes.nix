@@ -368,6 +368,9 @@ in {
           context = {
             engine = "lcm";
           };
+          plugins.enabled = [
+            "hermes-lcm"
+          ];
           memory = {
             memory_enabled = true;
             user_profile_enabled = true;
@@ -471,9 +474,6 @@ in {
             rev = "v0.20.0";
             # hash = "sha256-...";
           })
-        ];
-        plugins.enabled = [
-          "hermes-lcm"
         ];
       };
 
