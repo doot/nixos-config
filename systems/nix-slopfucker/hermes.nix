@@ -377,6 +377,7 @@ in {
             show_reasoning = true;
             reasoning_full = true;
             sections.thinking = "expanded";
+            memory_notifications = "verbose";
           };
           privacy.redact_pii = true;
           dashboard.theme = "ember";
