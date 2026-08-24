@@ -341,6 +341,7 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
+
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
         # TUI wrapper and the gateway share one state dir.
         addToSystemPackages = true;
@@ -363,6 +364,9 @@ in {
           model = {
             provider = "copilot";
             default = "claude-opus-5";
+          };
+          context = {
+            engine = "lcm";
           };
           memory = {
             memory_enabled = true;
@@ -459,6 +463,18 @@ in {
         # pre-compiled native (C/Cython) extensions via nixpkgs, so no build
         # toolchain or package manager is exposed to the agent at runtime.
         extraPythonPackages = [pkgs.python312Packages.numpy];
+
+        extraPlugins = [
+          (pkgs.fetchFromGitHub {
+            owner = "stephenschoettler";
+            repo = "hermes-lcm";
+            rev = "v0.20.0";
+            # hash = "sha256-...";
+          })
+        ];
+        plugins.enabled = [
+          "hermes-lcm"
+        ];
       };
 
       # Defense-in-depth on top of the module baseline (which already sets
