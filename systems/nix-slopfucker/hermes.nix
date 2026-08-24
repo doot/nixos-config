@@ -472,7 +472,7 @@ in {
             owner = "stephenschoettler";
             repo = "hermes-lcm";
             rev = "v0.20.0";
-            hash = "sha256-49e99a272d2d461e5c90732e7ef2bc20e96f0826";
+            hash = "sha256-yJ1Nn+su7YbKd+cgVOizXChzLbKHqTprSprF1p9/HYk=";
           })
         ];
       };
