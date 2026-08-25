@@ -3,11 +3,11 @@
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1787540378,
-        "narHash": "sha256-OqCfKD0VGEoH98oEOlibYmUUr3hALG3NBTOrsjHPRYA=",
+        "lastModified": 1787602541,
+        "narHash": "sha256-5j9Gvd2ulF6xiMALjwNl2JISzbjZAI+otYE2W+v4bgQ=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "ffb790fa8de10911b88c3114f35917a26759874a",
+        "rev": "4352c84d4dfbf26e7ad221378addde7920fc485b",
         "type": "github"
       },
       "original": {
@@ -16,6 +16,18 @@
         "repo": "devenv",
         "type": "github"
       }
+    },
+    "devenv-slop": {
+      "flake": false,
+      "locked": {
+        "path": "../devenv-slop",
+        "type": "path"
+      },
+      "original": {
+        "path": "../devenv-slop",
+        "type": "path"
+      },
+      "parent": []
     },
     "flake-compat": {
       "flake": false,
@@ -93,8 +105,26 @@
     "root": {
       "inputs": {
         "devenv": "devenv",
+        "devenv-slop": "devenv-slop",
         "git-hooks": "git-hooks",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "shared-config": "shared-config"
+      }
+    },
+    "shared-config": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787634659,
+        "narHash": "sha256-RyYMixIBuhRTIxWDbi/c2OpMN9j4x6hEP+9jR6kd6Ys=",
+        "owner": "doot",
+        "repo": "devenv-base",
+        "rev": "672229c201e3f44ed55422429bba4351bfca3b0d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "doot",
+        "repo": "devenv-base",
+        "type": "github"
       }
     }
   },

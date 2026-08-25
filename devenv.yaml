@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://devenv.sh/devenv.schema.json
 inputs:
   git-hooks:
     url: github:cachix/git-hooks.nix
@@ -6,3 +7,12 @@ inputs:
         follows: nixpkgs
   nixpkgs:
     url: github:cachix/devenv-nixpkgs/rolling
+  shared-config:
+    url: github:doot/devenv-base
+    flake: false
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+imports:
+- shared-config
+profile: base
