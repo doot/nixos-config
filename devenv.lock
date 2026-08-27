@@ -1,13 +1,36 @@
 {
   "nodes": {
+    "claude-code-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "devenv-slop",
+          "devenv-base",
+          "nixpkgs"
+        ],
+        "systems": "systems"
+      },
+      "locked": {
+        "lastModified": 1787758847,
+        "narHash": "sha256-l4Py81+AIHHg9AFMYJowHnSOlC1l3qlgKkLLYw+oegM=",
+        "owner": "sadjow",
+        "repo": "claude-code-nix",
+        "rev": "4d4a291f122ae8a322d3e690e76d80a7141ca269",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sadjow",
+        "repo": "claude-code-nix",
+        "type": "github"
+      }
+    },
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1787697693,
-        "narHash": "sha256-8QWWdf8uKJD2mfGzQNBUaurXh0qP2ug7OclsCxB8+Ws=",
+        "lastModified": 1787784483,
+        "narHash": "sha256-Y7I8zj6av4twRjUSOM8CJGfb5rCa0+iM3PU25nmhgUY=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "2865e320e6ddaee7464422d4a8091cc101b3ba18",
+        "rev": "39f65f2c82d1551e3f468025b5c676dcca88aa08",
         "type": "github"
       },
       "original": {
@@ -23,11 +46,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1787699593,
-        "narHash": "sha256-5MQ9WLxuwzMe5a4Cgx1qFeOXVQyd/j7CuD0/xZ0zzI0=",
+        "lastModified": 1787789035,
+        "narHash": "sha256-zxYdm95m44BlfW9E6tr7sj503En2Tt0QJqmDsRuzR24=",
         "owner": "doot",
         "repo": "devenv-base",
-        "rev": "25763c24ad4dc4a2161664e9c0c35693450c1ba6",
+        "rev": "97623214adf8c0fbae6667448800fa8bce40e98b",
         "type": "github"
       },
       "original": {
@@ -37,16 +60,25 @@
       }
     },
     "devenv-slop": {
-      "flake": false,
+      "inputs": {
+        "claude-code-nix": "claude-code-nix",
+        "devenv-base": [
+          "devenv-base"
+        ]
+      },
       "locked": {
-        "path": "../devenv-slop",
-        "type": "path"
+        "lastModified": 1787789256,
+        "narHash": "sha256-bQ9aI4qRweVAUDRu1kmHlTteJM8TQ1Kzj+E8afk73p4=",
+        "ref": "refs/heads/main",
+        "rev": "8698793f2492afd92c3406f516301e89f61b3822",
+        "revCount": 5,
+        "type": "git",
+        "url": "ssh://git@github.com/doot/devenv-priv"
       },
       "original": {
-        "path": "../devenv-slop",
-        "type": "path"
-      },
-      "parent": []
+        "type": "git",
+        "url": "ssh://git@github.com/doot/devenv-priv"
+      }
     },
     "flake-compat": {
       "flake": false,
@@ -91,11 +123,11 @@
         "nixpkgs-src": "nixpkgs-src"
       },
       "locked": {
-        "lastModified": 1787002832,
-        "narHash": "sha256-DGkHh88/7YLVGZ7HzSVN4YmUmR+wGKudIp6H9UsUNT0=",
+        "lastModified": 1787753358,
+        "narHash": "sha256-Tl77VbWyAKrOfRNQhL6JbQtb/MLzbYa/1RG1gWWfICk=",
         "owner": "cachix",
         "repo": "devenv-nixpkgs",
-        "rev": "ee3d58d53cfcddfc0ae6fc7f04f4fe2a0c7cf0ed",
+        "rev": "256551e45f6303e142ab4a98be1bf243feb77dc0",
         "type": "github"
       },
       "original": {
@@ -108,11 +140,11 @@
     "nixpkgs-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1786858016,
-        "narHash": "sha256-Vczr2zxD0orq6N2QQe5uqOGF7TRDcQJRRuAcsdHr4kg=",
+        "lastModified": 1787394516,
+        "narHash": "sha256-pRGOQSClnXNI2iLUG6DYpsGvYcuw0drOutVZFTJNw90=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "54ba4bcec4043e72a4006d825e0d7aff5562008f",
+        "rev": "c8f90650c15282fa8656a041bfbbd2403997a9a7",
         "type": "github"
       },
       "original": {
@@ -135,6 +167,21 @@
           "devenv-base",
           "nixpkgs"
         ]
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
       }
     }
   },
