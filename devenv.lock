@@ -3,18 +3,18 @@
     "claude-code-nix": {
       "inputs": {
         "nixpkgs": [
-          "devenv-slop",
+          "devenv-priv",
           "devenv-base",
           "nixpkgs"
         ],
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1787758847,
-        "narHash": "sha256-l4Py81+AIHHg9AFMYJowHnSOlC1l3qlgKkLLYw+oegM=",
+        "lastModified": 1787789419,
+        "narHash": "sha256-GjUH/k03ZGL6DpvEz34EbpTzIiIHHVEKWjNlOKU/0V4=",
         "owner": "sadjow",
         "repo": "claude-code-nix",
-        "rev": "4d4a291f122ae8a322d3e690e76d80a7141ca269",
+        "rev": "803370e6c9745a37a9e5aaaf8a3cf87ee03625cd",
         "type": "github"
       },
       "original": {
@@ -26,11 +26,11 @@
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1787784483,
-        "narHash": "sha256-Y7I8zj6av4twRjUSOM8CJGfb5rCa0+iM3PU25nmhgUY=",
+        "lastModified": 1787791039,
+        "narHash": "sha256-eqNJ+BB3Wk/sY/CxFWJ5Zlwcb+PsvGPCYlisf5zvHX8=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "39f65f2c82d1551e3f468025b5c676dcca88aa08",
+        "rev": "4117babd7cda394a696c471d1c58020172432ff0",
         "type": "github"
       },
       "original": {
@@ -59,7 +59,7 @@
         "type": "github"
       }
     },
-    "devenv-slop": {
+    "devenv-priv": {
       "inputs": {
         "claude-code-nix": "claude-code-nix",
         "devenv-base": [
@@ -67,11 +67,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787789256,
-        "narHash": "sha256-bQ9aI4qRweVAUDRu1kmHlTteJM8TQ1Kzj+E8afk73p4=",
+        "lastModified": 1787791179,
+        "narHash": "sha256-fAx8dd+u59NdWWM/xNc5pOucI6hnaYLt7KRVZdIEFOQ=",
         "ref": "refs/heads/main",
-        "rev": "8698793f2492afd92c3406f516301e89f61b3822",
-        "revCount": 5,
+        "rev": "97faab3caf79abe0cefd8ba405f1516595f72b30",
+        "revCount": 8,
         "type": "git",
         "url": "ssh://git@github.com/doot/devenv-priv"
       },
@@ -158,7 +158,7 @@
       "inputs": {
         "devenv": "devenv",
         "devenv-base": "devenv-base",
-        "devenv-slop": "devenv-slop",
+        "devenv-priv": "devenv-priv",
         "git-hooks": [
           "devenv-base",
           "git-hooks"
