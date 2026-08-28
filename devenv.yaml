@@ -8,5 +8,5 @@ inputs:
   git-hooks:
     follows: devenv-base/git-hooks
 imports:
-- devenv-base
+  - devenv-base
 profile: base

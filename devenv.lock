@@ -10,11 +10,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1787789419,
-        "narHash": "sha256-GjUH/k03ZGL6DpvEz34EbpTzIiIHHVEKWjNlOKU/0V4=",
+        "lastModified": 1787884211,
+        "narHash": "sha256-xNVPBUPNTst0qce4ZHMWabA6saGUsjM2H/m4LXvfMPs=",
         "owner": "sadjow",
         "repo": "claude-code-nix",
-        "rev": "803370e6c9745a37a9e5aaaf8a3cf87ee03625cd",
+        "rev": "3c503d54da2f313752e10ce5e7637ee26a6eaa8f",
         "type": "github"
       },
       "original": {
@@ -26,11 +26,11 @@
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1787791039,
-        "narHash": "sha256-eqNJ+BB3Wk/sY/CxFWJ5Zlwcb+PsvGPCYlisf5zvHX8=",
+        "lastModified": 1787881738,
+        "narHash": "sha256-RcTIzJeO86DUS48m2IXQznconZJ5MmL1H9gMegFZ04c=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "4117babd7cda394a696c471d1c58020172432ff0",
+        "rev": "3d2c030b7ba3da63bd68619c510aedd68cde11c9",
         "type": "github"
       },
       "original": {
@@ -46,11 +46,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1787789035,
-        "narHash": "sha256-zxYdm95m44BlfW9E6tr7sj503En2Tt0QJqmDsRuzR24=",
+        "lastModified": 1787885035,
+        "narHash": "sha256-VcIilCywKVRNP0FMVaTamh8Pl3zwJbUtPOuXNCACeKY=",
         "owner": "doot",
         "repo": "devenv-base",
-        "rev": "97623214adf8c0fbae6667448800fa8bce40e98b",
+        "rev": "19b08b0bc27d2d3f4bbd550e78b0e8809e44ab6f",
         "type": "github"
       },
       "original": {
@@ -67,11 +67,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1787791179,
-        "narHash": "sha256-fAx8dd+u59NdWWM/xNc5pOucI6hnaYLt7KRVZdIEFOQ=",
+        "lastModified": 1787885124,
+        "narHash": "sha256-+D/iCwaZXs9AqnwI+eNSf7LckbDqAvZAtZEF4BuXv4I=",
         "ref": "refs/heads/main",
-        "rev": "97faab3caf79abe0cefd8ba405f1516595f72b30",
-        "revCount": 8,
+        "rev": "f445d0b4259a283ca3b627b2bf2207fa0c269543",
+        "revCount": 12,
         "type": "git",
         "url": "ssh://git@github.com/doot/devenv-priv"
       },
