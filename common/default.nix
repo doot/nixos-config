@@ -186,6 +186,20 @@ in {
     variables.DO_NOT_TRACK = 1;
   };
 
+  fonts.packages = with pkgs; [
+    nerd-fonts.fira-code
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-color-emoji
+    liberation_ttf
+    fira-code
+    fira-code-symbols
+    mplus-outline-fonts.githubRelease
+    dina-font
+    proggyfonts
+    font-awesome
+  ];
+
   programs = {
     git.enable = true;
     direnv.enable = true;

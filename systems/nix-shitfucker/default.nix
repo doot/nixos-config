@@ -36,21 +36,6 @@
     ghostty
   ];
 
-  fonts.packages = with pkgs; [
-    # nerdfonts # needed for waybar
-    nerd-fonts.fira-code
-    noto-fonts
-    noto-fonts-cjk-sans
-    noto-fonts-color-emoji
-    liberation_ttf
-    fira-code
-    fira-code-symbols
-    mplus-outline-fonts.githubRelease
-    dina-font
-    proggyfonts
-    font-awesome
-  ];
-
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   system.stateVersion = "23.11";
