@@ -117,6 +117,7 @@ in {
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
+    extraPackages = with pkgs; [intel-media-driver]; # TODO: Might be needed for hardware acceleration in jellyfin, but not sure. Potentially remove, if not needed.
   };
 
   services = {
@@ -199,6 +200,16 @@ in {
       enable = true;
       settings.port = 9345;
       package = pkgs.unstable.actual-server;
+    };
+
+    jellyfin = {
+      enable = true;
+      hardwareAcceleration = {
+        enable = true;
+        type = "nvenc";
+        device = "/dev/dri/by-path/pci-0000:01:00.0-render";
+      };
+      openFirewall = true;
     };
   };
 
@@ -289,6 +300,10 @@ in {
           name = "plex";
           port = 32400;
           extraConfig = ''rewrite ^/$ /web permanent;'';
+        }
+        {
+          name = "jf";
+          port = 8096;
         }
         {
           name = "tautulli";
