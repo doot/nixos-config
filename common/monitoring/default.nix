@@ -56,10 +56,8 @@ in {
       #   # natel-discrete-panel
       # ];
       settings = {
-        # Overridden by nixos-config-priv's nmdSecrets, which points this at a
-        # sops secret via Grafana's $__file{} provider. The placeholder only
-        # satisfies the module's assertion when priv is the public stub, which
-        # has no sops options; a null here fails eval.
+        # Real value comes from nixos-config-priv; this only satisfies the
+        # module's assertion when priv is the public stub.
         security.secret_key = lib.mkDefault "set-by-nixos-config-priv";
         # TODO: for now database exists in default of /var/lib/grafana/data/grafana.db and is not backed up, except for snapshots. Get a proper set up working. Fucking permissions.
         # database.path = "/docker-nfs/monitoring/grafana/grafana.db";
