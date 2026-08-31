@@ -56,7 +56,9 @@ in {
       #   # natel-discrete-panel
       # ];
       settings = {
-        security.secret_key = "SW2YcwTIb9zpOOhoPsMm"; # Note that this is the old hard coded default. Should be changed in the future, but does not pose any risk.
+        # Real value comes from nixos-config-priv; this only satisfies the
+        # module's assertion when priv is the public stub.
+        security.secret_key = lib.mkDefault "set-by-nixos-config-priv";
         # TODO: for now database exists in default of /var/lib/grafana/data/grafana.db and is not backed up, except for snapshots. Get a proper set up working. Fucking permissions.
         # database.path = "/docker-nfs/monitoring/grafana/grafana.db";
         analytics.reporting_enabled = false;
