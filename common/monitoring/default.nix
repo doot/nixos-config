@@ -56,10 +56,11 @@ in {
       #   # natel-discrete-panel
       # ];
       settings = {
-        # Grafana expands $__file{} at startup, so the key encryption key stays
-        # out of the world-readable nix store. Rotating it requires migrating
-        # the existing data keys — see the runbook in nixos-config-priv.
-        security.secret_key = "$__file{${config.sops.secrets."grafana-secret-key".path}}";
+        # Overridden by nixos-config-priv's nmdSecrets, which points this at a
+        # sops secret via Grafana's $__file{} provider. The placeholder only
+        # satisfies the module's assertion when priv is the public stub, which
+        # has no sops options; a null here fails eval.
+        security.secret_key = lib.mkDefault "set-by-nixos-config-priv";
         # TODO: for now database exists in default of /var/lib/grafana/data/grafana.db and is not backed up, except for snapshots. Get a proper set up working. Fucking permissions.
         # database.path = "/docker-nfs/monitoring/grafana/grafana.db";
         analytics.reporting_enabled = false;
