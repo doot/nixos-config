@@ -44,7 +44,7 @@ in {
         TZ = common.tz;
         # set if using a source/client with redirect URI that you have not explicitly set and MS is NOT running on the same machine that you will view the dashboard from
         # EX: You will view MS dashboard at 'http://192.168.0.101:9078' -> set BASE_URL=http://192.168.0.101:9078
-        #- BASE_URL=http://MyHostIP:9078
+        #- BASE_URL=http://<MyHostIP>:9078
       };
       healthcheck = {
         test = ["CMD-SHELL" "curl --fail localhost:9078/api/health || exit 1"];
