@@ -56,7 +56,10 @@ in {
       #   # natel-discrete-panel
       # ];
       settings = {
-        security.secret_key = "SW2YcwTIb9zpOOhoPsMm"; # Note that this is the old hard coded default. Should be changed in the future, but does not pose any risk.
+        # Grafana expands $__file{} at startup, so the key encryption key stays
+        # out of the world-readable nix store. Rotating it requires migrating
+        # the existing data keys — see the runbook in nixos-config-priv.
+        security.secret_key = "$__file{${config.sops.secrets."grafana-secret-key".path}}";
         # TODO: for now database exists in default of /var/lib/grafana/data/grafana.db and is not backed up, except for snapshots. Get a proper set up working. Fucking permissions.
         # database.path = "/docker-nfs/monitoring/grafana/grafana.db";
         analytics.reporting_enabled = false;
