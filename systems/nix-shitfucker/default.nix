@@ -45,7 +45,7 @@
 
     emacs = {
       enable = true;
-      package = pkgs.emacs30;
+      package = pkgs.emacs;
     };
 
     getty.autologinUser = lib.mkDefault "doot";
