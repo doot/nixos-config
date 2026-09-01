@@ -112,6 +112,7 @@
           ++ extraModules;
       };
   in {
+    nix.nixPath = ["nixpkgs=${inputs.nixpkgs}"]; # Setting this may help nixd resolve
     # Set the formatter for `nix fmt`
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
 
