@@ -340,6 +340,10 @@ in {
         {
           name = "karakeep";
           port = config.services.karakeep.extraEnvironment.PORT;
+          extraConfig = ''
+            client_max_body_size 100M;
+            proxy_request_buffering off;
+          '';
         }
         {
           name = "pinchflat";
