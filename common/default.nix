@@ -183,7 +183,10 @@ in {
       traceroute
     ];
 
-    variables.DO_NOT_TRACK = 1;
+    variables = {
+      DO_NOT_TRACK = 1;
+      UV_PREVIEW_FEATURES = "cache-physical-space,centralized-project-envs,content-addressed-cache,malware-check,cache-size";
+    };
   };
 
   fonts.packages = with pkgs; [
