@@ -299,7 +299,10 @@ in {
         {
           name = "plex";
           port = 32400;
-          extraConfig = ''rewrite ^/$ /web permanent;'';
+          extraConfig = ''
+            rewrite ^/$ /web permanent;
+            proxy_buffering off;
+          '';
         }
         {
           name = "jf";
@@ -323,10 +326,11 @@ in {
           proxyPassHost = "http://${network.hosts.nix-shitfucker.fqdn}";
           inherit (config.services.immich) port;
           extraConfig = ''
-            client_max_body_size 50000M;
-            proxy_read_timeout   600s;
-            proxy_send_timeout   600s;
-            send_timeout         600s;
+            client_max_body_size    50000M;
+            proxy_request_buffering off;
+            proxy_read_timeout      600s;
+            proxy_send_timeout      600s;
+            send_timeout            600s;
           '';
         }
         {
@@ -381,6 +385,10 @@ in {
           name = "nc";
           proxyPassHost = "http://${network.hosts.nix-shitfucker.fqdn}";
           port = 80; # TODO: Put into variable to share with nextcloud setup in nsf, move to another port
+          extraConfig = ''
+            client_max_body_size 512M;
+            proxy_request_buffering off;
+          ''; # TODO: Move into variable to share with nextcloud setup in nsf so that they don't drift
         }
         {
           name = "wealthfolio";
