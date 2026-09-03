@@ -67,7 +67,7 @@ in {
       backend = "docker";
       projects =
         lib.genAttrs
-        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble"]
+        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble" "homelable"]
         (name: {
           serviceName = name; # systemd service name
           settings.imports = [../../arion/${name}];
@@ -294,6 +294,10 @@ in {
         {
           name = "cadvisor";
           port = 8080;
+        }
+        {
+          name = "homelable";
+          port = 3010;
         }
         {
           name = "plex";
