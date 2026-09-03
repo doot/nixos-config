@@ -10,6 +10,7 @@ let
   envFile = "/run/secrets/homelable-env";
 
   frontendPort = 3010;
+  vhost = "homelable.${network.hosts.nix-media-docker.fqdn}";
 in {
   project.name = "homelable";
 
@@ -28,7 +29,7 @@ in {
         environment = {
           TZ = common.tz;
           SQLITE_PATH = "/app/data/homelab.db";
-          CORS_ORIGINS = ''["https://homelable.${network.hosts.nix-media-docker.fqdn}"]'';
+          CORS_ORIGINS = ''["https://${vhost}"]'';
           SCANNER_RANGES = ''["192.168.1.0/24"]'';
         };
       };
