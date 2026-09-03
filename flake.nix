@@ -54,7 +54,10 @@
     # };
 
     hermes-agent = {
-      url = "github:NousResearch/hermes-agent";
+      # TODO: Temporarily pinned to NousResearch/hermes-agent#102200, which packages
+      # the missing hermes state modules. Revert to github:NousResearch/hermes-agent
+      # once that PR is merged upstream.
+      url = "github:plasma-penguin/hermes-agent/fix/nix-hermes-state-holders";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
   };
