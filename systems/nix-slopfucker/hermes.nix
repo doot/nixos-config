@@ -256,16 +256,22 @@ in {
       # allocate a different number than the host — leaving the bind-mounted
       # state (owned by the host's hermes) unreadable to the agent. mkForce
       # because the module already defines the user/group.
-      users.users.hermes.uid = lib.mkForce hermesUid;
-      users.groups.hermes.gid = lib.mkForce hermesGid;
+      users = {
+        users.hermes = {
+          uid = lib.mkForce hermesUid;
+
+          # Lingering keeps user@<uid>.service — and the session bus the cron
+          # scopes below need — alive for a user that never logs in.
+          linger = true;
+        };
+        groups.hermes.gid = lib.mkForce hermesGid;
+      };
 
       # The agent dispatches cron workers into a transient
       # `systemd-run --user --scope`, which needs a session bus at
-      # $XDG_RUNTIME_DIR/bus and fails closed without one. Two things are
-      # missing for a system service whose user never logs in: lingering keeps
-      # user@<uid>.service (and the bus) alive, and XDG_RUNTIME_DIR must be set
-      # explicitly, since systemd exports it only to user sessions.
-      users.users.hermes.linger = true;
+      # $XDG_RUNTIME_DIR/bus and fails closed without one. systemd exports that
+      # variable only to user sessions, so a system service must be told
+      # explicitly where the lingering user manager's runtime dir is.
       systemd.services.hermes-agent = {
         environment.XDG_RUNTIME_DIR = "/run/user/${toString hermesUid}";
         after = ["user@${toString hermesUid}.service"];
