@@ -259,6 +259,18 @@ in {
       users.users.hermes.uid = lib.mkForce hermesUid;
       users.groups.hermes.gid = lib.mkForce hermesGid;
 
+      # The agent dispatches cron workers into a transient
+      # `systemd-run --user --scope`, which needs a session bus at
+      # $XDG_RUNTIME_DIR/bus and fails closed without one. Two things are
+      # missing for a system service whose user never logs in: lingering keeps
+      # user@<uid>.service (and the bus) alive, and XDG_RUNTIME_DIR must be set
+      # explicitly, since systemd exports it only to user sessions.
+      users.users.hermes.linger = true;
+      systemd.services.hermes-agent = {
+        environment.XDG_RUNTIME_DIR = "/run/user/${toString hermesUid}";
+        after = ["user@${toString hermesUid}.service"];
+      };
+
       # No nix daemon → no `nix build`/`nix-shell`/`nix run` self-install.
       # No python/pip/uv on PATH either. This is the package-install lockdown.
       nix.enable = false;
