@@ -360,7 +360,7 @@ in {
         settings = {
           # Hand-bumped: managed installs refuse the config writes that would
           # otherwise advance this on update.
-          _config_version = 38;
+          _config_version = 39;
 
           model = {
             provider = "copilot";
