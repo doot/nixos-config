@@ -8,6 +8,31 @@ from pathlib import Path
 import sys
 
 
+def probe_peer(peer: int, outside: Path) -> dict:
+    results = {}
+    for path in (
+        f"/proc/{peer}/root{outside}",
+        f"/proc/{peer}/cwd/{outside.name}",
+        f"/proc/{peer}/fd/3",
+    ):
+        try:
+            fd = os.open(path, os.O_WRONLY | os.O_APPEND)
+        except OSError as error:
+            results[path] = error.errno
+        else:
+            results[path] = 0
+            try:
+                os.write(fd, b"proc escape\n")
+            except OSError as error:
+                results[path] = f"open succeeded; write errno {error.errno}"
+            finally:
+                os.close(fd)
+    print(json.dumps({"proc_peer_errnos": results}), flush=True)
+    # ProtectProc=invisible may hide a live peer after a Landlock ptrace denial.
+    assert all(value in (errno.EACCES, errno.EPERM, errno.ENOENT) for value in results.values()), results
+    return results
+
+
 def probe(outside: Path, state: Path) -> None:
     status = dict(
         line.split(":", 1) for line in Path("/proc/self/status").read_text().splitlines()
@@ -29,21 +54,20 @@ def probe(outside: Path, state: Path) -> None:
     assert libc.unshare(0x10000000) == -1, "worker created a user namespace"
     assert ctypes.get_errno() == errno.EPERM, "unexpected unshare failure"
 
-    peer_file = Path("/run/hermes-test-peer.pid")
-    if peer_file.exists():
-        peer = int(peer_file.read_text())
-        for path in (f"/proc/{peer}/root/srv/worker-canary", f"/proc/{peer}/cwd/worker-canary", f"/proc/{peer}/fd/3"):
-            try:
-                with open(path, "a") as target:
-                    target.write("proc escape\n")
-            except PermissionError:
-                pass
-            else:
-                raise AssertionError(f"worker escaped through {path}")
+    peer_fixture = json.loads(Path("/run/hermes-test-peer/ready.json").read_text())
+    peer = peer_fixture["pid"]
+    assert peer > 1, "invalid peer PID"
+    assert peer_fixture["uids"] == [os.getuid()] * 4, "peer UID differs from probe"
+    pid_namespace = os.readlink("/proc/self/ns/pid")
+    assert peer_fixture["pid_namespace"] == pid_namespace, "peer PID namespace differs from probe"
+    proc_errnos = probe_peer(peer, outside)
 
     state.mkdir(exist_ok=True)
     report = {
         "pid": os.getpid(),
+        "peer_fixture": peer_fixture,
+        "pid_namespace": pid_namespace,
+        "proc_peer_errnos": proc_errnos,
         "cgroup": Path("/proc/self/cgroup").read_text(),
         "no_new_privileges": True,
         "capabilities_empty": True,

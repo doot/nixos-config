@@ -16,7 +16,7 @@ while not (home / "release-worker").exists():
         raise TimeoutError("test did not release the cron worker")
     time.sleep(0.1)
 
+probe(Path("/srv/worker-canary"), home)
 with (home / "completions").open("a") as target:
     target.write("completed\n")
-probe(Path("/srv/worker-canary"), home)
 print("cron worker survived gateway restart")

@@ -9,15 +9,6 @@
   python = "${package.hermesVenv}/bin/python3";
   uid = 1100;
   home = "/var/lib/hermes/.hermes";
-  peer = pkgs.writeText "unconfined-peer.py" ''
-    import os
-    import time
-    fd = os.open("/srv/worker-canary", os.O_RDWR)
-    os.dup2(fd, 3)
-    os.chdir("/srv")
-    while True:
-        time.sleep(1)
-  '';
 in
   pkgs.testers.runNixOSTest {
     name = "hermes-workers";
@@ -56,7 +47,8 @@ in
             wantedBy = ["multi-user.target"];
             serviceConfig = {
               User = "hermes";
-              ExecStart = "${pkgs.python3}/bin/python3 ${peer}";
+              RuntimeDirectory = "hermes-test-peer";
+              ExecStart = "${pkgs.python3}/bin/python3 ${./peer.py} serve /srv/worker-canary /run/hermes-test-peer/ready.json";
             };
           };
           system.stateVersion = "26.05";
@@ -64,6 +56,8 @@ in
       };
     };
     testScript = ''
+      from contextlib import contextmanager
+      import errno
       import json
       import shlex
 
@@ -81,6 +75,30 @@ in
       def report(directory):
           return json.loads(c("cat " + directory + "/probe.json"))
 
+      def peer_control():
+          current = json.loads(user("${pkgs.python3}/bin/python3 ${./peer.py} check "
+                                    "/srv/worker-canary /run/hermes-test-peer/ready.json"))
+          assert current == peer_fixture, (current, peer_fixture)
+          assert c("systemctl show test-peer.service -p MainPID --value") == str(current["pid"])
+
+      @contextmanager
+      def checked_probe(directory):
+          peer_control()
+          try:
+              yield
+          finally:
+              peer_control()
+          result = report(directory)
+          assert result["peer_fixture"] == peer_fixture, result
+          assert result["pid_namespace"] == peer_fixture["pid_namespace"], result
+          pid = peer_fixture["pid"]
+          assert set(result["proc_peer_errnos"]) == {
+              f"/proc/{pid}/root/srv/worker-canary",
+              f"/proc/{pid}/cwd/worker-canary", f"/proc/{pid}/fd/3",
+          }, result
+          assert all(value in (errno.EACCES, errno.EPERM, errno.ENOENT)
+                     for value in result["proc_peer_errnos"].values()), result
+
       start_all()
       machine.wait_for_unit("container@hermes.service")
       machine.wait_until_succeeds(
@@ -90,10 +108,11 @@ in
       c("test ! -e /bin/true")
       manager = c("systemctl show user@${toString uid}.service -p MainPID --value")
       assert c(f"readlink /proc/{manager}/ns/cgroup") != c("readlink /proc/1/ns/cgroup")
-      c("systemctl show test-peer.service -p MainPID --value > /run/hermes-test-peer.pid")
-      peer_pid = c("cat /run/hermes-test-peer.pid")
-      # The control can write through the peer; DAC must not make this a false pass.
-      user(f"printf control >> /proc/{peer_pid}/root/srv/worker-canary")
+      machine.wait_until_succeeds(
+          "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test "
+          "-f /run/hermes-test-peer/ready.json"
+      )
+      peer_fixture = json.loads(c("cat /run/hermes-test-peer/ready.json"))
       c("mkdir -p ${home}/scripts")
       c("cp ${./probe.py} ${home}/scripts/probe.py; cp ${./worker.py} ${home}/scripts/worker.py")
       c("chown -R hermes:hermes ${home}/scripts")
@@ -118,8 +137,9 @@ in
                "-p CapabilityBoundingSet=~"),
           ):
               destination = "${home}/" + name
-              user(f"systemd-run --user --wait --pipe --collect --unit={name} {properties} "
-                   f"-- ${python} ${./probe.py} /srv/worker-canary {destination}")
+              with checked_probe(destination):
+                  user(f"systemd-run --user --wait --pipe --collect --unit={name} {properties} "
+                       f"-- ${python} ${./probe.py} /srv/worker-canary {destination}")
               assert report(destination)["outside_write_denied"]
 
       with subtest("user-authored privileged exec prefix stays constrained"):
@@ -127,29 +147,33 @@ in
           unit += "ExecStart=+${python} ${./probe.py} /srv/worker-canary ${home}/prefix\n"
           user("mkdir -p /var/lib/hermes/.config/systemd/user")
           user("printf %s " + shlex.quote(unit) + " > /var/lib/hermes/.config/systemd/user/prefix.service")
-          user("systemctl --user daemon-reload; systemctl --user start prefix.service")
+          with checked_probe("${home}/prefix"):
+              user("systemctl --user daemon-reload; systemctl --user start prefix.service")
           assert report("${home}/prefix")["capabilities_empty"]
 
       with subtest("real scheduled cron survives gateway restart"):
-          user("${python} ${./seed.py}")
-          machine.wait_until_succeeds(
-              "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test -f ${home}/worker-ready",
-              timeout=180,
-          )
+          with checked_probe("${home}"):
+              user("${python} ${./seed.py}")
+              machine.wait_until_succeeds(
+                  "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test -f ${home}/worker-ready",
+                  timeout=180,
+              )
           worker_pid = c("cat ${home}/worker-ready")
           before = report("${home}")
           assert before["pid"] == int(worker_pid)
           assert "hermes-worker-cron-" in before["cgroup"], before
-          gateway = c("systemctl show hermes-agent.service -p MainPID --value")
-          c("systemctl restart hermes-agent.service")
-          assert c("systemctl show hermes-agent.service -p MainPID --value") != gateway
-          assert c("systemctl show user@${toString uid}.service -p MainPID --value") == manager
-          c(f"test -d /proc/{worker_pid}")
-          c("touch ${home}/release-worker")
-          machine.wait_until_succeeds(
-              "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test -f ${home}/completions",
-              timeout=60,
-          )
+          with checked_probe("${home}"):
+              gateway = c("systemctl show hermes-agent.service -p MainPID --value")
+              c("systemctl restart hermes-agent.service")
+              assert c("systemctl show hermes-agent.service -p MainPID --value") != gateway
+              assert c("systemctl show user@${toString uid}.service -p MainPID --value") == manager
+              c(f"test -d /proc/{worker_pid}")
+              c("touch ${home}/release-worker")
+              machine.wait_until_succeeds(
+                  "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test -f ${home}/completions",
+                  timeout=60,
+              )
+          assert report("${home}")["pid"] == int(worker_pid)
           assert c("cat ${home}/completions") == "completed"
           query = "import sqlite3; db=sqlite3.connect('${home}/cron/executions.db'); "
           query += "rows=db.execute('select status from executions').fetchall(); "
@@ -160,9 +184,10 @@ in
           )
 
       with subtest("manager reexecution retains enforcement"):
-          user("systemctl --user daemon-reexec")
-          user("systemd-run --user --wait --pipe --collect -- ${python} ${./probe.py} "
-               "/srv/worker-canary ${home}/reexec")
+          with checked_probe("${home}/reexec"):
+              user("systemctl --user daemon-reexec")
+              user("systemd-run --user --wait --pipe --collect -- ${python} ${./probe.py} "
+                   "/srv/worker-canary ${home}/reexec")
           assert report("${home}/reexec")["no_new_privileges"]
 
       c("journalctl -u hermes-agent.service -u user@${toString uid}.service --no-pager")
