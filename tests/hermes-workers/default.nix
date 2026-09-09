@@ -37,6 +37,7 @@ in
             settings = {
               terminal.cwd = "/var/lib/hermes/workspace";
               cron.script_timeout_seconds = 180;
+              logging.level = "DEBUG";
             };
           };
           environment.systemPackages = [pkgs.util-linux pkgs.python3];
@@ -74,6 +75,24 @@ in
 
       def report(directory):
           return json.loads(c("cat " + directory + "/probe.json"))
+
+      def wait_for_worker_file(path, timeout):
+          try:
+              machine.wait_until_succeeds(
+                  "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test -f " + path,
+                  timeout=timeout,
+              )
+          except Exception as error:
+              diagnostics = []
+              for command in (
+                  "journalctl -u hermes-agent.service -u user@${toString uid}.service --no-pager -o cat -n 8",
+                  "${pkgs.python3}/bin/python3 ${./diagnostics.py} ${home}",
+              ):
+                  try:
+                      diagnostics.append(c(command))
+                  except Exception as collection_error:
+                      diagnostics.append(f"diagnostic collection failed: {collection_error}")
+              raise AssertionError(str(error) + "\n" + "\n".join(diagnostics)) from error
 
       def peer_control():
           current = json.loads(user("${pkgs.python3}/bin/python3 ${./peer.py} check "
@@ -154,10 +173,7 @@ in
       with subtest("real scheduled cron survives gateway restart"):
           with checked_probe("${home}"):
               user("${python} ${./seed.py}")
-              machine.wait_until_succeeds(
-                  "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test -f ${home}/worker-ready",
-                  timeout=180,
-              )
+              wait_for_worker_file("${home}/worker-ready", timeout=180)
           worker_pid = c("cat ${home}/worker-ready")
           before = report("${home}")
           assert before["pid"] == int(worker_pid)
@@ -169,10 +185,7 @@ in
               assert c("systemctl show user@${toString uid}.service -p MainPID --value") == manager
               c(f"test -d /proc/{worker_pid}")
               c("touch ${home}/release-worker")
-              machine.wait_until_succeeds(
-                  "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test -f ${home}/completions",
-                  timeout=60,
-              )
+              wait_for_worker_file("${home}/completions", timeout=60)
           assert report("${home}")["pid"] == int(worker_pid)
           assert c("cat ${home}/completions") == "completed"
           query = "import sqlite3; db=sqlite3.connect('${home}/cron/executions.db'); "
