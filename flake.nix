@@ -169,6 +169,11 @@
       };
     };
 
+    checks.x86_64-linux.hermes-workers = import ./tests/hermes-workers {
+      pkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
+      inherit inputs;
+    };
+
     packages.x86_64-linux = {
       nsf-proxmox = self.nixosConfigurations.nix-shitfucker.config.system.build.images.proxmox;
       slop-proxmox = self.nixosConfigurations.nix-slopfucker.config.system.build.images.proxmox;
