@@ -203,6 +203,7 @@ in {
     };
 
     jellyfin = {
+      package = pkgs.unstable.jellyfin;
       enable = true;
       hardwareAcceleration = {
         enable = true;
