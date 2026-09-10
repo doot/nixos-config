@@ -366,7 +366,7 @@ in {
 
           model = {
             provider = "copilot";
-            default = "claude-opus-5";
+            default = "gpt-6-astra";
           };
           context = {
             engine = "lcm";
