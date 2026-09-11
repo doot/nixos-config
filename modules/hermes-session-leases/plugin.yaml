@@ -1,0 +1,6 @@
+name: session-leases
+version: 0.1.0
+description: "Records which Hermes sessions have a live TUI attached, so a crashed host can restore its exact working set."
+provides_hooks:
+  - pre_llm_call
+  - on_session_start
