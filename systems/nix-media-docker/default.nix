@@ -7,7 +7,9 @@
   fqdn,
   ...
 }: let
+  arionCommon = import ../../arion/common.nix;
   network = import ../../common/network.nix;
+  watchstate = import ../../arion/watchstate/settings.nix;
 in {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
@@ -67,7 +69,7 @@ in {
       backend = "docker";
       projects =
         lib.genAttrs
-        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble"]
+        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble" "watchstate"]
         (name: {
           serviceName = name; # systemd service name
           settings.imports = [../../arion/${name}];
@@ -77,6 +79,10 @@ in {
 
   # Supress systemd units that don't work because of LXC
   systemd = {
+    tmpfiles.rules = [
+      "d ${watchstate.dataDir} 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+    ];
+
     suppressedSystemUnits = [
       "dev-mqueue.mount"
       "sys-kernel-debug.mount"
@@ -121,6 +127,9 @@ in {
   };
 
   services = {
+    # First-account signup is available only through the loopback port.
+    nginx.virtualHosts."watchstate.${fqdn}".locations."^~ /v1/api/system/auth/signup".return = "403";
+
     ntfy-sh = {
       enable = true;
       # Secret env file providing NTFY_AUTH_USERS + NTFY_AUTH_TOKENS. Generate
@@ -235,6 +244,7 @@ in {
         "/etc/machine-id"
         "/etc/passwd"
         "/docker-local/freshrss"
+        watchstate.dataDir
         "/home/doot/secret_test"
         "/home/doot/nixos-config-priv"
         "/root/media-nfs.files.txt"
@@ -316,6 +326,13 @@ in {
         {
           name = "tautulli";
           port = 8181;
+        }
+        {
+          name = "watchstate";
+          inherit (watchstate) port;
+          extraConfig = ''
+            proxy_set_header X-WatchState-Client-IP $remote_addr;
+          '';
         }
         {
           name = "audiobook";
