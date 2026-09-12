@@ -130,7 +130,7 @@ in {
 
   services = {
     nginx.eventsConfig = ''
-      worker_connections 16384;
+      worker_connections 10000;
     '';
 
     ntfy-sh = {
