@@ -91,8 +91,6 @@ in {
 
     # Start tty0 on serial console (needed for proxmox console)
     services = {
-      nginx.serviceConfig.LimitNOFILE = "65536:524288";
-
       "getty@tty1" = {
         enable = lib.mkForce true;
         wantedBy = ["getty.target"]; # to start at boot
@@ -129,15 +127,6 @@ in {
   };
 
   services = {
-    nginx = {
-      prependConfig = ''
-        worker_processes 4;
-      '';
-      eventsConfig = ''
-        worker_connections 10000;
-      '';
-    };
-
     ntfy-sh = {
       enable = true;
       # Secret env file providing NTFY_AUTH_USERS + NTFY_AUTH_TOKENS. Generate
@@ -271,6 +260,12 @@ in {
 
     nginx-proxy = {
       enable = true;
+      workerProcesses = 4;
+      workerConnections = 10000;
+      openFileLimit = {
+        soft = 65536;
+        hard = 524288;
+      };
       acme = {
         enable = true;
         email = "jeremy@jhauschildt.com";

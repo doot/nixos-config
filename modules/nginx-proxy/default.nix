@@ -10,6 +10,32 @@
 in {
   options.roles.nginx-proxy = {
     enable = lib.mkEnableOption "nginx reverse proxy role";
+    workerProcesses = lib.mkOption {
+      type = lib.types.nullOr lib.types.ints.positive;
+      default = null;
+      description = "Worker process count; null leaves nginx unchanged";
+    };
+    workerConnections = lib.mkOption {
+      type = lib.types.nullOr lib.types.ints.positive;
+      default = null;
+      description = "Connection limit per worker, including upstream connections; null leaves nginx unchanged";
+    };
+    openFileLimit = lib.mkOption {
+      type = lib.types.nullOr (lib.types.submodule {
+        options = {
+          soft = lib.mkOption {
+            type = lib.types.ints.positive;
+            description = "Soft file-descriptor limit";
+          };
+          hard = lib.mkOption {
+            type = lib.types.ints.positive;
+            description = "Hard file-descriptor limit";
+          };
+        };
+      });
+      default = null;
+      description = "nginx service file-descriptor limits; null preserves the systemd defaults";
+    };
     acme = {
       enable = lib.mkEnableOption "ACME wildcard certificate";
       email = lib.mkOption {
@@ -76,6 +102,12 @@ in {
       services.nginx = {
         enable = true;
         statusPage = true;
+        prependConfig = lib.mkIf (cfg.workerProcesses != null) ''
+          worker_processes ${toString cfg.workerProcesses};
+        '';
+        eventsConfig = lib.mkIf (cfg.workerConnections != null) ''
+          worker_connections ${toString cfg.workerConnections};
+        '';
         virtualHosts = builtins.listToAttrs (
           builtins.map (proxy: {
             name = "${proxy.name}.${fqdn}";
@@ -97,6 +129,19 @@ in {
           cfg.proxies
         );
       };
+    })
+    (lib.mkIf (cfg.enable && cfg.openFileLimit != null) {
+      assertions = [
+        {
+          assertion = cfg.openFileLimit.soft <= cfg.openFileLimit.hard;
+          message = "roles.nginx-proxy.openFileLimit.soft must not exceed the hard limit";
+        }
+        {
+          assertion = cfg.workerConnections == null || cfg.openFileLimit.soft >= cfg.workerConnections;
+          message = "roles.nginx-proxy.openFileLimit.soft must cover workerConnections";
+        }
+      ];
+      systemd.services.nginx.serviceConfig.LimitNOFILE = "${toString cfg.openFileLimit.soft}:${toString cfg.openFileLimit.hard}";
     })
     (lib.mkIf (cfg.enable && cfg.acme.enable) {
       security.acme = {
