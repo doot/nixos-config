@@ -84,35 +84,43 @@ in
       def report(directory):
           return json.loads(c("cat " + directory + "/probe.json"))
 
-      def wait_for_worker_file(path, timeout):
+      def wait_for_worker_command(command, timeout):
           try:
-              machine.wait_until_succeeds(
-                  "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test -f " + path,
-                  timeout=timeout,
-              )
+              machine.wait_until_succeeds(command, timeout=timeout)
           except Exception as error:
-              diagnostics = []
-              for command in (
-                  "journalctl -u hermes-agent.service -u user@${toString uid}.service --no-pager -o cat -n 8",
-                  "journalctl _SYSTEMD_USER_UNIT=hermes-gateway.service --no-pager -o cat -n 12",
-                  "systemctl show hermes-agent.service user@${toString uid}.service "
-                  "-p MainPID -p ActiveState -p SubState -p Result -p ExecStart -p ExecStopPost",
-                  "${pkgs.python3}/bin/python3 ${./diagnostics.py} ${home}",
+              diagnostics = {}
+              properties = "-p MainPID -p ActiveState -p SubState -p Result "
+              properties += "-p ExecMainCode -p ExecMainStatus -p ExecStart -p ExecStopPost"
+              for label, diagnostic_command in (
+                  ("controller-journal", "journalctl -u hermes-agent.service -u user@${toString uid}.service --no-pager -o cat -n 8"),
+                  ("gateway-journal", "journalctl _SYSTEMD_USER_UNIT=hermes-gateway.service --no-pager -o cat -n 12"),
+                  ("controller-status", "systemctl show hermes-agent.service user@${toString uid}.service " + properties),
+                  ("gateway-status", "runuser -u hermes -- env XDG_RUNTIME_DIR=/run/user/${toString uid} "
+                   "systemctl --user show hermes-gateway.service " + properties),
+                  ("worker-state", "${pkgs.python3}/bin/python3 ${./diagnostics.py} ${home}"),
               ):
                   try:
-                      diagnostics.append(c(command))
+                      diagnostics[label] = c(diagnostic_command)
                   except Exception as collection_error:
-                      diagnostics.append(f"diagnostic collection failed: {collection_error}")
-              raise AssertionError(str(error) + "\n" + "\n".join(diagnostics)) from error
+                      diagnostics[label] = f"diagnostic collection failed: {collection_error}"
+              # Keep every source visible in Nix's last-25-lines failure summary.
+              raise AssertionError(json.dumps({"error": str(error), "diagnostics": diagnostics})) from error
+
+      def wait_for_worker_file(path, timeout):
+          wait_for_worker_command(
+              "systemd-run --machine=hermes --wait --quiet ${pkgs.coreutils}/bin/test -f " + path,
+              timeout=timeout,
+          )
 
       def gateway_property(name):
           return user("systemctl --user show hermes-gateway.service -p " + name + " --value")
 
       def gateway_ready():
-          machine.wait_until_succeeds(
+          wait_for_worker_command(
               "systemd-run --machine=hermes --wait --quiet "
               "runuser -u hermes -- env XDG_RUNTIME_DIR=/run/user/${toString uid} "
-              "systemctl --user is-active hermes-gateway.service"
+              "systemctl --user is-active hermes-gateway.service",
+              timeout=60,
           )
           invocation = gateway_property("InvocationID")
           assert len(invocation) == 32, invocation
