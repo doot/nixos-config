@@ -5,16 +5,20 @@
   inherit (pkgs) lib;
   inherit (hermes-agent.inputs) uv2nix;
   package = hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  identityHelper = pkgs.writeText "hermes-recovery-identity.py" (builtins.readFile ./hermes-recovery-identity.py);
 
   # Patch the wheel inside uv2nix, not the outer launcher derivation.
-  probeOverlay = _final: prev: {
+  recoveryOverlay = _final: prev: {
     hermes-agent = prev.hermes-agent.overrideAttrs (old: {
+      patches = (old.patches or []) ++ [./hermes-recovery.patch];
       postPatch =
         (old.postPatch or "")
         + ''
-          substituteInPlace tools/process_registry.py \
-            --replace-fail '_systemd_scope_argv(binary, probe_unit, "/bin/true")' \
-            '_systemd_scope_argv(binary, probe_unit, "${pkgs.coreutils}/bin/true")'
+          cp ${identityHelper} gateway/recovery_identity.py
+          substituteInPlace gateway/recovery_identity.py \
+            --replace-fail '@systemd_run@' '${pkgs.systemd}/bin/systemd-run' \
+            --replace-fail '@python@' '${pkgs.python3}/bin/python3' \
+            --replace-fail '@identity_helper@' '${identityHelper}'
         '';
     });
   };
@@ -26,7 +30,7 @@
       workspace
       // {
         mkPyprojectOverlay = overlayArgs:
-          lib.composeExtensions (workspace.mkPyprojectOverlay overlayArgs) probeOverlay;
+          lib.composeExtensions (workspace.mkPyprojectOverlay overlayArgs) recoveryOverlay;
       };
   };
 in
@@ -36,7 +40,9 @@ in
       (old.postInstall or "")
       + ''
         HERMES_HOME="$TMPDIR/hermes-probe-test" \
-          ${old.passthru.hermesVenv}/bin/python3 -I ${./hermes-package-test.py} \
-          ${pkgs.coreutils}/bin/true
+          ${old.passthru.hermesVenv}/bin/python3 -I ${./hermes-package-test.py}
+        HERMES_HOME="$TMPDIR/hermes-recovery-test" \
+          ${old.passthru.hermesVenv}/bin/python3 -I ${./hermes-recovery-test.py} \
+          --helper ${identityHelper} --helper-python ${pkgs.python3}/bin/python3
       '';
   })

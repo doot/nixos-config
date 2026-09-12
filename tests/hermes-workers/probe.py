@@ -33,7 +33,25 @@ def probe_peer(peer: int, outside: Path) -> dict:
     return results
 
 
-def probe(outside: Path, state: Path) -> None:
+def probe_cgroup_writes(root: Path, *, denied: bool) -> dict:
+    results = {}
+    for name in ("cgroup.procs", "cgroup.subtree_control"):
+        path = root / name
+        path.stat()  # Missing delegation is not evidence of write confinement.
+        try:
+            fd = os.open(path, os.O_WRONLY)
+        except OSError as error:
+            results[name] = error.errno
+        else:
+            os.close(fd)  # Opening tests write authority without moving a process.
+            results[name] = 0
+    print(json.dumps(results), flush=True)
+    expected = (errno.EACCES, errno.EPERM, errno.EROFS) if denied else (0,)
+    assert all(value in expected for value in results.values()), results
+    return results
+
+
+def probe(outside: Path, state: Path, *, cgroup_writes: bool = False) -> None:
     status = dict(
         line.split(":", 1) for line in Path("/proc/self/status").read_text().splitlines()
     )
@@ -74,9 +92,14 @@ def probe(outside: Path, state: Path) -> None:
         "outside_write_denied": True,
         "user_namespace_denied": True,
     }
+    if cgroup_writes:
+        report["cgroup_write_errnos"] = probe_cgroup_writes(Path("/sys/fs/cgroup"), denied=True)
     (state / "probe.json").write_text(json.dumps(report))
     print(json.dumps(report))
 
 
 if __name__ == "__main__":
-    probe(Path(sys.argv[1]), Path(sys.argv[2]))
+    if sys.argv[1:] == ["cgroup-control"]:
+        probe_cgroup_writes(Path("/sys/fs/cgroup"), denied=False)
+    else:
+        probe(Path(sys.argv[1]), Path(sys.argv[2]))

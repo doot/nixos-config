@@ -1,13 +1,12 @@
-"""Exercise the installed probe; only the unavailable user bus is mocked."""
+"""Exercise the installed upstream shell probe; only the user bus is mocked."""
 
 import subprocess
-import sys
+
 import unittest
 from unittest.mock import patch
 
 from tools import process_registry as registry
 
-TRUE = sys.argv.pop(1)
 REAL_RUN = subprocess.run
 
 
@@ -18,19 +17,20 @@ class ProbeTest(unittest.TestCase):
         self.enterContext(patch.object(registry, "_SYSTEMD_SCOPE_PROBED_AT", 0.0))
         self.which = self.enterContext(patch("shutil.which", return_value="systemd-run"))
 
-    def test_probe_executes_store_true_without_path(self):
+    def test_probe_executes_upstream_shell_without_path(self):
         calls = []
 
         def run_scope(argv, **kwargs):
             calls.append(argv)
             command = argv[argv.index("--") + 1:]
-            return REAL_RUN(command, env={"PATH": ""}, **kwargs)
+            kwargs["env"] = {"PATH": ""}
+            return REAL_RUN(command, **kwargs)
 
         with patch.object(registry.subprocess, "run", side_effect=run_scope):
             self.assertTrue(registry._systemd_run_user_scope_available())
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][1:3], ["--user", "--scope"])
-        self.assertEqual(calls[0][calls[0].index("--") + 1:], [TRUE])
+        self.assertEqual(calls[0][calls[0].index("--") + 1:], ["/bin/sh", "-c", "exit 0"])
 
     def test_failed_scope_stays_unavailable(self):
         failure = subprocess.CompletedProcess([], 1, b"", b"no user bus")

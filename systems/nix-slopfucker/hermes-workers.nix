@@ -62,7 +62,7 @@
     ProtectSystem = "strict";
     ProtectHome = lib.mkForce "read-only";
     ReadWritePaths = writePaths;
-    # A worker's temporary files must outlive the gateway unit's cleanup.
+    # Scopes share the manager's temporary namespace across gateway restarts.
     PrivateTmp = lib.mkForce "disconnected";
     ProtectKernelTunables = true;
     ProtectKernelModules = true;
@@ -111,6 +111,26 @@ in {
     variables.HERMES_HOME = "${cfg.stateDir}/.hermes";
   };
 
+  systemd.user.services.hermes-gateway = {
+    description = "Hermes Agent Gateway";
+    unitConfig.ConditionUser = cfg.user;
+    environment =
+      common.processEnvironment {hermesHome = "${cfg.stateDir}/.hermes";}
+      // {
+        HOME = cfg.stateDir;
+        XDG_RUNTIME_DIR = runtimeDir;
+      };
+    path = common.processPath {inherit pkgs cfg;};
+    # M must fork G so it can inspect G's children when attaching worker scopes.
+    serviceConfig = {
+      Type = "exec";
+      ExecStart = lib.escapeShellArgs ([workerLauncher] ++ common.gatewayArgv cfg);
+      Restart = "no";
+      UMask = "0007";
+      WorkingDirectory = cfg.workingDirectory;
+    };
+  };
+
   systemd.services = {
     hermes-agent = {
       environment.XDG_RUNTIME_DIR = runtimeDir;
@@ -119,8 +139,24 @@ in {
       serviceConfig =
         policy
         // {
+          Type = "exec";
           ProtectControlGroups = true;
-          ExecStart = lib.mkForce (lib.escapeShellArgs ([workerLauncher] ++ common.gatewayArgv cfg));
+          ExecStart = lib.mkForce (lib.escapeShellArgs [
+            cliLauncher
+            (lib.getExe' pkgs.systemd "systemctl")
+            "--user"
+            "--wait"
+            "start"
+            "hermes-gateway.service"
+          ]);
+          # ExecStopPost also runs after controller death or a failed start.
+          ExecStopPost = lib.escapeShellArgs [
+            cliLauncher
+            (lib.getExe' pkgs.systemd "systemctl")
+            "--user"
+            "stop"
+            "hermes-gateway.service"
+          ];
         };
     };
     ${userManager} = {

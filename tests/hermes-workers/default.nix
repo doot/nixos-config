@@ -7,6 +7,13 @@
     inherit (inputs) hermes-agent;
   };
   python = "${package.hermesVenv}/bin/python3";
+  gatewayFixture = pkgs.writeShellScriptBin "hermes" ''
+    exec ${python} ${./gateway.py} ${package}/bin/hermes "$@"
+  '';
+  observedPackage = pkgs.symlinkJoin {
+    name = "hermes-observed-gateway";
+    paths = [gatewayFixture package];
+  };
   uid = 1100;
   home = "/var/lib/hermes/.hermes";
 in
@@ -33,10 +40,11 @@ in
           nix.enable = false;
           services.hermes-agent = {
             enable = true;
-            inherit package;
+            package = observedPackage;
+            extraPackages = [pkgs.hello];
             settings = {
               terminal.cwd = "/var/lib/hermes/workspace";
-              cron.script_timeout_seconds = 180;
+              cron.script_timeout_seconds = 420;
               logging.level = "DEBUG";
             };
           };
@@ -86,6 +94,9 @@ in
               diagnostics = []
               for command in (
                   "journalctl -u hermes-agent.service -u user@${toString uid}.service --no-pager -o cat -n 8",
+                  "journalctl _SYSTEMD_USER_UNIT=hermes-gateway.service --no-pager -o cat -n 12",
+                  "systemctl show hermes-agent.service user@${toString uid}.service "
+                  "-p MainPID -p ActiveState -p SubState -p Result -p ExecStart -p ExecStopPost",
                   "${pkgs.python3}/bin/python3 ${./diagnostics.py} ${home}",
               ):
                   try:
@@ -94,20 +105,78 @@ in
                       diagnostics.append(f"diagnostic collection failed: {collection_error}")
               raise AssertionError(str(error) + "\n" + "\n".join(diagnostics)) from error
 
+      def gateway_property(name):
+          return user("systemctl --user show hermes-gateway.service -p " + name + " --value")
+
+      def gateway_ready():
+          machine.wait_until_succeeds(
+              "systemd-run --machine=hermes --wait --quiet "
+              "runuser -u hermes -- env XDG_RUNTIME_DIR=/run/user/${toString uid} "
+              "systemctl --user is-active hermes-gateway.service"
+          )
+          invocation = gateway_property("InvocationID")
+          assert len(invocation) == 32, invocation
+          directory = "${home}/gateway-starts/" + invocation
+          wait_for_worker_file(directory + "/started.json", timeout=60)
+          # The exec shim removed the previous marker before this invocation.
+          # Pinned scheduler_provider writes its first heartbeat AFTER recovery.
+          wait_for_worker_file("${home}/cron/ticker_heartbeat", timeout=60)
+          started = json.loads(c("cat " + directory + "/started.json"))
+          assert started["pid"] == int(gateway_property("MainPID")), started
+          assert started["invocation"] == invocation, started
+          assert invocation != c("systemctl show hermes-agent.service -p InvocationID --value")
+          return started, directory
+
+      def ledger_status(expected):
+          query = "import sqlite3; db=sqlite3.connect('file:${home}/cron/executions.db?mode=ro', uri=True); "
+          query += "rows=db.execute('select status from executions').fetchall(); "
+          query += "assert rows == [(" + repr(expected) + ",)], rows"
+          return "${python} -c " + shlex.quote(query)
+
+      def ledger_owner():
+          query = "import json, runpy; from pathlib import Path; "
+          query += "shim=runpy.run_path('${./gateway.py}'); "
+          query += "print(json.dumps(shim['running_owner'](Path('${home}'))))"
+          return json.loads(c("${python} -c " + shlex.quote(query)))
+
+      def assert_recovery_identity(started, expected_owner):
+          # Only read the ledger and validate G2's recorded evidence here. Never
+          # run local_identity/get_identity from this unconfined test driver.
+          query = "import runpy; from pathlib import Path; "
+          query += "shim=runpy.run_path('${./gateway.py}'); "
+          query += "owner=shim['running_owner'](Path('${home}')); "
+          query += "assert owner == " + repr(expected_owner) + ", owner; "
+          query += "shim['assert_recovery_identity'](" + repr(started['recovery_identity']) + ", owner)"
+          c("${python} -c " + shlex.quote(query))
+
+      def assert_cgroup_denied(result):
+          assert set(result["cgroup_write_errnos"]) == {"cgroup.procs", "cgroup.subtree_control"}, result
+          assert all(value in (errno.EACCES, errno.EPERM, errno.EROFS)
+                     for value in result["cgroup_write_errnos"].values()), result
+
       def peer_control():
           current = json.loads(user("${pkgs.python3}/bin/python3 ${./peer.py} check "
                                     "/srv/worker-canary /run/hermes-test-peer/ready.json"))
           assert current == peer_fixture, (current, peer_fixture)
           assert c("systemctl show test-peer.service -p MainPID --value") == str(current["pid"])
 
+      def cgroup_control():
+          control = json.loads(user("systemd-run --user --wait --pipe --collect --quiet "
+                                    "${python} ${./probe.py} cgroup-control"))
+          assert control == {"cgroup.procs": 0, "cgroup.subtree_control": 0}, control
+
       @contextmanager
-      def checked_probe(directory):
+      def checked_probe(directory, *, cgroup_writes=False):
           peer_control()
+          if cgroup_writes:
+              cgroup_control()
           try:
               yield
           finally:
               peer_control()
-          result = report(directory)
+              if cgroup_writes:
+                  cgroup_control()
+          result = report(directory() if callable(directory) else directory)
           assert result["peer_fixture"] == peer_fixture, result
           assert result["pid_namespace"] == peer_fixture["pid_namespace"], result
           pid = peer_fixture["pid"]
@@ -135,6 +204,33 @@ in
       c("mkdir -p ${home}/scripts")
       c("cp ${./probe.py} ${home}/scripts/probe.py; cp ${./worker.py} ${home}/scripts/worker.py")
       c("chown -R hermes:hermes ${home}/scripts")
+
+      with subtest("static gateway is forked by the confined manager"):
+          c("systemctl stop hermes-agent.service")
+          assert gateway_property("ActiveState") == "inactive"
+          assert gateway_property("MainPID") == "0"
+          assert gateway_property("UnitFileState") == "static"
+          assert gateway_property("Restart") == "no"
+          assert "ConditionUser=hermes" in user("systemctl --user cat hermes-gateway.service")
+          user("touch ${home}/probe-gateway")
+          with checked_probe(lambda: gateway_directory, cgroup_writes=True):
+              c("systemctl start hermes-agent.service")
+              gateway_started, gateway_directory = gateway_ready()
+          assert gateway_started["recovery_identity"] == {"owner": None}, gateway_started
+          gateway_pid = str(gateway_started["pid"])
+          assert gateway_pid != c("systemctl show hermes-agent.service -p MainPID --value")
+          status = dict(line.split(":", 1) for line in gateway_started["status"].splitlines())
+          assert status["PPid"].strip() == manager, status
+          assert status["Umask"].strip() == "0007", status
+          assert gateway_started["cwd"] == "/var/lib/hermes/workspace"
+          env = gateway_started["environment"]
+          assert env["HOME"] == "/var/lib/hermes" and env["HERMES_HOME"] == "${home}", env
+          assert env["HERMES_MANAGED"] == "true", env
+          assert env["XDG_RUNTIME_DIR"] == "/run/user/${toString uid}", env
+          assert "${pkgs.hello}/bin" in env["PATH"].split(":"), env
+          assert "hermes-gateway.service" in gateway_started["cgroup"], gateway_started
+          assert c(f"readlink /proc/{gateway_pid}/ns/mnt") == c(f"readlink /proc/{manager}/ns/mnt")
+          assert_cgroup_denied(report(gateway_directory))
 
       with subtest("installed CLI launcher supports pipes"):
           output = user('printf %s "" | /run/current-system/sw/bin/hermes --help')
@@ -171,29 +267,60 @@ in
           assert report("${home}/prefix")["capabilities_empty"]
 
       with subtest("real scheduled cron survives gateway restart"):
-          with checked_probe("${home}"):
+          with checked_probe("${home}", cgroup_writes=True):
               user("${python} ${./seed.py}")
               wait_for_worker_file("${home}/worker-ready", timeout=180)
           worker_pid = c("cat ${home}/worker-ready")
           before = report("${home}")
           assert before["pid"] == int(worker_pid)
-          assert "hermes-worker-cron-" in before["cgroup"], before
-          with checked_probe("${home}"):
-              gateway = c("systemctl show hermes-agent.service -p MainPID --value")
-              c("systemctl restart hermes-agent.service")
-              assert c("systemctl show hermes-agent.service -p MainPID --value") != gateway
+          assert_cgroup_denied(before)
+          scope_names = [part for part in before["cgroup"].strip().split("/")
+                         if part.startswith("hermes-worker-cron-") and part.endswith(".scope")]
+          assert len(scope_names) == 1, before
+          scope = scope_names[0]
+          scope_cgroup = user(f"systemctl --user show {scope} -p ControlGroup --value")
+          assert before["cgroup"].strip() == "0::" + scope_cgroup, (before, scope_cgroup)
+          assert "hermes-gateway.service" not in scope_cgroup, scope_cgroup
+          assert scope_cgroup.rsplit("/", 1)[0] == gateway_started["cgroup"].strip().rsplit("/", 1)[0].removeprefix("0::")
+          c(ledger_status("running"))
+          execution_owner = ledger_owner()
+          assert execution_owner is not None
+          # The external scheduler owns the execution; worker-ready is its child.
+          assert execution_owner["pid"] != int(worker_pid), execution_owner
+          for action in ("restart", "kill-controller", "restart"):
+              previous = gateway_property("MainPID")
+              controller = c("systemctl show hermes-agent.service -p MainPID --value")
+              with checked_probe(lambda: gateway_directory, cgroup_writes=True):
+                  if action == "kill-controller":
+                      c("systemctl kill --kill-whom=main --signal=KILL hermes-agent.service")
+                      machine.wait_until_succeeds(
+                          "systemd-run --machine=hermes --wait --quiet ${pkgs.bash}/bin/bash -c "
+                          + shlex.quote("test $(systemctl show hermes-agent.service -p MainPID --value) -gt 0 && "
+                                        "test $(systemctl show hermes-agent.service -p MainPID --value) != " + controller)
+                      )
+                  else:
+                      c("systemctl restart hermes-agent.service")
+                  gateway_started, gateway_directory = gateway_ready()
+              assert str(gateway_started["pid"]) != previous
+              c(f"test ! -d /proc/{previous} && test -d /proc/{worker_pid}")
               assert c("systemctl show user@${toString uid}.service -p MainPID --value") == manager
-              c(f"test -d /proc/{worker_pid}")
+              assert user(f"systemctl --user is-active {scope}") == "active"
+              assert user(f"systemctl --user show {scope} -p ControlGroup --value") == scope_cgroup
+              # gateway_ready waited for THIS invocation's post-recovery heartbeat.
+              # Retention alone passes even if every manager probe returns unknown.
+              c(ledger_status("running"))
+              assert_recovery_identity(gateway_started, execution_owner)
+              c("test ! -e ${home}/completions && test ! -e ${home}/release-worker")
+              assert_cgroup_denied(report(gateway_directory))
+          with checked_probe("${home}", cgroup_writes=True):
               c("touch ${home}/release-worker")
               wait_for_worker_file("${home}/completions", timeout=60)
           assert report("${home}")["pid"] == int(worker_pid)
+          assert_cgroup_denied(report("${home}"))
           assert c("cat ${home}/completions") == "completed"
-          query = "import sqlite3; db=sqlite3.connect('${home}/cron/executions.db'); "
-          query += "rows=db.execute('select status from executions').fetchall(); "
-          query += "assert rows == [('completed',)], rows"
           machine.wait_until_succeeds(
-              "systemd-run --machine=hermes --wait --pipe --quiet ${python} -c " + shlex.quote(query),
-              timeout=60,
+              "systemd-run --machine=hermes --wait --pipe --quiet ${pkgs.bash}/bin/bash -c "
+              + shlex.quote(ledger_status("completed")), timeout=60,
           )
 
       with subtest("manager reexecution retains enforcement"):
@@ -202,6 +329,48 @@ in
               user("systemd-run --user --wait --pipe --collect -- ${python} ${./probe.py} "
                    "/srv/worker-canary ${home}/reexec")
           assert report("${home}/reexec")["no_new_privileges"]
+
+      with subtest("failed gateway launch fails the controller and still cleans up"):
+          c("systemctl stop hermes-agent.service")
+          old_manager = c("systemctl show user@${toString uid}.service -p MainPID --value")
+          override = "[Service]\nRestart=no\n"
+          c("mkdir -p /run/systemd/system/hermes-agent.service.d")
+          c("printf %s " + shlex.quote(override) + " > /run/systemd/system/hermes-agent.service.d/test.conf")
+          c("systemctl daemon-reload")
+          user("mkdir -p /run/user/${toString uid}/systemd/user/hermes-gateway.service.d")
+          broken = "[Service]\nExecStart=\nExecStart=/definitely-missing-hermes-gateway\n"
+          user("printf %s " + shlex.quote(broken)
+               + " > /run/user/${toString uid}/systemd/user/hermes-gateway.service.d/test.conf")
+          user("systemctl --user daemon-reload")
+          # Type=exec on the controller is not gateway/application readiness.
+          c("systemctl start --no-block hermes-agent.service")
+          machine.wait_until_succeeds("systemctl --machine=hermes is-failed hermes-agent.service")
+          assert c("systemctl show hermes-agent.service -p Result --value") == "exit-code"
+          assert gateway_property("MainPID") == "0"
+          cleanup = c("systemctl show hermes-agent.service -p ExecStopPost --value")
+          assert "status=0/SUCCESS" in cleanup, cleanup
+          assert c("systemctl show user@${toString uid}.service -p MainPID --value") == old_manager
+          user("rm /run/user/${toString uid}/systemd/user/hermes-gateway.service.d/test.conf; "
+               "systemctl --user daemon-reload; systemctl --user reset-failed hermes-gateway.service")
+          c("rm /run/systemd/system/hermes-agent.service.d/test.conf; "
+            "systemctl daemon-reload; systemctl reset-failed hermes-agent.service")
+          with checked_probe(lambda: gateway_directory, cgroup_writes=True):
+              c("systemctl start hermes-agent.service")
+              gateway_started, gateway_directory = gateway_ready()
+
+      with subtest("explicit stop synchronously removes only the gateway"):
+          previous = gateway_property("MainPID")
+          c("systemctl stop hermes-agent.service")
+          assert gateway_property("ActiveState") == "inactive"
+          assert gateway_property("MainPID") == "0"
+          c(f"test ! -d /proc/{previous}")
+          assert c("systemctl show user@${toString uid}.service -p MainPID --value") == manager
+          assert c("systemctl is-active user@${toString uid}.service") == "active"
+          with checked_probe("${home}/after-stop"):
+              user("systemd-run --user --wait --pipe --collect -- ${python} ${./probe.py} "
+                   "/srv/worker-canary ${home}/after-stop")
+          c(ledger_status("completed"))
+          assert c("cat ${home}/completions") == "completed"
 
       c("journalctl -u hermes-agent.service -u user@${toString uid}.service --no-pager")
     '';
