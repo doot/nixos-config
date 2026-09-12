@@ -324,8 +324,38 @@ in {
               ssh.allowedSignersFile = toString allowedSigners;
             };
 
-            commit.gpgSign = true;
+            commit = {
+              gpgSign = true;
+              verbose = true;
+            };
             tag.gpgSign = true;
+
+            credential = {
+              "https://github.com".helper = ["" "!gh auth git-credential"];
+              "https://gist.github.com".helper = ["" "!gh auth git-credential"];
+            };
+            github.user = "doot";
+
+            log = {
+              decorate = "full";
+              tool = "nvimdiff3";
+              log = true;
+              conflictStyle = "zdiff3";
+            };
+            diff = {
+              tool = "vimdiff";
+              renames = "copies";
+              mnemonicPrefix = true;
+              algorithm = "histogram";
+            };
+            branch = {
+              autoSetupRebase = "always";
+              sort = "-committerdate";
+            };
+            rebase.autoStash = true;
+            push.default = "simple";
+            pull.rebase = true;
+            safe.directory = "/var/lib/hermes/workspace/nixos-config";
           };
         };
 
