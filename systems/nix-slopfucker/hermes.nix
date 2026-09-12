@@ -399,6 +399,7 @@ in {
           context = {
             engine = "lcm";
           };
+          lcm.context_threshold = 0.70;
           plugins.enabled = [
             "hermes-lcm"
           ];
