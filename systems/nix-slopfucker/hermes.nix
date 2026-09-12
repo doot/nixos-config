@@ -168,7 +168,7 @@ in {
   # The ~5 GB hermes uv2nix closure is excluded from the Proxmox IMAGE build in
   # proxmox.nix (boot.enableContainers = false there), which keeps the 1 GB
   # cptofs builder from OOMing. The live VM builds it fine (4 G RAM); the agent
-  # arrives on first post-boot autoUpgrade. `nix flake check` only evaluates.
+  # arrives on first post-boot autoUpgrade.
   containers.hermes = {
     autoStart = true;
 
@@ -206,7 +206,7 @@ in {
     # once, above) so the container's hermes resolves to the SAME numeric owner
     # as the bind-mounted state on the host. (Containers don't inherit host
     # specialArgs, so these must be passed explicitly.)
-    specialArgs = {inherit inputs hermesUid hermesGid;};
+    specialArgs = {inherit inputs hermesUid hermesGid terminalIdentityEnv;};
 
     # Shared state + the secret, bound from the host. Shared uids make ownership
     # map 1:1, so plain bindMounts suffice (no id-mapping needed). The state dir
@@ -241,6 +241,7 @@ in {
       imports = [
         inputs.hermes-agent.nixosModules.default
         inputs.priv.nixosModules.hermesPriv
+        ./hermes-workers.nix
 
         # The container intentionally does not inherit anything from the host,
         # so explicitly include some very basic imports.
@@ -373,9 +374,10 @@ in {
       services.hermes-agent = {
         enable = true;
 
-        # CLI on the container PATH + HERMES_HOME exported, so the machinectl
-        # TUI wrapper and the gateway share one state dir.
-        addToSystemPackages = true;
+        package = import ./hermes-package.nix {
+          inherit pkgs;
+          inherit (inputs) hermes-agent;
+        };
 
         # Rendering `settings` into configFile makes Nix the sole owner of
         # config.yaml: the module installs it verbatim instead of deep-merging,
@@ -429,6 +431,7 @@ in {
           privacy.redact_pii = true;
           dashboard.theme = "ember";
           agent = {
+            clarify_timeout = 0;
             environment_hint = "You are running inside a locked-down NixOS container: no nix daemon, no package managers, and network access restricted to the internet only (no local network).";
             reasoning_effort = "xhigh";
           };
@@ -507,27 +510,6 @@ in {
             hash = "sha256-yJ1Nn+su7YbKd+cgVOizXChzLbKHqTprSprF1p9/HYk=";
           })
         ];
-      };
-
-      # Defense-in-depth on top of the module baseline (which already sets
-      # NoNewPrivileges, ProtectSystem=strict, PrivateTmp): drop all capabilities
-      # and add kernel/proc protections. Egress filtering lives host-side.
-      systemd.services.hermes-agent.serviceConfig = {
-        # Drop all capabilities — agent runs unprivileged and NoNewPrivileges is already set.
-        CapabilityBoundingSet = "";
-        AmbientCapabilities = "";
-
-        # Kernel / host protections.
-        ProtectKernelTunables = true;
-        ProtectKernelModules = true;
-        ProtectKernelLogs = true;
-        ProtectControlGroups = true;
-        ProtectClock = true;
-        ProtectProc = "invisible";
-
-        LockPersonality = true;
-        RestrictRealtime = true;
-        RestrictSUIDSGID = true;
       };
 
       system.stateVersion = "26.05";
