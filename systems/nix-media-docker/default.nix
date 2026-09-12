@@ -9,7 +9,7 @@
 }: let
   arionCommon = import ../../arion/common.nix;
   network = import ../../common/network.nix;
-  watchstate = import ../../arion/watchstate/settings.nix;
+  watchstate = config.virtualisation.arion.projects.watchstate.settings.watchstate;
 in {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
@@ -127,9 +127,6 @@ in {
   };
 
   services = {
-    # First-account signup is available only through the loopback port.
-    nginx.virtualHosts."watchstate.${fqdn}".locations."^~ /v1/api/system/auth/signup".return = "403";
-
     ntfy-sh = {
       enable = true;
       # Secret env file providing NTFY_AUTH_USERS + NTFY_AUTH_TOKENS. Generate
@@ -330,6 +327,8 @@ in {
         {
           name = "watchstate";
           inherit (watchstate) port;
+          # First-account signup is available only through the loopback port.
+          extraLocations."^~ /v1/api/system/auth/signup".return = "403";
           extraConfig = ''
             proxy_set_header X-WatchState-Client-IP $remote_addr;
           '';

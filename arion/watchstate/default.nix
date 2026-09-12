@@ -1,33 +1,52 @@
-let
+{
+  config,
+  lib,
+  ...
+}: let
   common = import ../common.nix;
-  settings = import ./settings.nix;
+  cfg = config.watchstate;
 in {
-  project.name = "watchstate";
-  services.watchstate = {
-    service = {
-      image = "ghcr.io/arabcoders/watchstate:v1.10.5@sha256:810cc6dafda19b9a6abab3527ead1cd044962d157acf230491d169c5e2493bbb";
-      restart = "unless-stopped";
-      user = "${common.puid}:${common.pgid}";
-      capabilities.ALL = false;
-      volumes = [
-        "${settings.dataDir}:/config"
-      ];
-      ports = [
-        "127.0.0.1:${toString settings.port}:8080"
-      ];
-      environment = {
-        TZ = common.tz;
-        UMASK = "0077";
-        WS_SECURE_API_ENDPOINTS = "true";
-        WS_TRUST_PROXY = "true";
-        WS_TRUST_HEADER = "X-WatchState-Client-IP";
-        WS_TRUST_LOCAL = "false";
-      };
+  options.watchstate = {
+    port = lib.mkOption {
+      type = lib.types.port;
+      default = 8087;
+      description = "Host loopback port for WatchState";
     };
-    out.service =
-      common.outDefaults
-      // {
-        security_opt = ["no-new-privileges:true"];
+    dataDir = lib.mkOption {
+      type = lib.types.strMatching "/.*";
+      default = "/docker-local/watchstate";
+      description = "Host directory for WatchState data";
+    };
+  };
+
+  config = {
+    project.name = "watchstate";
+    services.watchstate = {
+      service = {
+        image = "ghcr.io/arabcoders/watchstate:latest";
+        restart = "unless-stopped";
+        user = "${common.puid}:${common.pgid}";
+        capabilities.ALL = false;
+        volumes = [
+          "${cfg.dataDir}:/config"
+        ];
+        ports = [
+          "127.0.0.1:${toString cfg.port}:8080"
+        ];
+        environment = {
+          TZ = common.tz;
+          UMASK = "0077";
+          WS_SECURE_API_ENDPOINTS = "true";
+          WS_TRUST_PROXY = "true";
+          WS_TRUST_HEADER = "X-WatchState-Client-IP";
+          WS_TRUST_LOCAL = "false";
+        };
       };
+      out.service =
+        common.outDefaults
+        // {
+          security_opt = ["no-new-privileges:true"];
+        };
+    };
   };
 }
