@@ -260,6 +260,12 @@ in {
 
     nginx-proxy = {
       enable = true;
+      workerProcesses = 4;
+      workerConnections = 10000;
+      openFileLimit = {
+        soft = 65536;
+        hard = 524288;
+      };
       acme = {
         enable = true;
         email = "jeremy@jhauschildt.com";
