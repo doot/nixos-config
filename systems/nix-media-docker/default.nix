@@ -129,9 +129,14 @@ in {
   };
 
   services = {
-    nginx.eventsConfig = ''
-      worker_connections 10000;
-    '';
+    nginx = {
+      prependConfig = ''
+        worker_processes 4;
+      '';
+      eventsConfig = ''
+        worker_connections 10000;
+      '';
+    };
 
     ntfy-sh = {
       enable = true;
