@@ -2,6 +2,7 @@
 {
   config,
   lib,
+  options,
   fqdn,
   ...
 }: let
@@ -50,6 +51,14 @@ in {
             default = "";
             description = "Extra nginx config for the location block";
           };
+          extraLocations = lib.mkOption {
+            type =
+              lib.types.addCheck
+              (options.services.nginx.virtualHosts.type.getSubOptions []).locations.type
+              (locations: !(locations ? "/"));
+            default = {};
+            description = "Additional nginx locations; / is reserved for the generated proxy";
+          };
           default = lib.mkOption {
             type = lib.types.bool;
             default = false;
@@ -74,11 +83,15 @@ in {
               inherit (proxy) default;
               useACMEHost = fqdn;
               forceSSL = true;
-              locations."/" = {
-                proxyPass = "${proxy.proxyPassHost}:${toString proxy.port}";
-                proxyWebsockets = true;
-                inherit (proxy) extraConfig;
-              };
+              locations =
+                proxy.extraLocations
+                // {
+                  "/" = {
+                    proxyPass = "${proxy.proxyPassHost}:${toString proxy.port}";
+                    proxyWebsockets = true;
+                    inherit (proxy) extraConfig;
+                  };
+                };
             };
           })
           cfg.proxies
