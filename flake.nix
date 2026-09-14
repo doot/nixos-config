@@ -4,12 +4,14 @@
   nixConfig = {
     extra-substituters = [
       "https://cachix.cachix.org"
+      "https://devenv.cachix.org"
       "https://nix-community.cachix.org"
       "https://wezterm.cachix.org"
       "https://hermes-agent.cachix.org/"
     ];
     extra-trusted-public-keys = [
       "cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM="
+      "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "wezterm.cachix.org-1:kAbhjYUC9qvblTE+s7S+kl5XM1zVa4skO+E/1IDWdH0="
       "hermes-agent.cachix.org-1:jN3pjR50Mxi4SESKC/FIMNM6/LCosvPk2VUwzVvebzU="
@@ -19,6 +21,9 @@
   inputs = {
     nixpkgs.url = "https://channels.nixos.org/nixos-26.05-small/nixexprs.tar.xz";
     nixpkgs-unstable.url = "https://channels.nixos.org/nixos-unstable-small/nixexprs.tar.xz";
+
+    # Keep upstream's dependency pins for ABI compatibility and cache hits.
+    devenv.url = "github:cachix/devenv/v2.3";
 
     arion = {
       url = "github:hercules-ci/arion";
@@ -73,6 +78,7 @@
     neovim-nightly-overlay,
     # gitea-mirror,
     hermes-agent,
+    ...
   } @ inputs: let
     inherit (self) outputs;
     host_nmd = "nix-media-docker";
