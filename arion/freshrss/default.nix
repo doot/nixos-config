@@ -13,6 +13,7 @@ in {
         "8666:80"
       ];
       environment = {
+        INTERNAL_HOST_ALLOWLIST = "changelog.nmd.jhauschildt.com:443";
         PUID = common.puid;
         PGID = "1029"; # Differs from common.pgid ("100"); intentional for freshrss
         TZ = common.tz;
