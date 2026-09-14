@@ -279,7 +279,7 @@ in {
         alejandra
         bat
         delta
-        devenv # This is probably a dumb idea...
+        inputs.devenv.packages.${pkgs.stdenv.hostPlatform.system}.devenv
         eza
         fd
         file
