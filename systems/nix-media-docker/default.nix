@@ -211,10 +211,8 @@ in {
     jellyfin = {
       package = pkgs.unstable.jellyfin;
       enable = true;
-      dataDir = "/plex/jellyfin/data";
-      configDir = "/plex/jellyfin/config";
       cacheDir = "/plex/jellyfin/cache";
-      logDir = "/plex/jellyfin/log";
+      # metadata dir is manually configured to "/plex/jellyfin/metadata", but cannot be configured in the service.
       hardwareAcceleration = {
         enable = true;
         type = "nvenc";
