@@ -10,6 +10,7 @@
   arionCommon = import ../../arion/common.nix;
   network = import ../../common/network.nix;
   watchstate = config.virtualisation.arion.projects.watchstate.settings.watchstate;
+  jellyfinTranscodeDir = "/run/jellyfin-transcodes";
 in {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
@@ -77,6 +78,21 @@ in {
     };
   };
 
+  fileSystems."${jellyfinTranscodeDir}" = {
+    device = "tmpfs";
+    fsType = "tmpfs";
+    options = [
+      "size=12G"
+      "mode=0700"
+      "uid=${config.services.jellyfin.user}"
+      "gid=${config.services.jellyfin.group}"
+      "nodev"
+      "nosuid"
+      "noexec"
+      "nofail"
+    ];
+  };
+
   # Supress systemd units that don't work because of LXC
   systemd = {
     tmpfiles.rules = [
@@ -91,6 +107,8 @@ in {
 
     # Start tty0 on serial console (needed for proxmox console)
     services = {
+      jellyfin.unitConfig.RequiresMountsFor = [jellyfinTranscodeDir];
+
       "getty@tty1" = {
         enable = lib.mkForce true;
         wantedBy = ["getty.target"]; # to start at boot
