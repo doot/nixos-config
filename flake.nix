@@ -92,6 +92,9 @@
             inherit (prev.stdenv.hostPlatform) system;
             inherit (prev) config;
           };
+          # TODO: Temporary fix to resolve sops-nix build issue. Remove once upstream fix
+          # is in: https://github.com/Mic92/sops-nix/issues/983, https://github.com/Mic92/sops-nix/pull/984 }
+          buildGo125Module = prev.buildGoModule;
         })
       ];
     };
