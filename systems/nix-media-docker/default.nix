@@ -211,6 +211,10 @@ in {
     jellyfin = {
       package = pkgs.unstable.jellyfin;
       enable = true;
+      dataDir = "/plex/jellyfin/data";
+      configDir = "/plex/jellyfin/config";
+      cacheDir = "/plex/jellyfin/cache";
+      logDir = "/plex/jellyfin/log";
       hardwareAcceleration = {
         enable = true;
         type = "nvenc";
