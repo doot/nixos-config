@@ -34,17 +34,12 @@ in {
         [
           lazygit
           unzip
-          stylua
           unstable.nodejs_26
           tree-sitter
+          stylua
           luarocks
-          sqlfluff
-          gcc
           gh
-          rustc
-          cargo
           nil
-          rust-analyzer
         ]
         ++ lib.optional cfg.imageSupport ueberzugpp;
     };
@@ -55,13 +50,13 @@ in {
         withNodeJs = true;
         package = inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default;
       };
-      nix-ld = {
-        # Allows LazyVim to work with neovim as-is (not a good way to do this, but works for now)
-        enable = true;
-        libraries = with pkgs; [
-          stdenv.cc.cc
-        ];
-      };
+      # nix-ld = {
+      #   # Allows LazyVim to work with neovim as-is (not a good way to do this, but works for now)
+      #   enable = true;
+      #   libraries = with pkgs; [
+      #     stdenv.cc.cc
+      #   ];
+      # };
     };
   };
 }
