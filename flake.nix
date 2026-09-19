@@ -23,7 +23,7 @@
     nixpkgs-unstable.url = "https://channels.nixos.org/nixos-unstable-small/nixexprs.tar.xz";
 
     # Keep upstream's dependency pins for ABI compatibility and cache hits.
-    devenv.url = "github:cachix/devenv/v2.3";
+    devenv.url = "github:cachix/devenv";
 
     arion = {
       url = "github:hercules-ci/arion";
