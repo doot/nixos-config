@@ -150,9 +150,12 @@ in {
       jq
       ncdu
       inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default
+      # Nix helpers
       nix-inspect # TUI to browse nix config
       nix-tree # TUI to browse nix dependency graph/sizes
       unstable.nix-sweep # CLI to analyse nix store usage
+      unstable.nix-forecast # CLI to see what is missing from the binary cache (e.g. nix-forecast -b "https://cache.nixos.org" -b "https://cachix.cachix.org" -b "https://devenv.cachix.org" -b "https://nix-community.cachix.org" -b "https://wezterm.cachix.org" -b "https://hermes-agent.cachix.org" -c ".#nixosConfigurations.nix-media-docker" --show-missing)
+      unstable.hydra-check # CLI to check hydra build status (e.g. hydra-check --channel nixos/release-26.05-small)
       nvd
       ripgrep
       tmux
