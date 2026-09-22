@@ -204,6 +204,7 @@ in {
     dina-font
     proggyfonts
     font-awesome
+    nerd-fonts.droid-sans-mono
   ];
 
   programs = {
