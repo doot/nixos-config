@@ -1,0 +1,359 @@
+--- a/cron/executions.py
++++ b/cron/executions.py
+@@ -9,6 +9,7 @@
+ 
+ import os
+ import sqlite3
++import sys
+ import threading
+ import time
+ import uuid
+@@ -114,6 +115,10 @@
+ 
+ 
+ def _owner_is_live(pid: int, started_at: Optional[int]) -> bool:
++    """Recovery retention predicate: unknown is not proof of death."""
++    if sys.platform == "linux":
++        from gateway.recovery_identity import owner_state
++        return owner_state(pid, started_at) != "gone"
+     try:
+         from gateway.status import _pid_exists
+         if not _pid_exists(pid):
+@@ -121,9 +126,9 @@
+     except Exception:
+         return True  # fail safe: inability to prove death must not rewrite state
+     if started_at is None:
+-        return pid == os.getpid()
++        return True
+     current = _process_start_time(pid)
+-    return current is not None and current == started_at
++    return current is None or current == started_at
+ 
+ 
+ def _prune_unlocked(conn: sqlite3.Connection) -> None:
+--- a/gateway/status.py
++++ b/gateway/status.py
+@@ -269,8 +269,9 @@
+     """Per-process start-time fingerprint (PID-reuse guard), or None: ``/proc/<pid>/stat`` field 22
+     on Linux, else psutil ``create_time()`` in centiseconds. Units differ per platform; the guard
+     only compares same-host values."""
+-    with contextlib.suppress(IndexError, ValueError, OSError):
+-        return int(Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").split()[21])
++    if sys.platform == "linux":
++        from gateway.recovery_identity import local_identity
++        return local_identity(pid).start_time
+     try:
+         import psutil  # type: ignore
+         return int(round(psutil.Process(pid).create_time() * 100))
+--- a/tools/process_registry.py
++++ b/tools/process_registry.py
+@@ -687,12 +687,23 @@
+             return None
+ 
+     @classmethod
++    def _host_pid_state(cls, pid: Optional[int], expected_start: Optional[int]) -> str:
++        if _IS_LINUX:
++            from gateway.recovery_identity import owner_state
++            return owner_state(pid, expected_start)
++        return "same" if cls._host_pid_is_ours(pid, expected_start) else "gone"
++
++    @classmethod
+     def _host_pid_is_ours(cls, pid: Optional[int], expected_start: Optional[int]) -> bool:
+         """True only if ``pid`` is alive AND still the process we spawned.
+         The kernel recycles PIDs, so a stored number can later name an unrelated
+         process (seen in the wild: a browser's session leader tree-killed). The kernel
+         start time captured at spawn must match the live one; with no baseline
+-        (legacy checkpoints, no ``/proc``) degrade to a bare liveness check."""
++        (legacy checkpoints, no ``/proc``) only non-Linux hosts degrade to liveness.
++        This local snapshot is not signalling authority without a runtime handle."""
++        if _IS_LINUX:
++            from gateway.recovery_identity import owner_state
++            return owner_state(pid, expected_start, local_only=True) == "same"
+         return cls._is_host_pid_alive(pid) and (
+             expected_start is None or cls._safe_host_start_time(pid) == expected_start)
+ 
+@@ -702,7 +713,7 @@
+             return session
+         # A recycled PID (alive but not ours) counts as "our process exited" so a
+         # later kill() can never tree-kill the stranger.
+-        if self._host_pid_is_ours(session.pid, session.host_start_time):
++        if self._host_pid_state(session.pid, session.host_start_time) != "gone":
+             return session
+         with session._lock:
+             if session.exited:
+@@ -745,8 +756,10 @@
+         return ProcessRegistry._config_seconds("daemon_term_grace_seconds", 2.0)
+ 
+     @classmethod
+-    def _terminate_host_pid(cls, pid: int, expected_start: Optional[int] = None) -> None:
+-        """Terminate a host-visible PID and its descendants.
++    def _terminate_host_pid(
++        cls, pid: int, expected_start: Optional[int] = None, *, process: Optional[subprocess.Popen] = None,
++    ) -> None:
++        """Terminate a host-visible PID and its descendants; Linux requires the original Popen.
+         ``expected_start`` (kernel start time at spawn) is re-validated first: a mismatch
+         or dead PID means the number was recycled onto a stranger and we refuse to touch
+         it — a leaked orphan beats tree-killing someone's browser. POSIX: psutil SIGTERMs
+@@ -754,7 +767,19 @@
+         SIGKILLs survivors after ``terminal.daemon_term_grace_seconds``. Windows:
+         ``taskkill /T /F`` (psutil's stale PPID links miss orphans there); ``os.kill``
+         is the fallback."""
+-        if expected_start is not None and not cls._host_pid_is_ours(pid, expected_start):
++        if _IS_LINUX:
++            # Neither a local nor a manager snapshot binds a later numeric PID lookup.
++            if process is None or process.pid != pid:
++                raise OSError("Refusing to terminate a process without its original runtime handle")
++            if process.poll() is not None:
++                return
++            from gateway.recovery_identity import owner_state
++            state = owner_state(pid, expected_start, local_only=True)
++            if state == "unknown":
++                raise OSError("Process identity is inaccessible; retained without signalling")
++            if state == "gone":
++                return
++        elif expected_start is not None and not cls._host_pid_is_ours(pid, expected_start):
+             logger.warning(
+                 "Refusing to terminate host pid %d: start-time mismatch — "
+                 "PID was recycled onto an unrelated process.", pid)
+@@ -762,7 +787,10 @@
+ 
+         def _sigterm_quietly():
+             with suppress(OSError, ProcessLookupError, PermissionError):
+-                os.kill(pid, signal.SIGTERM)
++                if _IS_LINUX:
++                    process.terminate()
++                else:
++                    os.kill(pid, signal.SIGTERM)
+         if _IS_WINDOWS:
+             try:
+                 subprocess.run(
+@@ -965,7 +993,7 @@
+                 # The worker runs in its own systemd scope and, since the #70716 session-isolation fix, its
+                 # own session. Stop the scope (kills every process in the worker cgroup), then terminate the
+                 # systemd-run wrapper PID as fallback.
+-                self._terminate_host_pid(proc.pid, session.host_start_time)
++                self._terminate_host_pid(proc.pid, session.host_start_time, process=proc)
+             elif not _IS_WINDOWS:
+                 try:
+                     kill_signal = getattr(signal, "SIGKILL", signal.SIGTERM)
+@@ -1489,7 +1517,7 @@
+     # Minimum suffix chars for prefix resolution; "p"/"proc_1" are too collision-prone.
+     _MIN_PREFIX_CHARS = 4
+ 
+-    def get(self, session_id: str) -> Optional[ProcessSession]:
++    def get(self, session_id: str, *, refresh: bool = True) -> Optional[ProcessSession]:
+         """Session by full ID or unique prefix (``proc_4dae`` / bare ``4dae``, like git
+         short hashes); ambiguous or too-short prefixes resolve to None, never a guess."""
+         if not isinstance(session_id, str) or not session_id:
+@@ -1498,7 +1526,8 @@
+             session = self._running.get(session_id) or self._finished.get(session_id)
+         if session is None:
+             session = load_completed_results(session_id).get(session_id)
+-        return self._refresh_detached_session(session if session is not None else self._resolve_prefix(session_id))
++        session = session if session is not None else self._resolve_prefix(session_id)
++        return self._refresh_detached_session(session) if refresh else session
+ 
+     def _resolve_prefix(self, session_id: str) -> Optional[ProcessSession]:
+         """Resolve a unique session-ID prefix (a bare hex tail is normalized to
+@@ -1700,9 +1729,14 @@
+         output). Bulk cleanup passes false so it doesn't suppress an autonomous
+         completion notification — except abandoned-turn reaping (``kill_started_since``),
+         which passes true so a killed abandoned process can't revive stopped work."""
+-        session = self.get(session_id)
++        session = self.get(session_id, refresh=False)
+         if session is None:
+             return _not_found(session_id)
++        # Refuse before refresh can finish a recovered session or stop its saved scope.
++        if (_IS_LINUX and session.detached and session.pid_scope == "host"
++                and not session.process and not session._pty):
++            return self._signal_kill(session, session_id, consume_output)
++        session = self._refresh_detached_session(session)
+         if session.exited:
+             # A double-forked descendant may still be alive in the systemd scope even
+             # though the main process exited — stop the scope to reap survivors.
+@@ -1751,6 +1785,14 @@
+         """Deliver the kill via PTY, local Popen tree, sandbox exec or recovered host
+         PID. Returns a final result dict when the kill cannot proceed (recycled/dead
+         recovered PID, or no runtime handle), else None."""
++        if (_IS_LINUX and session.detached and session.pid_scope == "host"
++                and not session.process and not session._pty):
++            state = self._host_pid_state(session.pid, session.host_start_time)
++            return {
++                "status": "error",
++                "error": "Process identity is inaccessible; retained without signalling" if state == "unknown"
++                         else "Recovered process has no original runtime handle; retained without signalling",
++            }
+         if session._pty:
+             try:
+                 session._pty.terminate(force=True)
+@@ -1760,7 +1802,7 @@
+         elif session.process:
+             # Tree kill: on Windows Popen.terminate() only kills the shell wrapper and
+             # leaves Git Bash descendants behind.
+-            self._terminate_host_pid(session.process.pid, session.host_start_time)
++            self._terminate_host_pid(session.process.pid, session.host_start_time, process=session.process)
+         elif session.env_ref and session.pid:
+             session.env_ref.execute(f"kill {session.pid} 2>/dev/null", timeout=5)
+         elif session.detached and session.pid_scope == "host" and session.pid:
+@@ -1770,7 +1812,10 @@
+             # If this recovered session also carries an owned systemd scope, stop that scope before
+             # returning: a daemonized descendant may still be alive there even though the wrapper PID exited
+             # or was recycled across the gateway restart (#70716, teknium1 review).
+-            if not self._host_pid_is_ours(session.pid, session.host_start_time):
++            identity_state = self._host_pid_state(session.pid, session.host_start_time)
++            if identity_state == "unknown":
++                return {"status": "error", "error": "Process identity is inaccessible; retained without signalling"}
++            if identity_state == "gone":
+                 if session.systemd_unit:
+                     _stop_systemd_unit(session.systemd_unit)
+                 with session._lock:
+--- a/tools/process_registry_checkpoint.py
++++ b/tools/process_registry_checkpoint.py
+@@ -25,7 +25,7 @@
+                         continue
+                     # Backfill the start time so recovery can detect PID recycling
+                     # even for sessions spawned before this field existed.
+-                    if s.host_start_time is None and s.pid_scope == "host" and s.pid:
++                    if not s.detached and s.host_start_time is None and s.pid_scope == "host" and s.pid:
+                         s.host_start_time = self._safe_host_start_time(s.pid)
+                     entry = {"session_id": s.id, **{f: getattr(s, f) for f in _CHECKPOINT_FIELDS}}
+                     # Redact inline credentials before persisting (~/.hermes/processes.json).
+@@ -35,9 +35,13 @@
+                     entry["command"] = redact_sensitive_text(s.command, code_file=True)
+                     entry["owner_task_id"] = s.owner_task_id or s.task_id
+                     entries.append(entry)
++                extra_entries = [*getattr(self, "_unresolved_scope_entries", []), *(extra_entries or [])]
+                 if extra_entries:
+                     tracked_ids = {item.get("session_id") for item in entries}
+-                    entries.extend(item for item in extra_entries if item.get("session_id") not in tracked_ids)
++                    for item in extra_entries:
++                        if item.get("session_id") not in tracked_ids:
++                            entries.append(item)
++                            tracked_ids.add(item.get("session_id"))
+             from utils import atomic_json_write
+             atomic_json_write(CHECKPOINT_PATH, entries)
+         except Exception as e:
+@@ -48,7 +52,7 @@
+         were recovered as detached sessions."""
+         from tools.process_registry import (
+             CHECKPOINT_PATH, ProcessSession, _CHECKPOINT_FIELDS,
+-            _CHECKPOINT_DEFAULTS, _WATCHER_ROUTE_KEYS, _stop_systemd_unit,
++            _CHECKPOINT_DEFAULTS, _WATCHER_ROUTE_KEYS, _stop_systemd_unit, _IS_LINUX,
+         )
+ 
+         if not CHECKPOINT_PATH.exists():
+@@ -68,10 +72,17 @@
+                     "Skipping recovery for non-host process: %s (pid=%s, scope=%s)",
+                     entry.get("command", "unknown")[:60], pid, pid_scope)
+                 continue
++            if _IS_LINUX and entry.get("systemd_unit"):
++                # Wrapper liveness cannot resolve a saved scope without an owned handle.
++                unresolved_scope_entries.append({
++                    **entry, "command": redact_sensitive_text(entry.get("command", "unknown"), code_file=True),
++                })
+             # Alive AND the same process: across a restart the kernel may have
+             # recycled the PID onto a stranger, and adopting it would let a later
+             # kill tree-kill e.g. a browser.
+-            if not self._host_pid_is_ours(pid, entry.get("host_start_time")):
++            if self._host_pid_state(pid, entry.get("host_start_time")) == "gone":
++                if _IS_LINUX:
++                    continue
+                 if self._is_host_pid_alive(pid):
+                     logger.info(
+                         "Not recovering session %s: pid %d is alive but its "
+@@ -107,5 +118,11 @@
+                     "notify_on_complete": session.notify_on_complete,
+                     "parent_session_id": session.parent_session_id,
+                 })
+-        self._write_checkpoint(extra_entries=unresolved_scope_entries)
++        if _IS_LINUX:
++            # Keep saved scopes independently of the recovered wrapper's lifetime.
++            with self._lock:
++                self._unresolved_scope_entries = unresolved_scope_entries
++            self._write_checkpoint()
++        else:
++            self._write_checkpoint(extra_entries=unresolved_scope_entries)
+         return recovered
+--- a/tools/async_delegation.py
++++ b/tools/async_delegation.py
+@@ -252,7 +252,7 @@
+     """Classify records whose owning process disappeared as outcome unknown; children a multi-child unit had already
+     recorded (``record_unit_child``) are replayed with their real results."""
+     try:
+-        from gateway.status import _pid_exists, get_process_start_time
++        from cron.executions import _owner_is_live
+     except Exception:
+         return 0
+     now, recovered = time.time(), 0
+@@ -263,7 +263,7 @@
+                FROM async_delegations WHERE state IN ('running','finalizing')""").fetchall()
+         for row in rows:
+             delegation_id, session_key, origin_ui, parent_id, dispatched_at, pid, started, task_json, origin_sid, result_json = row
+-            if pid and _pid_exists(int(pid)) and (started is None or get_process_start_time(int(pid)) == int(started)):
++            if _owner_is_live(pid, started):
+                 continue
+             task = json.loads(task_json or "{}")
+             error = "Delegation owner exited before recording a terminal result; outcome unknown."
+--- a/tools/browser_lightpanda.py
++++ b/tools/browser_lightpanda.py
+@@ -13,6 +13,7 @@
+ import shutil
+ import socket
+ import subprocess
++import sys
+ import threading
+ import time
+ from dataclasses import dataclass
+@@ -178,10 +179,10 @@
+         return None
+ 
+ 
+-def _tree_kill(pid: int, expected_start) -> None:
++def _tree_kill(pid: int, expected_start, *, process: Optional[subprocess.Popen] = None) -> None:
+     """Tree-kill ``pid`` via ProcessRegistry, verifying its start time first."""
+     from tools.process_registry import ProcessRegistry
+-    ProcessRegistry._terminate_host_pid(pid, expected_start=expected_start)
++    ProcessRegistry._terminate_host_pid(pid, expected_start=expected_start, process=process)
+ 
+ 
+ def _write_record(server: LightpandaServer) -> None:
+@@ -253,7 +254,7 @@
+         server = _servers.pop(session_name, None)
+     if server is not None and server.is_alive():
+         try:
+-            _tree_kill(server.proc.pid, server.start_time)
++            _tree_kill(server.proc.pid, server.start_time, process=server.proc)
+         except Exception as e:
+             logger.debug("lightpanda tree-kill failed for %s: %s", server.session_name, e)
+             _terminate(server.proc)
+@@ -327,6 +328,12 @@
+         elif owner_pid and _pid_exists(int(owner_pid)):
+             continue
+         pid = record.get("pid")
++        if sys.platform == "linux":
++            # PID-only records cannot authorize termination; metadata denial is not death.
++            from gateway.recovery_identity import owner_state
++            if owner_state(pid, record.get("start_time")) == "gone":
++                record_path.unlink(missing_ok=True)
++            continue
+         if pid and _is_lightpanda_process(int(pid), record.get("port"), record.get("start_time")):
+             try:
+                 _tree_kill(int(pid), record.get("start_time"))
+@@ -334,5 +341,6 @@
+                 logger.info("Reaped orphaned lightpanda serve pid %s (session %s)", pid, session_name)
+             except Exception as e:
+                 logger.debug("orphan lightpanda kill failed for pid %s: %s", pid, e)
++                continue
+         record_path.unlink(missing_ok=True)
+     return reaped
+--- a/tools/browser_tool_lifecycle.py
++++ b/tools/browser_tool_lifecycle.py
+@@ -340,7 +340,7 @@
+         _bt.logger.info("Reaped orphaned browser daemon PID %d (session %s)", daemon_pid, session_name)
+         reaped = True
+     except (ProcessLookupError, PermissionError, OSError):
+-        pass
++        return False
+     shutil.rmtree(socket_dir, ignore_errors=True)
+     return reaped
+ 
