@@ -237,6 +237,11 @@ in {
         device = "/dev/dri/by-path/pci-0000:01:00.0-render";
       };
     };
+
+    seerr = {
+      enable = true;
+      package = pkgs.unstable.seerr;
+    };
   };
 
   # Host specific settings for certain roles
@@ -345,6 +350,10 @@ in {
             proxy_read_timeout   600s;
             proxy_buffering off;
           '';
+        }
+        {
+          name = "seerr";
+          inherit (config.services.seerr) port;
         }
         {
           name = "tautulli";
