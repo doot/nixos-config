@@ -10,6 +10,7 @@
   arionCommon = import ../../arion/common.nix;
   network = import ../../common/network.nix;
   watchstate = config.virtualisation.arion.projects.watchstate.settings.watchstate;
+  streamystats = config.virtualisation.arion.projects.streamystats.settings.streamystats;
   jellyfinTranscodeDir = "/run/jellyfin-transcodes";
 in {
   imports = [
@@ -70,7 +71,7 @@ in {
       backend = "docker";
       projects =
         lib.genAttrs
-        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble" "watchstate"]
+        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble" "watchstate" "streamystats"]
         (name: {
           serviceName = name; # systemd service name
           settings.imports = [../../arion/${name}];
@@ -97,6 +98,8 @@ in {
   systemd = {
     tmpfiles.rules = [
       "d ${watchstate.dataDir} 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      # The image assigns PostgreSQL ownership; preserve it on rebuild.
+      "d ${streamystats.dataDir} 0700 - - -"
     ];
 
     suppressedSystemUnits = [
@@ -354,6 +357,14 @@ in {
         {
           name = "seerr";
           inherit (config.services.seerr) port;
+        }
+        {
+          name = "streamystats";
+          inherit (streamystats) port;
+          extraConfig = ''
+            proxy_buffering off;
+            proxy_read_timeout 3600s;
+          '';
         }
         {
           name = "tautulli";
