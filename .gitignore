@@ -19,3 +19,6 @@ devenv.local.yaml
 .mcp.json
 
 .lycheecache
+
+__pycache__/
+people-*.jsonl

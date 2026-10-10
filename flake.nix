@@ -179,8 +179,11 @@
     };
 
     packages.x86_64-linux = {
+      jellyfin-people-images = nixpkgs.legacyPackages.x86_64-linux.callPackage ./scripts/jellyfin {};
       nsf-proxmox = self.nixosConfigurations.nix-shitfucker.config.system.build.images.proxmox;
       slop-proxmox = self.nixosConfigurations.nix-slopfucker.config.system.build.images.proxmox;
     };
+
+    checks.x86_64-linux.jellyfin-people-images = self.packages.x86_64-linux.jellyfin-people-images;
   };
 }
