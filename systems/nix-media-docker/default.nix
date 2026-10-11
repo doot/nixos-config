@@ -11,6 +11,9 @@
   network = import ../../common/network.nix;
   watchstate = config.virtualisation.arion.projects.watchstate.settings.watchstate;
   streamystats = config.virtualisation.arion.projects.streamystats.settings.streamystats;
+  tracearr = config.virtualisation.arion.projects.tracearr.settings.tracearr;
+  jellydash = config.virtualisation.arion.projects.jellydash.settings.jellydash;
+  jellyglance = config.virtualisation.arion.projects.jellyglance.settings.jellyglance;
   jellyfinTranscodeDir = "/run/jellyfin-transcodes";
 in {
   imports = [
@@ -71,7 +74,7 @@ in {
       backend = "docker";
       projects =
         lib.genAttrs
-        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble" "watchstate" "streamystats"]
+        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble" "watchstate" "streamystats" "tracearr" "jellydash" "jellyglance"]
         (name: {
           serviceName = name; # systemd service name
           settings.imports = [../../arion/${name}];
@@ -100,6 +103,7 @@ in {
       "d ${watchstate.dataDir} 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
       # The image assigns PostgreSQL ownership; preserve it on rebuild.
       "d ${streamystats.dataDir} 0700 - - -"
+      "d ${jellydash.dataDir} 0700 root root -"
     ];
 
     suppressedSystemUnits = [
@@ -364,6 +368,43 @@ in {
           extraConfig = ''
             proxy_buffering off;
             proxy_read_timeout 3600s;
+          '';
+        }
+        {
+          name = "tracearr";
+          inherit (tracearr) port;
+          allowAddresses = network.localClientCidrs;
+          replaceForwardedHeaders = true;
+          extraConfig = ''
+            proxy_buffering off;
+            proxy_read_timeout 3600s;
+            client_max_body_size 512M;
+          '';
+        }
+        {
+          name = "jellydash";
+          inherit (jellydash) port;
+          allowAddresses = network.localClientCidrs;
+          replaceForwardedHeaders = true;
+          extraConfig = ''
+            proxy_buffering off;
+            proxy_read_timeout 600s;
+            client_max_body_size 24M;
+          '';
+        }
+        {
+          name = "jellyglance";
+          inherit (jellyglance) port;
+          allowAddresses = network.localClientCidrs;
+          replaceForwardedHeaders = true;
+          # Upstream matches case-insensitively and writes uploads before checking setup.
+          extraLocations."~* ^/backup/first-run/restore".return = "403";
+          extraConfig = ''
+            proxy_buffering off;
+            proxy_read_timeout 3600s;
+            client_max_body_size 512M;
+            # Block upstream's third-party analytics script.
+            add_header Content-Security-Policy "script-src 'self' 'unsafe-inline'" always;
           '';
         }
         {
