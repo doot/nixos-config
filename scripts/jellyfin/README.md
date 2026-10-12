@@ -6,10 +6,9 @@ No database access, library deletion, or scheduled job.
 
 ## Run
 
-From the repository root, choose a server explicitly:
+From the repository root (the Nix command defaults to the configured Jellyfin proxy):
 
 ```sh
-export JELLYFIN_URL='https://jellyfin.example.com'
 nix run .#jellyfin-people-images -- --report people-before.jsonl
 nix run .#jellyfin-people-images -- --repair --report people-repair.jsonl
 ```
@@ -17,12 +16,14 @@ nix run .#jellyfin-people-images -- --repair --report people-repair.jsonl
 Without Nix:
 
 ```sh
-python3 scripts/jellyfin/refresh_people_images.py --repair --report people-repair.jsonl
+uv run --project scripts --locked jellyfin-people-images \
+  --url https://jellyfin.example.com --repair --report people-repair.jsonl
 ```
 
 Use a **server API key**, not a restricted user session. The script prompts for
-it without echoing; `JELLYFIN_API_KEY` is also supported. `--url` overrides
-`JELLYFIN_URL`. HTTPS is required except for loopback HTTP on the server itself.
+it without echoing; `JELLYFIN_API_KEY` is also supported. Precedence is `--url`,
+then `JELLYFIN_URL`, then the Nix-provided default. Outside Nix/devenv, a URL is
+required. HTTPS is required except for loopback HTTP on the server itself.
 Redirects are refused rather than forwarding the key.
 
 Keep Jellyfin running, library scans idle, and metadata storage mounted. The
@@ -64,10 +65,10 @@ This is a maintenance pass, not a guarantee that every person has a photo.
 ## Tests
 
 ```sh
-python3 -B -m unittest discover -s scripts/jellyfin -v
-nix build .#jellyfin-people-images
+uv run --project scripts --locked python -B -m unittest discover -s scripts/tests -v
+nix build .#checks.x86_64-linux.homelab-tools
 ```
 
-The package runs the tests and checks the installed command's `--help`.
-It is also a flake check, so the existing `nix flake check` and `devenv test`
-commands include it. Tests use fixtures, never a real Jellyfin server.
+The flake check runs the tests against the installed package and checks command
+entry points and URL overrides. `devenv test` also tests the editable project.
+Tests use fixtures, never a real Jellyfin server.

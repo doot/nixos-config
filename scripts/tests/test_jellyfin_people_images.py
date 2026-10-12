@@ -1,6 +1,7 @@
 """Offline API fixtures; no Jellyfin access or database writes."""
 import io
 from http.client import HTTPMessage
+from importlib.metadata import distribution
 import json
 import os
 from pathlib import Path
@@ -9,7 +10,7 @@ import unittest
 from unittest.mock import patch
 from urllib.request import Request
 
-import refresh_people_images as images
+from homelab_tools import jellyfin_people_images as images
 
 
 IDS = [f'{index:032x}' for index in range(1, 5)]
@@ -58,6 +59,31 @@ def page(items, total):
 
 
 class PeopleImagesTest(unittest.TestCase):
+    def test_console_entrypoint_stops_cleanly_on_failure_or_interrupt(self):
+        command, = [entry for entry in distribution('homelab-tools').entry_points
+                    if entry.group == 'console_scripts' and entry.name == 'jellyfin-people-images']
+        failures: list[tuple[BaseException, int]] = [
+            (kind('offline failure'), 1) for kind in (RuntimeError, ValueError, KeyError, OSError)]
+        failures.append((KeyboardInterrupt(), 130))
+        for error, expected_status in failures:
+            with self.subTest(error=type(error).__name__):
+                stderr = io.StringIO()
+                with patch.dict(os.environ, {
+                    'JELLYFIN_URL': 'https://example.com/jellyfin',
+                    'JELLYFIN_API_KEY': 'fixture',
+                }, clear=True), patch('sys.argv', ['jellyfin-people-images']), \
+                        patch.object(images, 'API', side_effect=error), \
+                        patch.object(images, 'run') as run, patch('sys.stderr', stderr):
+                    try:
+                        status = command.load()()
+                    except (RuntimeError, ValueError, KeyError, OSError, KeyboardInterrupt) as leaked:
+                        self.fail(f'Console entrypoint leaked {type(leaked).__name__}')
+                self.assertEqual(status, expected_status)
+                message = ('Stopped. Previously queued refreshes may still run.'
+                           if expected_status == 130 else f'Stopped: {error}')
+                self.assertEqual(stderr.getvalue(), message + '\n')
+                run.assert_not_called()
+
     def test_all_pages_probe_then_repair_only_broken(self):
         api = FixtureAPI()
         output = io.StringIO()
@@ -138,11 +164,45 @@ class PeopleImagesTest(unittest.TestCase):
             HTTPMessage(), 'https://other.example.com')
         self.assertIsNone(result)
 
+    def test_cli_help_shows_url_default_without_api_key(self):
+        for url in (None, 'https://example.com/jellyfin'):
+            with self.subTest(url=url):
+                env = {'JELLYFIN_API_KEY': 'fixture-secret-key'}
+                if url is not None:
+                    env['JELLYFIN_URL'] = url
+                stdout, stderr = io.StringIO(), io.StringIO()
+                with patch.dict(os.environ, env, clear=True), \
+                        patch('sys.argv', ['jellyfin-people-images', '--help']), \
+                        patch('sys.stdout', stdout), patch('sys.stderr', stderr), \
+                        patch.object(images, 'API') as api, \
+                        patch.object(images, 'getpass') as prompt, \
+                        self.assertRaises(SystemExit) as result:
+                    images.cli()
+                self.assertEqual(result.exception.code, 0)
+                self.assertIn(f'default: {url}', ' '.join(stdout.getvalue().split()))
+                self.assertNotIn(env['JELLYFIN_API_KEY'], stdout.getvalue() + stderr.getvalue())
+                api.assert_not_called()
+                prompt.assert_not_called()
+
+    def test_cli_url_overrides_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            url = 'https://override.example.com/jellyfin'
+            argv = ['jellyfin-people-images', '--url', url,
+                    '--report', str(Path(directory) / 'report.jsonl')]
+            with patch.dict(os.environ, {
+                'JELLYFIN_URL': 'https://example.com/jellyfin',
+                'JELLYFIN_API_KEY': 'fixture',
+            }, clear=True), patch('sys.argv', argv), \
+                    patch.object(images, 'API', return_value=FixtureAPI()) as factory, \
+                    patch('sys.stdout', io.StringIO()), patch('sys.stderr', io.StringIO()):
+                self.assertEqual(images.cli(), 2)
+            factory.assert_called_once_with(url, 'fixture')
+
     def test_cli_report_permissions_exit_codes_and_no_overwrite(self):
         for repair in (False, True):
             with self.subTest(repair=repair), tempfile.TemporaryDirectory() as directory:
                 report = Path(directory) / 'report.jsonl'
-                argv = ['refresh_people_images.py', '--report', str(report), '--interval', '0']
+                argv = ['jellyfin-people-images', '--report', str(report), '--interval', '0']
                 if repair:
                     argv.append('--repair')
                 api = FixtureAPI()
@@ -164,7 +224,7 @@ class PeopleImagesTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             report = str(Path(directory) / 'report.jsonl')
             with patch.dict(os.environ, {'JELLYFIN_API_KEY': 'fixture'}, clear=True), \
-                    patch('sys.argv', ['refresh_people_images.py', '--report', report]), \
+                    patch('sys.argv', ['jellyfin-people-images', '--report', report]), \
                     patch.object(images, 'API') as api, \
                     patch.object(images, 'run', return_value={'broken': 0, 'queued': 0}), \
                     self.assertRaises(SystemExit) as error:

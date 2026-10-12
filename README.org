@@ -17,8 +17,8 @@ Initial nixos configs. I don't really know what I'm doing.
 
 ** Maintenance tools
 
-[[file:scripts/jellyfin/README.md][Jellyfin person portraits]]: audit all person images and queue refreshes for broken ones.
-Run with ~nix run .#jellyfin-people-images -- --help~ or directly with Python.
+[[file:scripts/README.md][Python maintenance tools]], managed with uv and packaged through devenv/uv2nix.
+Run the portrait tool with ~nix run .#jellyfin-people-images -- --help~.
 
 ** Proxmox
 *** Generate a Proxmox LXC CT template

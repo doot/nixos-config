@@ -21,4 +21,6 @@ devenv.local.yaml
 .lycheecache
 
 __pycache__/
+.venv/
+scripts/dist/
 people-*.jsonl

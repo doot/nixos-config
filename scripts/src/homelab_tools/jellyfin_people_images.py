@@ -140,7 +140,8 @@ def run(api: Transport, output: TextIO, *, repair: bool, workers: int, interval:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--url', default=os.environ.get('JELLYFIN_URL'), help='Server URL (or JELLYFIN_URL)')
+    parser.add_argument('--url', default=os.environ.get('JELLYFIN_URL'),
+                        help='Server URL (or JELLYFIN_URL; default: %(default)s)')
     parser.add_argument('--repair', action='store_true', help='Queue refreshes; default is read-only checking')
     parser.add_argument('--workers', type=int, default=4, help='Concurrent image checks (default: 4)')
     parser.add_argument('--interval', type=float, default=0.5, help='Seconds between refresh requests (default: 0.5)')
@@ -168,12 +169,16 @@ def main() -> int:
     return 2 if counts['broken'] and not args.repair else 0
 
 
-if __name__ == '__main__':
+def cli() -> int:
     try:
-        raise SystemExit(main())
+        return main()
     except (RuntimeError, ValueError, KeyError, OSError) as error:
         print(f'Stopped: {error}', file=sys.stderr)
-        raise SystemExit(1)
+        return 1
     except KeyboardInterrupt:
         print('Stopped. Previously queued refreshes may still run.', file=sys.stderr)
-        raise SystemExit(130)
+        return 130
+
+
+if __name__ == '__main__':
+    raise SystemExit(cli())

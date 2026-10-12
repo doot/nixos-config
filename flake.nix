@@ -25,6 +25,24 @@
     # Keep upstream's dependency pins for ABI compatibility and cache hits.
     devenv.url = "github:cachix/devenv";
 
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        pyproject-nix.follows = "pyproject-nix";
+        uv2nix.follows = "uv2nix";
+      };
+    };
+
     arion = {
       url = "github:hercules-ci/arion";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -81,6 +99,11 @@
     ...
   } @ inputs: let
     inherit (self) outputs;
+    toolsConfig = inputs.devenv.lib.mkConfig {
+      inherit inputs;
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      modules = [./scripts/devenv.nix];
+    };
     host_nmd = "nix-media-docker";
     host_nsf = "nix-shitfucker";
     host_slop = "nix-slopfucker";
@@ -179,11 +202,11 @@
     };
 
     packages.x86_64-linux = {
-      jellyfin-people-images = nixpkgs.legacyPackages.x86_64-linux.callPackage ./scripts/jellyfin {};
+      inherit (toolsConfig.outputs) homelab-tools jellyfin-people-images;
       nsf-proxmox = self.nixosConfigurations.nix-shitfucker.config.system.build.images.proxmox;
       slop-proxmox = self.nixosConfigurations.nix-slopfucker.config.system.build.images.proxmox;
     };
 
-    checks.x86_64-linux.jellyfin-people-images = self.packages.x86_64-linux.jellyfin-people-images;
+    checks.x86_64-linux.homelab-tools = toolsConfig.outputs.homelab-tools-tests;
   };
 }
