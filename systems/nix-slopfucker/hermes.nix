@@ -256,8 +256,26 @@ in {
       # allocate a different number than the host — leaving the bind-mounted
       # state (owned by the host's hermes) unreadable to the agent. mkForce
       # because the module already defines the user/group.
-      users.users.hermes.uid = lib.mkForce hermesUid;
-      users.groups.hermes.gid = lib.mkForce hermesGid;
+      users = {
+        users.hermes = {
+          uid = lib.mkForce hermesUid;
+
+          # Lingering keeps user@<uid>.service — and the session bus the cron
+          # scopes below need — alive for a user that never logs in.
+          linger = true;
+        };
+        groups.hermes.gid = lib.mkForce hermesGid;
+      };
+
+      # The agent dispatches cron workers into a transient
+      # `systemd-run --user --scope`, which needs a session bus at
+      # $XDG_RUNTIME_DIR/bus and fails closed without one. systemd exports that
+      # variable only to user sessions, so a system service must be told
+      # explicitly where the lingering user manager's runtime dir is.
+      systemd.services.hermes-agent = {
+        environment.XDG_RUNTIME_DIR = "/run/user/${toString hermesUid}";
+        after = ["user@${toString hermesUid}.service"];
+      };
 
       # No nix daemon → no `nix build`/`nix-shell`/`nix run` self-install.
       # No python/pip/uv on PATH either. This is the package-install lockdown.
