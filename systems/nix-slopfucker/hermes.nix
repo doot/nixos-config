@@ -421,6 +421,7 @@ in {
             show_cost = true;
             timestamps = true;
             interface = "tui";
+            vim_mode = true;
             show_reasoning = true;
             reasoning_full = true;
             sections.thinking = "expanded";

@@ -10,6 +10,8 @@
   arionCommon = import ../../arion/common.nix;
   network = import ../../common/network.nix;
   watchstate = config.virtualisation.arion.projects.watchstate.settings.watchstate;
+  streamystats = config.virtualisation.arion.projects.streamystats.settings.streamystats;
+  jellyfinTranscodeDir = "/run/jellyfin-transcodes";
 in {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
@@ -69,7 +71,7 @@ in {
       backend = "docker";
       projects =
         lib.genAttrs
-        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble" "watchstate"]
+        ["pihole" "freshrss" "librenms" "plex" "monitoring" "scrobble" "watchstate" "streamystats"]
         (name: {
           serviceName = name; # systemd service name
           settings.imports = [../../arion/${name}];
@@ -77,10 +79,27 @@ in {
     };
   };
 
+  fileSystems."${jellyfinTranscodeDir}" = {
+    device = "tmpfs";
+    fsType = "tmpfs";
+    options = [
+      "size=12G"
+      "mode=0700"
+      "uid=${config.services.jellyfin.user}"
+      "gid=${config.services.jellyfin.group}"
+      "nodev"
+      "nosuid"
+      "noexec"
+      "nofail"
+    ];
+  };
+
   # Supress systemd units that don't work because of LXC
   systemd = {
     tmpfiles.rules = [
       "d ${watchstate.dataDir} 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      # The image assigns PostgreSQL ownership; preserve it on rebuild.
+      "d ${streamystats.dataDir} 0700 - - -"
     ];
 
     suppressedSystemUnits = [
@@ -91,6 +110,8 @@ in {
 
     # Start tty0 on serial console (needed for proxmox console)
     services = {
+      jellyfin.unitConfig.RequiresMountsFor = [jellyfinTranscodeDir];
+
       "getty@tty1" = {
         enable = lib.mkForce true;
         wantedBy = ["getty.target"]; # to start at boot
@@ -211,11 +232,18 @@ in {
     jellyfin = {
       package = pkgs.unstable.jellyfin;
       enable = true;
+      cacheDir = "/plex/jellyfin/cache";
+      # metadata dir is manually configured to "/plex/jellyfin/metadata", but cannot be configured in the service.
       hardwareAcceleration = {
         enable = true;
         type = "nvenc";
         device = "/dev/dri/by-path/pci-0000:01:00.0-render";
       };
+    };
+
+    seerr = {
+      enable = true;
+      package = pkgs.unstable.seerr;
     };
   };
 
@@ -324,6 +352,18 @@ in {
             client_max_body_size 30M;
             proxy_read_timeout   600s;
             proxy_buffering off;
+          '';
+        }
+        {
+          name = "seerr";
+          inherit (config.services.seerr) port;
+        }
+        {
+          name = "streamystats";
+          inherit (streamystats) port;
+          extraConfig = ''
+            proxy_buffering off;
+            proxy_read_timeout 3600s;
           '';
         }
         {
