@@ -8,19 +8,21 @@
   cfg = config.jellyglance;
   vhost = "jellyglance.${network.hosts.nix-media-docker.fqdn}";
 in {
-  options.jellyglance.port = lib.mkOption {
-    type = lib.types.port;
-    default = 3013;
-    description = "Host loopback port for JellyGlance";
+  options.jellyglance = {
+    port = lib.mkOption {
+      type = lib.types.port;
+      default = 3013;
+      description = "Host loopback port for JellyGlance";
+    };
+    dataDir = lib.mkOption {
+      type = lib.types.strMatching "/.*";
+      default = "/docker-local/jellyglance";
+      description = "Host directory for JellyGlance state";
+    };
   };
 
   config = {
     project.name = "jellyglance";
-    docker-compose.volumes = {
-      postgres = {};
-      config = {};
-      backups = {};
-    };
     services = {
       jellyglance = {
         service = {
@@ -29,8 +31,8 @@ in {
           env_file = ["/run/secrets/rendered/jellyglance.env"];
           ports = ["127.0.0.1:${toString cfg.port}:3000"];
           volumes = [
-            "config:/app/config"
-            "backups:/app/backups"
+            "${cfg.dataDir}/config:/app/config"
+            "${cfg.dataDir}/backups:/app/backups"
           ];
           environment = {
             TZ = common.tz;
@@ -57,7 +59,7 @@ in {
             POSTGRES_INITDB_ARGS = "--auth-host=scram-sha-256";
           };
           # PostgreSQL 18 stores its versioned data below this parent.
-          volumes = ["postgres:/var/lib/postgresql"];
+          volumes = ["${cfg.dataDir}/postgres:/var/lib/postgresql"];
           healthcheck = {
             test = ["CMD" "pg_isready" "-U" "jellyglance" "-d" "jellyglance"];
             interval = "10s";

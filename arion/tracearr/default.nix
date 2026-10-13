@@ -8,20 +8,21 @@
   cfg = config.tracearr;
   vhost = "tracearr.${network.hosts.nix-media-docker.fqdn}";
 in {
-  options.tracearr.port = lib.mkOption {
-    type = lib.types.port;
-    default = 3011;
-    description = "Host loopback port for Tracearr";
+  options.tracearr = {
+    port = lib.mkOption {
+      type = lib.types.port;
+      default = 3011;
+      description = "Host loopback port for Tracearr";
+    };
+    dataDir = lib.mkOption {
+      type = lib.types.strMatching "/.*";
+      default = "/docker-local/tracearr";
+      description = "Host directory for Tracearr state";
+    };
   };
 
   config = {
     project.name = "tracearr";
-    docker-compose.volumes = {
-      postgres = {};
-      redis = {};
-      backups = {};
-      images = {};
-    };
     services = {
       tracearr = {
         service = {
@@ -30,10 +31,7 @@ in {
           capabilities.ALL = false;
           env_file = ["/run/secrets/rendered/tracearr.env"];
           ports = ["127.0.0.1:${toString cfg.port}:3000"];
-          volumes = [
-            "backups:/data/backup"
-            "images:/data/tracearr/image-cache"
-          ];
+          volumes = ["${cfg.dataDir}/data:/data"];
           environment = {
             TZ = common.tz;
             NODE_ENV = "production";
@@ -59,7 +57,7 @@ in {
             POSTGRES_DB = "tracearr";
             POSTGRES_INITDB_ARGS = "--auth-host=scram-sha-256";
           };
-          volumes = ["postgres:/home/postgres/pgdata/data"];
+          volumes = ["${cfg.dataDir}/postgres:/home/postgres/pgdata/data"];
           command = [
             "postgres"
             "-c"
@@ -100,7 +98,7 @@ in {
           image = "redis:8-alpine";
           restart = "unless-stopped";
           command = ["redis-server" "--appendonly" "yes"];
-          volumes = ["redis:/data"];
+          volumes = ["${cfg.dataDir}/redis:/data"];
           healthcheck = {
             test = ["CMD" "redis-cli" "ping"];
             interval = "10s";
