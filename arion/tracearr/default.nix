@@ -28,6 +28,7 @@ in {
         service = {
           image = "ghcr.io/connorgallopo/tracearr:latest";
           restart = "unless-stopped";
+          user = "${common.puid}:${common.pgid}";
           capabilities.ALL = false;
           env_file = ["/run/secrets/rendered/tracearr.env"];
           ports = ["127.0.0.1:${toString cfg.port}:3000"];
@@ -51,6 +52,8 @@ in {
         service = {
           image = "timescale/timescaledb-ha:pg18.4-ts2.29.1";
           restart = "unless-stopped";
+          user = "${common.puid}:${common.pgid}";
+          capabilities.ALL = false;
           env_file = ["/run/secrets/rendered/tracearr-postgres.env"];
           environment = {
             POSTGRES_USER = "tracearr";
@@ -97,6 +100,8 @@ in {
         service = {
           image = "redis:8-alpine";
           restart = "unless-stopped";
+          user = "${common.puid}:${common.pgid}";
+          capabilities.ALL = false;
           command = ["redis-server" "--appendonly" "yes"];
           volumes = ["${cfg.dataDir}/redis:/data"];
           healthcheck = {

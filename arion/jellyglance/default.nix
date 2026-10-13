@@ -28,14 +28,20 @@ in {
         service = {
           image = "ghcr.io/jellyglance/server:latest";
           restart = "unless-stopped";
+          user = "${common.puid}:${common.pgid}";
+          capabilities.ALL = false;
           env_file = ["/run/secrets/rendered/jellyglance.env"];
           ports = ["127.0.0.1:${toString cfg.port}:3000"];
           volumes = [
             "${cfg.dataDir}/config:/app/config"
             "${cfg.dataDir}/backups:/app/backups"
+            # Import staging and frontend setup also write inside the application tree.
+            "${cfg.dataDir}/backups:/app/apps/api/backup-data"
+            "${cfg.dataDir}/config/client-env.js:/app/apps/web/dist/env.js"
           ];
           environment = {
             TZ = common.tz;
+            HOME = "/tmp";
             POSTGRES_USER = "jellyglance";
             POSTGRES_DB = "jellyglance";
             POSTGRES_IP = "postgres";
@@ -52,6 +58,8 @@ in {
         service = {
           image = "postgres:18-alpine";
           restart = "unless-stopped";
+          user = "${common.puid}:${common.pgid}";
+          capabilities.ALL = false;
           env_file = ["/run/secrets/rendered/jellyglance-postgres.env"];
           environment = {
             POSTGRES_USER = "jellyglance";

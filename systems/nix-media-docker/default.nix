@@ -103,17 +103,16 @@ in {
       "d ${watchstate.dataDir} 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
       # The image assigns PostgreSQL ownership; preserve it on rebuild.
       "d ${streamystats.dataDir} 0700 - - -"
-      "d ${jellydash.dataDir} 0700 root root -"
-      "d ${tracearr.dataDir} 0700 root root -"
-      # Match the users baked into the Tracearr and Timescale images.
-      "d ${tracearr.dataDir}/data 0700 1001 1001 -"
-      "d ${tracearr.dataDir}/postgres 0700 1000 1000 -"
-      "d ${tracearr.dataDir}/redis 0700 - - -"
-      "d ${jellyglance.dataDir} 0700 root root -"
-      "d ${jellyglance.dataDir}/config 0700 root root -"
-      "d ${jellyglance.dataDir}/backups 0700 root root -"
-      # The postgres user must traverse this parent to reach PGDATA.
-      "d ${jellyglance.dataDir}/postgres 0755 root root -"
+      "d ${jellydash.dataDir} 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      "d ${tracearr.dataDir} 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      "d ${tracearr.dataDir}/data 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      "d ${tracearr.dataDir}/postgres 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      "d ${tracearr.dataDir}/redis 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      "d ${jellyglance.dataDir} 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      "d ${jellyglance.dataDir}/config 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      "f ${jellyglance.dataDir}/config/client-env.js 0600 ${arionCommon.puid} ${arionCommon.pgid} -"
+      "d ${jellyglance.dataDir}/backups 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
+      "d ${jellyglance.dataDir}/postgres 0700 ${arionCommon.puid} ${arionCommon.pgid} -"
     ];
 
     suppressedSystemUnits = [
