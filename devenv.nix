@@ -3,6 +3,12 @@ _: {
 
   languages.python.directory = "./scripts";
 
+  git-hooks.hooks.mypy = {
+    files = "^scripts/(.*\\.py|pyproject\\.toml)$";
+    pass_filenames = false;
+    args = ["--config-file" "scripts/pyproject.toml"];
+  };
+
   git-hooks.hooks.uv-check = {
     files = "^scripts/(uv\\.lock|pyproject\\.toml)$";
     args = ["--project" "scripts"];

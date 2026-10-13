@@ -5,29 +5,51 @@ import json
 import os
 import tempfile
 import unittest
+from collections.abc import Iterable, Mapping, Sequence
 from http.client import HTTPMessage
 from importlib.metadata import distribution
 from pathlib import Path
 from unittest.mock import patch
-from urllib.request import Request
+from urllib.request import HTTPRedirectHandler, Request
 
 from homelab_tools import jellyfin_people_images as images
 
 IDS = [f"{index:032x}" for index in range(1, 5)]
-PERSON = {"id": IDS[0], "name": "Fixture"}
+PERSON: images.Person = {"id": IDS[0], "name": "Fixture"}
 
 
 class FixtureAPI:
-    def __init__(self):
-        self.calls = []
+    """Serve two person pages and one healthy portrait without network access.
 
-    def request(self, method, path, params=None, image=False):
+    :ivar calls: Recorded HTTP verbs, paths, and query parameters.
+    """
+
+    def __init__(self) -> None:
+        """Start with an empty request log."""
+        self.calls: list[tuple[str, str, images.QueryParams | None]] = []
+
+    def request(
+        self,
+        method: str,
+        path: str,
+        params: images.QueryParams | None = None,
+        image: bool = False,
+    ) -> images.Response:
+        """Record a request and serve the corresponding offline fixture.
+
+        :param method: HTTP verb; POST simulates a successful refresh.
+        :param path: Endpoint selecting preflight, people, or portrait fixtures.
+        :param params: Query parameters containing the person-page offset.
+        :param image: Image-prefix flag; fixtures already contain only prefixes.
+        :returns: Simulated status, content type, and body.
+        """
         self.calls.append((method, path, params))
         if path == "/System/Info":
             return 200, "", b""
         if path == "/Persons":
             assert params is not None
             start = params["startIndex"]
+            assert isinstance(start, int)
             rows = [
                 {"Id": item, "Name": item, "Type": "Person"}
                 for item in IDS[start : start + 2]
@@ -54,14 +76,44 @@ class FixtureAPI:
 
 
 class Replies:
-    def __init__(self, responses):
+    """Serve a predetermined response sequence without network access.
+
+    :ivar responses: Iterator over the remaining fixture responses.
+    """
+
+    def __init__(self, responses: Iterable[images.Response]) -> None:
+        """Retain an ordered sequence of responses.
+
+        :param responses: Responses to return on successive requests.
+        """
         self.responses = iter(responses)
 
-    def request(self, *args, **kwargs):
+    def request(
+        self,
+        method: str,
+        path: str,
+        params: images.QueryParams | None = None,
+        image: bool = False,
+    ) -> images.Response:
+        """Return the next response regardless of the request contents.
+
+        :param method: HTTP verb, unused by the sequential fixture.
+        :param path: Endpoint path, unused by the sequential fixture.
+        :param params: Query parameters, unused by the sequential fixture.
+        :param image: Image-prefix flag, unused by the sequential fixture.
+        :returns: The next preconfigured response.
+        :raises StopIteration: If the test makes more requests than expected.
+        """
         return next(self.responses)
 
 
-def page(items, total):
+def page(items: Sequence[Mapping[str, str]], total: int) -> images.Response:
+    """Encode a person page for an offline response.
+
+    :param items: Raw Jellyfin person records, including invalid test cases.
+    :param total: Advertised population count across every page.
+    :returns: A successful JSON response containing the supplied page.
+    """
     return (
         200,
         "application/json",
@@ -75,7 +127,10 @@ def page(items, total):
 
 
 class PeopleImagesTest(unittest.TestCase):
-    def test_console_entrypoint_stops_cleanly_on_failure_or_interrupt(self):
+    """Exercise audit, refresh, transport, and CLI safety using offline fixtures."""
+
+    def test_console_entrypoint_stops_cleanly_on_failure_or_interrupt(self) -> None:
+        """Translate expected failures and interrupts into documented exit codes."""
         (command,) = [
             entry
             for entry in distribution("homelab-tools").entry_points
@@ -84,7 +139,7 @@ class PeopleImagesTest(unittest.TestCase):
         ]
         failures: list[tuple[BaseException, int]] = [
             (kind("offline failure"), 1)
-            for kind in (RuntimeError, ValueError, KeyError, OSError)
+            for kind in (RuntimeError, ValueError, TypeError, KeyError, OSError)
         ]
         failures.append((KeyboardInterrupt(), 130))
         for error, expected_status in failures:
@@ -109,6 +164,7 @@ class PeopleImagesTest(unittest.TestCase):
                     except (
                         RuntimeError,
                         ValueError,
+                        TypeError,
                         KeyError,
                         OSError,
                         KeyboardInterrupt,
@@ -123,7 +179,8 @@ class PeopleImagesTest(unittest.TestCase):
                 self.assertEqual(stderr.getvalue(), message + "\n")
                 run.assert_not_called()
 
-    def test_all_pages_probe_then_repair_only_broken(self):
+    def test_all_pages_probe_then_repair_only_broken(self) -> None:
+        """Enumerate all pages and refresh broken portraits without replacing metadata."""
         api = FixtureAPI()
         output = io.StringIO()
         counts = images.run(api, output, repair=True, workers=2, interval=0)
@@ -145,19 +202,22 @@ class PeopleImagesTest(unittest.TestCase):
                 },
             )
 
-    def test_read_only_pass_never_posts(self):
+    def test_read_only_pass_never_posts(self) -> None:
+        """Audit the complete population without issuing any POST requests."""
         api = FixtureAPI()
         counts = images.run(api, io.StringIO(), repair=False, workers=1, interval=0)
         self.assertEqual(counts["checked"], len(IDS))
         self.assertEqual(counts["queued"], 0)
         self.assertFalse(any(call[0] == "POST" for call in api.calls))
 
-    def test_access_and_proxy_errors_are_not_missing_portraits(self):
+    def test_access_and_proxy_errors_are_not_missing_portraits(self) -> None:
+        """Stop on access, rate-limit, and proxy errors instead of queuing repairs."""
         for status in (401, 403, 429, 502, 503):
             with self.subTest(status=status), self.assertRaises(RuntimeError):
                 images.probe(Replies([(status, "", b"")]), PERSON)
 
-    def test_supported_image_signatures(self):
+    def test_supported_image_signatures(self) -> None:
+        """Accept JPEG, PNG, GIF, and WebP prefixes with image content types."""
         for body in (
             b"\xff\xd8\xff",
             b"\x89PNG\r\n\x1a\n",
@@ -169,7 +229,8 @@ class PeopleImagesTest(unittest.TestCase):
                 result = images.probe(Replies([(200, "image/example", body)]), PERSON)
                 self.assertTrue(result["healthy"])
 
-    def test_invalid_population_fails_before_refresh(self):
+    def test_invalid_population_fails_before_refresh(self) -> None:
+        """Reject empty, inconsistent, duplicate, or invalid people before refreshing."""
         row = {"Id": IDS[0], "Name": "Fixture", "Type": "Person"}
         cases = (
             [page([], 0)],
@@ -193,7 +254,35 @@ class PeopleImagesTest(unittest.TestCase):
                     interval=0,
                 )
 
-    def test_refresh_failure_is_reported_and_not_retried(self):
+    def test_malformed_population_is_rejected_before_refresh(self) -> None:
+        """Reject incorrectly shaped JSON before submitting any refreshes."""
+        row = {"Id": IDS[0], "Name": "Fixture", "Type": "Person"}
+        payloads: tuple[object, ...] = (
+            None,
+            [],
+            {"TotalRecordCount": True, "Items": [row]},
+            {"TotalRecordCount": 1, "Items": "invalid"},
+            {"TotalRecordCount": 1, "Items": [None]},
+            {"TotalRecordCount": 1, "Items": [dict(row, Id=123)]},
+            {"TotalRecordCount": 1, "Items": [dict(row, Name=123)]},
+        )
+        for payload in payloads:
+            api = Replies([(200, "application/json", json.dumps(payload).encode())])
+            output = io.StringIO()
+            with (
+                self.subTest(payload=payload),
+                patch.object(api, "request", wraps=api.request) as request,
+                self.assertRaises((RuntimeError, TypeError)),
+            ):
+                images.run(api, output, repair=True, workers=1, interval=0)
+            self.assertEqual(request.call_count, 1)
+            self.assertFalse(
+                any(call.args[0] == "POST" for call in request.call_args_list)
+            )
+            self.assertEqual(output.getvalue(), "")
+
+    def test_refresh_failure_is_reported_and_not_retried(self) -> None:
+        """Record a failed refresh response and stop without retrying the write."""
         row = {"Id": IDS[0], "Name": "Fixture", "Type": "Person"}
         output = io.StringIO()
         api = Replies([page([row], 1), (404, "", b""), (503, "", b"")])
@@ -204,7 +293,8 @@ class PeopleImagesTest(unittest.TestCase):
         self.assertFalse(records[0]["queued"])
         self.assertEqual(records[0]["refresh_http_status"], 503)
 
-    def test_remote_http_and_credential_urls_are_rejected(self):
+    def test_remote_http_and_credential_urls_are_rejected(self) -> None:
+        """Require HTTPS except on loopback and reject credentials, queries, and fragments."""
         for url in (
             "http://example.com",
             "https://user@example.com",
@@ -222,8 +312,10 @@ class PeopleImagesTest(unittest.TestCase):
             with self.subTest(url=url):
                 self.assertEqual(images.API(url, "fixture").url, url)
 
-    def test_redirects_cannot_forward_credentials(self):
-        result = images.NoRedirect().redirect_request(
+    def test_redirects_cannot_forward_credentials(self) -> None:
+        """Refuse replacement requests to prevent forwarding the API key."""
+        handler: HTTPRedirectHandler = images.NoRedirect()
+        result = handler.redirect_request(
             Request("https://example.com"),
             io.BytesIO(),
             302,
@@ -233,7 +325,8 @@ class PeopleImagesTest(unittest.TestCase):
         )
         self.assertIsNone(result)
 
-    def test_cli_help_shows_url_default_without_api_key(self):
+    def test_cli_help_shows_url_default_without_api_key(self) -> None:
+        """Show the selected URL in help without exposing a key, prompting, or connecting."""
         for url in (None, "https://example.com/jellyfin"):
             with self.subTest(url=url):
                 env = {"JELLYFIN_API_KEY": "fixture-secret-key"}
@@ -258,7 +351,8 @@ class PeopleImagesTest(unittest.TestCase):
                 api.assert_not_called()
                 prompt.assert_not_called()
 
-    def test_cli_url_overrides_environment(self):
+    def test_cli_url_overrides_environment(self) -> None:
+        """Prefer the explicit URL argument over the environment default."""
         with tempfile.TemporaryDirectory() as directory:
             url = "https://override.example.com/jellyfin"
             argv = [
@@ -285,7 +379,8 @@ class PeopleImagesTest(unittest.TestCase):
                 self.assertEqual(images.cli(), 2)
             factory.assert_called_once_with(url, "fixture")
 
-    def test_cli_report_permissions_exit_codes_and_no_overwrite(self):
+    def test_cli_report_permissions_exit_codes_and_no_overwrite(self) -> None:
+        """Create private reports, preserve existing files, and return audit/repair codes."""
         for repair in (False, True):
             with (
                 self.subTest(repair=repair),
@@ -328,7 +423,8 @@ class PeopleImagesTest(unittest.TestCase):
                         images.main()
                     self.assertEqual(report.read_bytes(), before)
 
-    def test_cli_requires_explicit_server_before_connecting(self):
+    def test_cli_requires_explicit_server_before_connecting(self) -> None:
+        """Reject a missing server before connecting or creating a report."""
         with tempfile.TemporaryDirectory() as directory:
             report = str(Path(directory) / "report.jsonl")
             with (

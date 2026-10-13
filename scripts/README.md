@@ -58,12 +58,17 @@ From the repository root:
 ```sh
 devenv shell
 jellyfin-people-images --help
+mypy --config-file scripts/pyproject.toml
+ruff check scripts/src scripts/tests
 devenv tasks run tools:test
 devenv build outputs.homelab-tools-tests
 ```
 
 The shared `devenv-base` Python profile provides Python, uv, editable sync, and
-lint hooks. Outside devenv, provide the server URL explicitly:
+lint hooks. Mypy checks source and tests in strict mode. Public APIs use PEP 257
+docstrings with reST `:param:`, `:returns:`, `:raises:`, and `:ivar:` fields;
+type information stays in annotations. Outside devenv, provide the server URL
+explicitly:
 
 ```sh
 uv run --project scripts jellyfin-people-images --url https://jellyfin.example.com
