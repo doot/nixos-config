@@ -5,20 +5,23 @@ import json
 import os
 import tempfile
 import unittest
-from collections.abc import Iterable, Mapping, Sequence
 from http.client import HTTPMessage
 from importlib.metadata import distribution
 from pathlib import Path
+from typing import TYPE_CHECKING, override
 from unittest.mock import patch
 from urllib.request import HTTPRedirectHandler, Request
 
 from homelab_tools import jellyfin_people_images as images
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping, Sequence
+
 IDS = [f"{index:032x}" for index in range(1, 5)]
 PERSON: images.Person = {"id": IDS[0], "name": "Fixture"}
 
 
-class FixtureAPI:
+class FixtureAPI(images.Transport):
     """Serve two person pages and one healthy portrait without network access.
 
     :ivar calls: Recorded HTTP verbs, paths, and query parameters.
@@ -28,6 +31,7 @@ class FixtureAPI:
         """Start with an empty request log."""
         self.calls: list[tuple[str, str, images.QueryParams | None]] = []
 
+    @override
     def request(
         self,
         method: str,
@@ -75,7 +79,7 @@ class FixtureAPI:
         ][index]
 
 
-class Replies:
+class Replies(images.Transport):
     """Serve a predetermined response sequence without network access.
 
     :ivar responses: Iterator over the remaining fixture responses.
@@ -88,6 +92,7 @@ class Replies:
         """
         self.responses = iter(responses)
 
+    @override
     def request(
         self,
         method: str,
@@ -180,7 +185,7 @@ class PeopleImagesTest(unittest.TestCase):
                 run.assert_not_called()
 
     def test_all_pages_probe_then_repair_only_broken(self) -> None:
-        """Enumerate all pages and refresh broken portraits without replacing metadata."""
+        """Enumerate every page and refresh only broken portraits."""
         api = FixtureAPI()
         output = io.StringIO()
         counts = images.run(api, output, repair=True, workers=2, interval=0)
@@ -230,7 +235,7 @@ class PeopleImagesTest(unittest.TestCase):
                 self.assertTrue(result["healthy"])
 
     def test_invalid_population_fails_before_refresh(self) -> None:
-        """Reject empty, inconsistent, duplicate, or invalid people before refreshing."""
+        """Reject empty, inconsistent, duplicate, or invalid populations."""
         row = {"Id": IDS[0], "Name": "Fixture", "Type": "Person"}
         cases = (
             [page([], 0)],
@@ -294,9 +299,12 @@ class PeopleImagesTest(unittest.TestCase):
         self.assertEqual(records[0]["refresh_http_status"], 503)
 
     def test_remote_http_and_credential_urls_are_rejected(self) -> None:
-        """Require HTTPS except on loopback and reject credentials, queries, and fragments."""
+        """Reject unsafe transports, credentials, queries, and fragments."""
         for url in (
             "http://example.com",
+            "file:///etc/passwd",
+            "ftp://example.com",
+            "custom://example.com",
             "https://user@example.com",
             "https://example.com?key=value",
             "https://example.com#fragment",
@@ -326,7 +334,7 @@ class PeopleImagesTest(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_cli_help_shows_url_default_without_api_key(self) -> None:
-        """Show the selected URL in help without exposing a key, prompting, or connecting."""
+        """Show the URL default without leaking keys, prompting, or connecting."""
         for url in (None, "https://example.com/jellyfin"):
             with self.subTest(url=url):
                 env = {"JELLYFIN_API_KEY": "fixture-secret-key"}
@@ -380,7 +388,7 @@ class PeopleImagesTest(unittest.TestCase):
             factory.assert_called_once_with(url, "fixture")
 
     def test_cli_report_permissions_exit_codes_and_no_overwrite(self) -> None:
-        """Create private reports, preserve existing files, and return audit/repair codes."""
+        """Create private reports without overwrites and return audit/repair codes."""
         for repair in (False, True):
             with (
                 self.subTest(repair=repair),

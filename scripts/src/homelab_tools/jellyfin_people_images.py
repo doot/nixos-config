@@ -12,15 +12,17 @@ import sys
 import time
 from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
-from email.message import Message
 from getpass import getpass
-from http.client import HTTPResponse
 from pathlib import Path
-from typing import NotRequired, Protocol, TextIO, TypedDict
+from typing import TYPE_CHECKING, NotRequired, Protocol, TextIO, TypedDict, override
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from email.message import Message
+    from http.client import HTTPResponse
 
 type QueryParams = Mapping[str, str | int]
 """URL query parameters accepted by the Jellyfin endpoints."""
@@ -95,6 +97,7 @@ class _Options(argparse.Namespace):
 class NoRedirect(HTTPRedirectHandler):
     """Refuse redirects so the API key cannot reach a different destination."""
 
+    @override
     def redirect_request(
         self,
         req: Request,
@@ -186,7 +189,7 @@ class API:
         :raises RuntimeError: If the connection fails; writes are never retried.
         """
         url = self.url + path + ("?" + urlencode(params) if params else "")
-        request = Request(
+        request = Request(  # noqa: S310 - URL schemes are validated in __init__.
             url,
             method=method,
             headers={
@@ -411,7 +414,7 @@ def main() -> int:
     status, _, _ = api.request("GET", "/System/Info")
     if status != 200:
         raise RuntimeError(f"Authenticated server check failed: HTTP {status}")
-    # Exclusive creation protects earlier reports; names and IDs are private library data.
+    # Reports contain private names/IDs; never overwrite existing files.
     fd = os.open(args.report, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, "w") as output:
         counts = run(
@@ -425,7 +428,8 @@ def main() -> int:
     print(f"Report: {args.report.resolve()}")
     if counts["queued"]:
         print(
-            "QUEUED, not verified repaired. After Jellyfin finishes, rerun WITHOUT --repair."
+            "QUEUED, not verified repaired. "
+            "After Jellyfin finishes, rerun WITHOUT --repair."
         )
     return 2 if counts["broken"] and not args.repair else 0
 

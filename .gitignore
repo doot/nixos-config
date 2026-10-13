@@ -21,6 +21,7 @@ devenv.local.yaml
 .lycheecache
 
 __pycache__/
+.python-version
 .venv/
 /venv
 scripts/dist/

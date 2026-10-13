@@ -19,7 +19,30 @@ strict = true
 files = ["$MYPY_CONFIG_FILE_DIR/src", "$MYPY_CONFIG_FILE_DIR/tests"]
 
 [tool.ruff.lint]
-extend-select = ["D"]
+extend-select = [
+    "A",
+    "ARG",
+    "B",
+    "C4",
+    "D",
+    "DTZ",
+    "E",
+    "ERA",
+    "EXE",
+    "F",
+    "I",
+    "N",
+    "PERF",
+    "RUF013",
+    "S",
+    "TC",
+    "UP",
+    "W",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/homelab_tools/__init__.py" = ["D104"]
+"tests/**/*.py" = ["S101"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
