@@ -18,6 +18,9 @@ python_version = "3.14"
 strict = true
 files = ["$MYPY_CONFIG_FILE_DIR/src", "$MYPY_CONFIG_FILE_DIR/tests"]
 
+[tool.ruff]
+line-length = 160
+
 [tool.ruff.lint]
 extend-select = [
     "A",

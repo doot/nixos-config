@@ -54,10 +54,7 @@ class FixtureAPI(images.Transport):
             assert params is not None
             start = params["startIndex"]
             assert isinstance(start, int)
-            rows = [
-                {"Id": item, "Name": item, "Type": "Person"}
-                for item in IDS[start : start + 2]
-            ]
+            rows = [{"Id": item, "Name": item, "Type": "Person"} for item in IDS[start : start + 2]]
             return (
                 200,
                 "application/json",
@@ -137,15 +134,9 @@ class PeopleImagesTest(unittest.TestCase):
     def test_console_entrypoint_stops_cleanly_on_failure_or_interrupt(self) -> None:
         """Translate expected failures and interrupts into documented exit codes."""
         (command,) = [
-            entry
-            for entry in distribution("homelab-tools").entry_points
-            if entry.group == "console_scripts"
-            and entry.name == "jellyfin-people-images"
+            entry for entry in distribution("homelab-tools").entry_points if entry.group == "console_scripts" and entry.name == "jellyfin-people-images"
         ]
-        failures: list[tuple[BaseException, int]] = [
-            (kind("offline failure"), 1)
-            for kind in (RuntimeError, ValueError, TypeError, KeyError, OSError)
-        ]
+        failures: list[tuple[BaseException, int]] = [(kind("offline failure"), 1) for kind in (RuntimeError, ValueError, TypeError, KeyError, OSError)]
         failures.append((KeyboardInterrupt(), 130))
         for error, expected_status in failures:
             with self.subTest(error=type(error).__name__):
@@ -176,11 +167,7 @@ class PeopleImagesTest(unittest.TestCase):
                     ) as leaked:
                         self.fail(f"Console entrypoint leaked {type(leaked).__name__}")
                 self.assertEqual(status, expected_status)
-                message = (
-                    "Stopped. Previously queued refreshes may still run."
-                    if expected_status == 130
-                    else f"Stopped: {error}"
-                )
+                message = "Stopped. Previously queued refreshes may still run." if expected_status == 130 else f"Stopped: {error}"
                 self.assertEqual(stderr.getvalue(), message + "\n")
                 run.assert_not_called()
 
@@ -281,9 +268,7 @@ class PeopleImagesTest(unittest.TestCase):
             ):
                 images.run(api, output, repair=True, workers=1, interval=0)
             self.assertEqual(request.call_count, 1)
-            self.assertFalse(
-                any(call.args[0] == "POST" for call in request.call_args_list)
-            )
+            self.assertFalse(any(call.args[0] == "POST" for call in request.call_args_list))
             self.assertEqual(output.getvalue(), "")
 
     def test_refresh_failure_is_reported_and_not_retried(self) -> None:
@@ -353,9 +338,7 @@ class PeopleImagesTest(unittest.TestCase):
                     images.cli()
                 self.assertEqual(result.exception.code, 0)
                 self.assertIn(f"default: {url}", " ".join(stdout.getvalue().split()))
-                self.assertNotIn(
-                    env["JELLYFIN_API_KEY"], stdout.getvalue() + stderr.getvalue()
-                )
+                self.assertNotIn(env["JELLYFIN_API_KEY"], stdout.getvalue() + stderr.getvalue())
                 api.assert_not_called()
                 prompt.assert_not_called()
 
@@ -418,13 +401,9 @@ class PeopleImagesTest(unittest.TestCase):
                     patch.object(images, "API", return_value=api) as factory,
                 ):
                     self.assertEqual(images.main(), 0 if repair else 2)
-                    factory.assert_called_once_with(
-                        "https://example.com/jellyfin", "fixture"
-                    )
+                    factory.assert_called_once_with("https://example.com/jellyfin", "fixture")
                     self.assertEqual(report.stat().st_mode & 0o777, 0o600)
-                    records = [
-                        json.loads(line) for line in report.read_text().splitlines()
-                    ]
+                    records = [json.loads(line) for line in report.read_text().splitlines()]
                     self.assertEqual(len(records), len(IDS))
                     before = report.read_bytes()
                     with self.assertRaises(FileExistsError):

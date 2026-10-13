@@ -30,9 +30,7 @@ type QueryParams = Mapping[str, str | int]
 type Response = tuple[int, str, bytes]
 """HTTP status, content type, and response body or image prefix."""
 
-type JSONValue = (
-    None | bool | int | float | str | list[JSONValue] | dict[str, JSONValue]
-)
+type JSONValue = None | bool | int | float | str | list[JSONValue] | dict[str, JSONValue]
 """Decoded JSON values before application-specific validation."""
 
 
@@ -160,13 +158,7 @@ class API:
         parsed = urlsplit(url)
         if parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError("URL must not contain credentials, query, or fragment")
-        if not parsed.hostname or (
-            parsed.scheme != "https"
-            and not (
-                parsed.scheme == "http"
-                and parsed.hostname in ("localhost", "127.0.0.1", "::1")
-            )
-        ):
+        if not parsed.hostname or (parsed.scheme != "https" and not (parsed.scheme == "http" and parsed.hostname in ("localhost", "127.0.0.1", "::1"))):
             raise ValueError("Use HTTPS, or loopback HTTP on the Jellyfin host")
         self.url = url.rstrip("/")
         self.token = token
@@ -209,9 +201,7 @@ class API:
             error.close()
             return status, "", b""
         except URLError, TimeoutError, OSError:
-            raise RuntimeError(
-                "Connection failed; stopped without retrying writes"
-            ) from None
+            raise RuntimeError("Connection failed; stopped without retrying writes") from None
 
 
 def people(api: Transport) -> list[Person]:
@@ -264,9 +254,7 @@ def people(api: Transport) -> list[Person]:
                 raise TypeError("Malformed person row; Id and Name must be strings")
             person_id = UUID(raw_id).hex
             if row.get("Type") != "Person" or person_id in found:
-                raise RuntimeError(
-                    "Unexpected type or duplicate person; rerun with scans idle"
-                )
+                raise RuntimeError("Unexpected type or duplicate person; rerun with scans idle")
             found[person_id] = {"id": person_id, "name": name}
         offset += len(rows)
     if len(found) != total:
@@ -284,16 +272,10 @@ def probe(api: Transport, person: Person) -> PortraitResult:
     :raises RuntimeError: If the request fails or returns an unexpected status,
         such as an authentication, rate-limit, or proxy error.
     """
-    status, content_type, body = api.request(
-        "GET", f"/Items/{person['id']}/Images/Primary", image=True
-    )
+    status, content_type, body = api.request("GET", f"/Items/{person['id']}/Images/Primary", image=True)
     if status not in (200, 404, 500):
-        raise RuntimeError(
-            f"Image check returned HTTP {status}; stopped (not classified as missing)"
-        )
-    signature = body.startswith(
-        (b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n", b"GIF87a", b"GIF89a")
-    ) or (body.startswith(b"RIFF") and body[8:12] == b"WEBP")
+        raise RuntimeError(f"Image check returned HTTP {status}; stopped (not classified as missing)")
+    signature = body.startswith((b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n", b"GIF87a", b"GIF89a")) or (body.startswith(b"RIFF") and body[8:12] == b"WEBP")
     healthy = status == 200 and content_type.lower().startswith("image/") and signature
     return {
         "id": person["id"],
@@ -304,9 +286,7 @@ def probe(api: Transport, person: Person) -> PortraitResult:
     }
 
 
-def run(
-    api: Transport, output: TextIO, *, repair: bool, workers: int, interval: float
-) -> Counts:
+def run(api: Transport, output: TextIO, *, repair: bool, workers: int, interval: float) -> Counts:
     """Audit all portraits, optionally queuing refreshes for broken ones.
 
     :param api: Transport used for enumeration, probes, and optional refreshes.
@@ -327,9 +307,7 @@ def run(
     counts: Counts = {"checked": 0, "healthy": 0, "broken": 0, "queued": 0}
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for start in range(0, len(subjects), 100):
-            results = list(
-                pool.map(lambda p: probe(api, p), subjects[start : start + 100])
-            )
+            results = list(pool.map(lambda p: probe(api, p), subjects[start : start + 100]))
             for result in results:
                 counts["checked"] += 1
                 counts["healthy" if result["healthy"] else "broken"] += 1
@@ -350,9 +328,7 @@ def run(
                     output.write(json.dumps(result) + "\n")
                     output.flush()
                     if status != 204:
-                        raise RuntimeError(
-                            f"Refresh returned HTTP {status}; stopped without retrying"
-                        )
+                        raise RuntimeError(f"Refresh returned HTTP {status}; stopped without retrying")
                     counts["queued"] += 1
                     time.sleep(interval)
                 else:
@@ -388,9 +364,7 @@ def main() -> int:
         action="store_true",
         help="Queue refreshes; default is read-only checking",
     )
-    parser.add_argument(
-        "--workers", type=int, default=4, help="Concurrent image checks (default: 4)"
-    )
+    parser.add_argument("--workers", type=int, default=4, help="Concurrent image checks (default: 4)")
     parser.add_argument(
         "--interval",
         type=float,
@@ -427,10 +401,7 @@ def main() -> int:
     print(json.dumps(counts))
     print(f"Report: {args.report.resolve()}")
     if counts["queued"]:
-        print(
-            "QUEUED, not verified repaired. "
-            "After Jellyfin finishes, rerun WITHOUT --repair."
-        )
+        print("QUEUED, not verified repaired. After Jellyfin finishes, rerun WITHOUT --repair.")
     return 2 if counts["broken"] and not args.repair else 0
 
 
