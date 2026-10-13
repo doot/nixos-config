@@ -30,4 +30,4 @@ inputs:
         follows: uv2nix
 imports:
   - devenv-base
-profile: base
+profile: python

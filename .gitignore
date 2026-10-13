@@ -22,5 +22,6 @@ devenv.local.yaml
 
 __pycache__/
 .venv/
+/venv
 scripts/dist/
 people-*.jsonl

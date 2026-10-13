@@ -9,7 +9,6 @@
   jellyfinUrl = "https://${jellyfinProxy.name}.${network.hosts.nix-media-docker.fqdn}";
   tools = config.languages.python.import ./. {};
 in {
-  languages.python.enable = true;
   env.JELLYFIN_URL = lib.mkDefault jellyfinUrl;
 
   outputs = {

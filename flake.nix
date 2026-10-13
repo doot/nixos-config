@@ -101,8 +101,11 @@
     inherit (self) outputs;
     toolsConfig = inputs.devenv.lib.mkConfig {
       inherit inputs;
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
-      modules = [./scripts/devenv.nix];
+      pkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
+      modules = [
+        ./scripts/devenv.nix
+        {languages.python.enable = true;}
+      ];
     };
     host_nmd = "nix-media-docker";
     host_nsf = "nix-shitfucker";
@@ -162,6 +165,7 @@
           # nmd's own services. Excludes the agent credentials, which slop alone
           # is a sops recipient of.
           priv.nixosModules.nmdPriv
+          {environment.systemPackages = [toolsConfig.outputs.jellyfin-people-images];}
         ];
       };
 
@@ -202,7 +206,6 @@
     };
 
     packages.x86_64-linux = {
-      inherit (toolsConfig.outputs) homelab-tools jellyfin-people-images;
       nsf-proxmox = self.nixosConfigurations.nix-shitfucker.config.system.build.images.proxmox;
       slop-proxmox = self.nixosConfigurations.nix-slopfucker.config.system.build.images.proxmox;
     };
