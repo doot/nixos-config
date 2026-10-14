@@ -354,7 +354,6 @@ in {
           name = "plex";
           port = 32400;
           extraConfig = ''
-            rewrite ^/$ /web permanent;
             proxy_buffering off;
           '';
         }
