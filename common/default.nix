@@ -317,7 +317,8 @@ in {
       package = pkgs.unstable.netbird;
     };
 
-    eternal-terminal.enable = true;
+    # TODO: Re-enable once eternal-terminal is fixed upstream and stops breaking the build
+    eternal-terminal.enable = false;
 
     # nginx defaults
     nginx = {
