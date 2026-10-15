@@ -398,7 +398,7 @@ in {
         settings = {
           # Hand-bumped: managed installs refuse the config writes that would
           # otherwise advance this on update.
-          _config_version = 39;
+          _config_version = 50;
 
           model = {
             provider = "copilot";
@@ -430,6 +430,7 @@ in {
             memory_notifications = "verbose";
           };
           privacy.redact_pii = true;
+          security.allow_lazy_installs = false;
           dashboard.theme = "ember";
           agent = {
             environment_hint = "You are running inside a locked-down NixOS container: no nix daemon, no package managers, and network access restricted to the internet only (no local network).";
@@ -440,7 +441,7 @@ in {
 
         mcpServers = {
           nixos = {
-            command = "mcp-nixos";
+            command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
             args = ["--"];
           };
           # TODO: Re-enable after memory issues are sorted out. Each spawned process consumes 4-8 GB of memory, even before it does anything...
