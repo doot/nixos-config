@@ -478,12 +478,16 @@ in {
 
   time.timeZone = "America/Los_Angeles";
 
-  boot.kernel.sysctl = {
-    # Try out TCP BBR, to see if it improves network throughput/latency
-    "net.core.default_qdisc" = "fq";
-    "net.ipv4.tcp_congestion_control" = "bbr";
+  boot = {
+    zswap.enable = lib.mkDefault (config.swapDevices != []);
 
-    "vm.swappiness" = "1";
+    kernel.sysctl = {
+      # Try out TCP BBR, to see if it improves network throughput/latency
+      "net.core.default_qdisc" = "fq";
+      "net.ipv4.tcp_congestion_control" = "bbr";
+
+      "vm.swappiness" = "1";
+    };
   };
 
   # Power management defaults
