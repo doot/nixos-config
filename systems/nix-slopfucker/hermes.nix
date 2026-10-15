@@ -237,7 +237,15 @@ in {
       hermesUid,
       hermesGid,
       ...
-    }: {
+    }: let
+      hermesCfg = config.services.hermes-agent;
+      holographicPlugin = pkgs.fetchFromGitHub {
+        owner = "itpartypattaya";
+        repo = "hermes-plugin-holographic";
+        rev = "a6d009315bc72a7c4e68d6a0e60a6eeed68080fd";
+        hash = "sha256-JkHG1Rmb+5H3d/jpMrpQ1x8H8b1kgc+QorV4uQXCKaM=";
+      };
+    in {
       imports = [
         inputs.hermes-agent.nixosModules.default
         inputs.priv.nixosModules.hermesPriv
@@ -406,12 +414,6 @@ in {
           memory = {
             memory_enabled = true;
             user_profile_enabled = true;
-            # Holographic provider: a bundled, fully-local memory plugin storing
-            # structured facts in SQLite at $HERMES_HOME/memory_store.db. Runs
-            # alongside built-in memory (never replaces it), adds entity
-            # resolution, trust scoring, and HRR compositional retrieval. Needs
-            # no API key, no LLM, and no network — the embedding/HRR math is the
-            # only dependency, satisfied by numpy in extraPythonPackages below.
             provider = "holographic";
             user_char_limit = 2750;
           };
@@ -491,14 +493,8 @@ in {
         # No compilers or package managers visible to the agent.
         extraPackages = [];
 
-        # numpy enables the holographic memory provider's full HRR (Holographic
-        # Reduced Representation) retrieval — the reason/related/contradict
-        # compositional queries. Without it the provider still loads but
-        # silently degrades to FTS5 keyword search only. This lands on the
-        # agent's PYTHONPATH (not the sealed venv rebuild). numpy ships
-        # pre-compiled native (C/Cython) extensions via nixpkgs, so no build
-        # toolchain or package manager is exposed to the agent at runtime.
-        extraPythonPackages = [pkgs.python312Packages.numpy];
+        # HRR needs NumPy built for Hermes' interpreter.
+        extraPythonPackages = [hermesCfg.package.python.pkgs.numpy];
 
         extraPlugins = [
           (pkgs.fetchFromGitHub {
@@ -509,6 +505,11 @@ in {
           })
         ];
       };
+
+      # The memory loader requires the provider name, not extraPlugins' nix-managed-* prefix.
+      systemd.tmpfiles.rules = [
+        "L+ ${hermesCfg.stateDir}/.hermes/plugins/holographic - ${hermesCfg.user} ${hermesCfg.group} - ${holographicPlugin}"
+      ];
 
       # Defense-in-depth on top of the module baseline (which already sets
       # NoNewPrivileges, ProtectSystem=strict, PrivateTmp): drop all capabilities
