@@ -335,6 +335,22 @@
         "type": "github"
       }
     },
+    "hermes-holographic": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792003309,
+        "narHash": "sha256-i6hAKZjv5njEDZsRMQcDtNp28AlSBvsN0yrniwbzhSg=",
+        "owner": "itpartypattaya",
+        "repo": "hermes-plugin-holographic",
+        "rev": "d3240cfe5034c464a6e2af905e2dec26d4eac478",
+        "type": "github"
+      },
+      "original": {
+        "owner": "itpartypattaya",
+        "repo": "hermes-plugin-holographic",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -657,6 +673,7 @@
         "arion": "arion",
         "devenv": "devenv",
         "hermes-agent": "hermes-agent",
+        "hermes-holographic": "hermes-holographic",
         "home-manager": "home-manager_2",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
         "nixpkgs": "nixpkgs_2",

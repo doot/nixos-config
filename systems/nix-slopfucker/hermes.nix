@@ -237,7 +237,9 @@ in {
       hermesUid,
       hermesGid,
       ...
-    }: {
+    }: let
+      hermesCfg = config.services.hermes-agent;
+    in {
       imports = [
         inputs.hermes-agent.nixosModules.default
         inputs.priv.nixosModules.hermesPriv
@@ -390,7 +392,7 @@ in {
         settings = {
           # Hand-bumped: managed installs refuse the config writes that would
           # otherwise advance this on update.
-          _config_version = 39;
+          _config_version = 50;
 
           model = {
             provider = "copilot";
@@ -400,18 +402,15 @@ in {
             engine = "lcm";
           };
           lcm.context_threshold = 0.70;
-          plugins.enabled = [
-            "hermes-lcm"
-          ];
+          plugins = {
+            enabled = [
+              "hermes-lcm"
+            ];
+            hermes-memory-store.embeddings = "off";
+          };
           memory = {
             memory_enabled = true;
             user_profile_enabled = true;
-            # Holographic provider: a bundled, fully-local memory plugin storing
-            # structured facts in SQLite at $HERMES_HOME/memory_store.db. Runs
-            # alongside built-in memory (never replaces it), adds entity
-            # resolution, trust scoring, and HRR compositional retrieval. Needs
-            # no API key, no LLM, and no network — the embedding/HRR math is the
-            # only dependency, satisfied by numpy in extraPythonPackages below.
             provider = "holographic";
             user_char_limit = 2750;
           };
@@ -428,6 +427,7 @@ in {
             memory_notifications = "verbose";
           };
           privacy.redact_pii = true;
+          security.allow_lazy_installs = false;
           dashboard.theme = "ember";
           agent = {
             environment_hint = "You are running inside a locked-down NixOS container: no nix daemon, no package managers, and network access restricted to the internet only (no local network).";
@@ -438,7 +438,7 @@ in {
 
         mcpServers = {
           nixos = {
-            command = "mcp-nixos";
+            command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
             args = ["--"];
           };
           # TODO: Re-enable after memory issues are sorted out. Each spawned process consumes 4-8 GB of memory, even before it does anything...
@@ -491,14 +491,8 @@ in {
         # No compilers or package managers visible to the agent.
         extraPackages = [];
 
-        # numpy enables the holographic memory provider's full HRR (Holographic
-        # Reduced Representation) retrieval — the reason/related/contradict
-        # compositional queries. Without it the provider still loads but
-        # silently degrades to FTS5 keyword search only. This lands on the
-        # agent's PYTHONPATH (not the sealed venv rebuild). numpy ships
-        # pre-compiled native (C/Cython) extensions via nixpkgs, so no build
-        # toolchain or package manager is exposed to the agent at runtime.
-        extraPythonPackages = [pkgs.python312Packages.numpy];
+        # HRR needs NumPy built for Hermes' interpreter.
+        extraPythonPackages = [hermesCfg.package.python.pkgs.numpy];
 
         extraPlugins = [
           (pkgs.fetchFromGitHub {
@@ -509,6 +503,11 @@ in {
           })
         ];
       };
+
+      # The memory loader requires the provider name, not extraPlugins' nix-managed-* prefix.
+      systemd.tmpfiles.rules = [
+        "L+ ${hermesCfg.stateDir}/.hermes/plugins/holographic - ${hermesCfg.user} ${hermesCfg.group} - ${inputs.hermes-holographic}"
+      ];
 
       # Defense-in-depth on top of the module baseline (which already sets
       # NoNewPrivileges, ProtectSystem=strict, PrivateTmp): drop all capabilities
