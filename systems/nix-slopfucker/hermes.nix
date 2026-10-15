@@ -239,12 +239,6 @@ in {
       ...
     }: let
       hermesCfg = config.services.hermes-agent;
-      holographicPlugin = pkgs.fetchFromGitHub {
-        owner = "itpartypattaya";
-        repo = "hermes-plugin-holographic";
-        rev = "a6d009315bc72a7c4e68d6a0e60a6eeed68080fd";
-        hash = "sha256-JkHG1Rmb+5H3d/jpMrpQ1x8H8b1kgc+QorV4uQXCKaM=";
-      };
     in {
       imports = [
         inputs.hermes-agent.nixosModules.default
@@ -408,9 +402,12 @@ in {
             engine = "lcm";
           };
           lcm.context_threshold = 0.70;
-          plugins.enabled = [
-            "hermes-lcm"
-          ];
+          plugins = {
+            enabled = [
+              "hermes-lcm"
+            ];
+            hermes-memory-store.embeddings = "off";
+          };
           memory = {
             memory_enabled = true;
             user_profile_enabled = true;
@@ -509,7 +506,7 @@ in {
 
       # The memory loader requires the provider name, not extraPlugins' nix-managed-* prefix.
       systemd.tmpfiles.rules = [
-        "L+ ${hermesCfg.stateDir}/.hermes/plugins/holographic - ${hermesCfg.user} ${hermesCfg.group} - ${holographicPlugin}"
+        "L+ ${hermesCfg.stateDir}/.hermes/plugins/holographic - ${hermesCfg.user} ${hermesCfg.group} - ${inputs.hermes-holographic}"
       ];
 
       # Defense-in-depth on top of the module baseline (which already sets
