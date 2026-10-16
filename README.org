@@ -15,6 +15,11 @@ Initial nixos configs. I don't really know what I'm doing.
 + ~nix fmt~ to format entire flake using configured formatter (alejandra)
 + Docker containers are run via Arion, which generates and runs (via systemd units) docker-compose files
 
+** Maintenance tools
+
+[[file:scripts/README.md][Python maintenance tools]], managed with uv and packaged through devenv/uv2nix.
+The portrait command is installed only on ~nix-media-docker~; run ~jellyfin-people-images --help~ there.
+
 ** Proxmox
 *** Generate a Proxmox LXC CT template
 #+BEGIN_SRC sh
