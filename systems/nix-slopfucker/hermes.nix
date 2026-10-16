@@ -239,6 +239,7 @@ in {
       ...
     }: let
       hermesCfg = config.services.hermes-agent;
+      tuiGatewayBootstrap = inputs.hermes-agent + "/ui-tui/scripts/gateway_bootstrap.py";
     in {
       imports = [
         inputs.hermes-agent.nixosModules.default
@@ -374,6 +375,19 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
+
+        # Gateway-based TUI revisions need a helper omitted from the Nix package.
+        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old:
+          lib.optionalAttrs (builtins.pathExists tuiGatewayBootstrap) {
+            postInstall =
+              (old.postInstall or "")
+              + ''
+                install -Dm644 ${tuiGatewayBootstrap} \
+                  "$out/share/hermes-tui-python/ui-tui/scripts/gateway_bootstrap.py"
+                wrapProgram "$out/bin/hermes" \
+                  --set HERMES_PYTHON_SRC_ROOT "$out/share/hermes-tui-python"
+              '';
+          });
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
         # TUI wrapper and the gateway share one state dir.
