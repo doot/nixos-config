@@ -1,36 +1,13 @@
 {
   "nodes": {
-    "claude-code-nix": {
-      "inputs": {
-        "nixpkgs": [
-          "devenv-priv",
-          "devenv-base",
-          "nixpkgs"
-        ],
-        "systems": "systems"
-      },
-      "locked": {
-        "lastModified": 1791736119,
-        "narHash": "sha256-e6V9dNQEfoJu1MPHb6ALx3ZJIWUOp8dj2Sn/NYgMJ54=",
-        "owner": "sadjow",
-        "repo": "claude-code-nix",
-        "rev": "7a91b64f9378dcff2180dc35b9ba033754d93b0a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "sadjow",
-        "repo": "claude-code-nix",
-        "type": "github"
-      }
-    },
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1791917453,
-        "narHash": "sha256-BuVZNLxDPisddnzyzUpfzkJaCuKVDAKSG/Gkmrj3NA8=",
+        "lastModified": 1792314268,
+        "narHash": "sha256-4kSsl2iB/CEzeh2bxqHMXU97pkU8z89F/GfTisuPMQA=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "30ef5a2458f270574726efe3574e5eb7e731f647",
+        "rev": "a86a087d250cbae59adb95627bc4aa3069a87e6c",
         "type": "github"
       },
       "original": {
@@ -57,27 +34,6 @@
         "owner": "doot",
         "repo": "devenv-base",
         "type": "github"
-      }
-    },
-    "devenv-priv": {
-      "inputs": {
-        "claude-code-nix": "claude-code-nix",
-        "devenv-base": [
-          "devenv-base"
-        ]
-      },
-      "locked": {
-        "lastModified": 1791828398,
-        "narHash": "sha256-ucgZYor45nKFnLNBebxm8aHlc+XB3ArZrBgmjknFDuw=",
-        "ref": "refs/heads/main",
-        "rev": "3b98e8b906aa5766e5b152df95acf8523a76426a",
-        "revCount": 21,
-        "type": "git",
-        "url": "ssh://git@github.com/doot/devenv-priv"
-      },
-      "original": {
-        "type": "git",
-        "url": "ssh://git@github.com/doot/devenv-priv"
       }
     },
     "flake-compat": {
@@ -158,7 +114,6 @@
       "inputs": {
         "devenv": "devenv",
         "devenv-base": "devenv-base",
-        "devenv-priv": "devenv-priv",
         "git-hooks": [
           "devenv-base",
           "git-hooks"
@@ -167,21 +122,6 @@
           "devenv-base",
           "nixpkgs"
         ]
-      }
-    },
-    "systems": {
-      "locked": {
-        "lastModified": 1791244623,
-        "narHash": "sha256-uuanbkFk8a313Zfrxdcz8Us/yQtaxNnKJtX8v0ZPpd8=",
-        "owner": "nix-systems",
-        "repo": "default",
-        "rev": "d36eeed142f88b5a636f2e3856a53c61654cf29b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-systems",
-        "repo": "default",
-        "type": "github"
       }
     }
   },
