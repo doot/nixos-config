@@ -13,8 +13,8 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   nix.settings = {
-    max-jobs = 2;
-    cores = 2;
+    max-jobs = 1;
+    cores = 1;
   };
 
   environment.systemPackages = with pkgs; [
