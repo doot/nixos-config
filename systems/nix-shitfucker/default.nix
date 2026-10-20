@@ -90,7 +90,7 @@
       enable = true;
       hostName = "nc.nmd.jhauschildt.com";
       # database.createLocally = true;
-      package = pkgs.nextcloud34;
+      package = pkgs.nextcloud35;
       config = {
         # dbtype = "pgsql";
         dbtype = "sqlite";
