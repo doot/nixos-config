@@ -94,7 +94,6 @@
       config = {
         # dbtype = "pgsql";
         dbtype = "sqlite";
-        adminpassFile = "/home/doot/secret_test/nextcloud/admin-pass";
       };
     };
   };
