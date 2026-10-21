@@ -77,6 +77,16 @@ in {
             default = "";
             description = "Extra nginx config for the location block";
           };
+          replaceForwardedHeaders = lib.mkOption {
+            type = lib.types.bool;
+            default = false;
+            description = "Replace client forwarding headers when nginx is the sole ingress proxy";
+          };
+          allowAddresses = lib.mkOption {
+            type = lib.types.listOf (lib.types.strMatching "[0-9a-fA-F.:/]+");
+            default = [];
+            description = "Allowed client IPs or CIDRs; empty permits all clients";
+          };
           extraLocations = lib.mkOption {
             type =
               lib.types.addCheck
@@ -115,13 +125,27 @@ in {
               inherit (proxy) default;
               useACMEHost = fqdn;
               forceSSL = true;
+              extraConfig = lib.optionalString (proxy.allowAddresses != []) (
+                lib.concatMapStringsSep "\n" (address: "allow ${address};") proxy.allowAddresses
+                + "\ndeny all;"
+              );
               locations =
                 proxy.extraLocations
                 // {
                   "/" = {
                     proxyPass = "${proxy.proxyPassHost}:${toString proxy.port}";
                     proxyWebsockets = true;
-                    inherit (proxy) extraConfig;
+                    recommendedProxySettings = !proxy.replaceForwardedHeaders && config.services.nginx.recommendedProxySettings;
+                    extraConfig =
+                      lib.optionalString proxy.replaceForwardedHeaders ''
+                        proxy_set_header Host $host;
+                        proxy_set_header X-Real-IP $remote_addr;
+                        proxy_set_header X-Forwarded-For $remote_addr;
+                        proxy_set_header X-Forwarded-Proto $scheme;
+                        proxy_set_header X-Forwarded-Host $host;
+                        proxy_set_header X-Forwarded-Server $hostname;
+                      ''
+                      + proxy.extraConfig;
                   };
                 };
             };

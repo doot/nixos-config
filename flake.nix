@@ -64,6 +64,11 @@
       url = "github:NousResearch/hermes-agent";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    hermes-holographic = {
+      url = "github:itpartypattaya/hermes-plugin-holographic";
+      flake = false;
+    };
   };
 
   outputs = {

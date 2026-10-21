@@ -12,6 +12,11 @@
   system.stateVersion = "26.05";
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  nix.settings = {
+    max-jobs = 1;
+    cores = 1;
+  };
+
   environment.systemPackages = with pkgs; [
     inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default
     github-cli

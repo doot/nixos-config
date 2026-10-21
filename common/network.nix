@@ -6,6 +6,8 @@ let
 in rec {
   inherit domain;
 
+  localClientCidrs = ["127.0.0.1/32" "::1/128" "192.168.1.0/24"];
+
   hosts = {
     nix-media-docker = {
       shortname = "nmd";
