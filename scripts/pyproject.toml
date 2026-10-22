@@ -1,0 +1,51 @@
+[project]
+name = "homelab-tools"
+version = "0.1.0"
+description = "Homelab maintenance tools"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[project.scripts]
+jellyfin-people-images = "homelab_tools.jellyfin_people_images:cli"
+
+[build-system]
+requires = ["uv_build>=0.12.22,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+files = ["$MYPY_CONFIG_FILE_DIR/src", "$MYPY_CONFIG_FILE_DIR/tests"]
+
+[tool.ruff]
+line-length = 160
+
+[tool.ruff.lint]
+extend-select = [
+    "A",
+    "ARG",
+    "B",
+    "C4",
+    "D",
+    "DTZ",
+    "E",
+    "ERA",
+    "EXE",
+    "F",
+    "I",
+    "N",
+    "PERF",
+    "RUF013",
+    "S",
+    "TC",
+    "UP",
+    "W",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/homelab_tools/__init__.py" = ["D104"]
+"tests/**/*.py" = ["S101"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
