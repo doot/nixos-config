@@ -191,10 +191,11 @@ in {
 
     audiobookshelf = {
       enable = true;
+      package = pkgs.unstable-small.audiobookshelf;
     };
 
     karakeep = {
-      package = pkgs.unstable.karakeep;
+      package = pkgs.unstable-small.karakeep;
       enable = true;
       browser.enable = true;
       meilisearch.enable = true;
@@ -233,17 +234,17 @@ in {
       enable = true;
       mediaDir = "/media-nfs/pinchflat/";
       secretsFile = "/home/doot/secret_test/pinchflat/env";
-      package = pkgs.unstable.pinchflat-ngx;
+      package = pkgs.unstable-small.pinchflat-ngx;
     };
 
     actual = {
       enable = true;
       settings.port = 9345;
-      package = pkgs.unstable.actual-server;
+      package = pkgs.unstable-small.actual-server;
     };
 
     jellyfin = {
-      package = pkgs.unstable.jellyfin;
+      package = pkgs.unstable-small.jellyfin;
       enable = true;
       cacheDir = "/plex/jellyfin/cache";
       # metadata dir is manually configured to "/plex/jellyfin/metadata", but cannot be configured in the service.
@@ -256,7 +257,7 @@ in {
 
     seerr = {
       enable = true;
-      package = pkgs.unstable.seerr;
+      package = pkgs.unstable-small.seerr;
     };
   };
 

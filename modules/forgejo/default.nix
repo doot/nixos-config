@@ -13,14 +13,14 @@ in {
   };
   config = lib.mkIf cfg.enable {
     environment = {
-      systemPackages = with pkgs; [
+      systemPackages = with pkgs.unstable-small; [
         forgejo-cli
       ];
     };
     services = {
       forgejo = {
         enable = true;
-        package = pkgs.unstable.forgejo;
+        package = pkgs.unstable-small.forgejo;
         database.type = "sqlite3";
         # # Enable support for Git Large File Storage
         # lfs.enable = false;

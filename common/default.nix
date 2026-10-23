@@ -314,7 +314,7 @@ in {
 
     netbird = {
       enable = true;
-      package = pkgs.unstable.netbird;
+      package = pkgs.unstable-small.netbird;
     };
 
     # TODO: Re-enable once eternal-terminal is fixed upstream and stops breaking the build

@@ -54,6 +54,7 @@
       network = import ../../common/network.nix;
     in {
       enable = true;
+      package = pkgs.unstable-small.immich;
       host = network.ips.nix-shitfucker;
       openFirewall = true;
       mediaLocation = "/mnt/pictures-nfs/immich/";
@@ -124,6 +125,7 @@
 
     dms-shell = {
       enable = true;
+      package = pkgs.unstable-small.dms-shell;
       systemd.enable = true;
     };
   };

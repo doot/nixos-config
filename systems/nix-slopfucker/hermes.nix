@@ -275,7 +275,7 @@ in {
         # Leaf system: it does not manage the host firewall.
         firewall.enable = lib.mkForce false;
       };
-      environment.systemPackages = with pkgs; [
+      environment.systemPackages = with pkgs.unstable-small; [
         github-cli
         forgejo-cli
         alejandra

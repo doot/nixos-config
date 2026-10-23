@@ -39,7 +39,7 @@ in {
   config = lib.mkIf cfg.enable {
     services.alloy = {
       enable = true;
-      package = pkgs.unstable.grafana-alloy;
+      package = pkgs.unstable-small.grafana-alloy;
       extraFlags = [
         "--server.http.listen-addr=0.0.0.0:${toString cfg.alloyPort}"
         "--disable-reporting"

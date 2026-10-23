@@ -30,18 +30,18 @@ in {
   };
   config = lib.mkIf cfg.enable {
     environment = {
-      systemPackages = with pkgs;
+      systemPackages =
         [
-          lazygit
-          unzip
-          unstable.nodejs_26
-          tree-sitter
-          stylua
-          luarocks
-          gh
-          nil
+          pkgs.unstable-small.lazygit
+          pkgs.unstable-small.unzip
+          pkgs.unstable.nodejs_26
+          pkgs.unstable-small.tree-sitter
+          pkgs.unstable-small.stylua
+          pkgs.unstable-small.luarocks
+          pkgs.unstable-small.gh
+          pkgs.unstable-small.nil
         ]
-        ++ lib.optional cfg.imageSupport ueberzugpp;
+        ++ lib.optional cfg.imageSupport pkgs.unstable.ueberzugpp;
     };
     programs = {
       neovim = {

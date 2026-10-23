@@ -46,7 +46,7 @@ in {
 
   services = {
     grafana = {
-      package = pkgs.unstable.grafana;
+      package = pkgs.unstable-small.grafana;
       enable = true;
       # TODO Temorarily disable declarative plugins to try out a few plugins which are not available in nixpkgs
       # declarativePlugins = with pkgs.grafanaPlugins; [
@@ -113,7 +113,7 @@ in {
       port = 9001;
       retentionTime = "1y";
 
-      package = pkgs.unstable.prometheus;
+      package = pkgs.unstable-small.prometheus;
 
       exporters = {
         pve = {
@@ -308,7 +308,7 @@ in {
 
     loki = {
       enable = true;
-      package = pkgs.unstable.grafana-loki;
+      package = pkgs.unstable-small.grafana-loki;
       configuration = {
         auth_enabled = false;
         analytics.reporting_enabled = false;

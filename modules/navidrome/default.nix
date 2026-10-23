@@ -14,7 +14,7 @@ in {
     services = {
       navidrome = {
         enable = true;
-        package = pkgs.unstable.navidrome;
+        package = pkgs.unstable-small.navidrome;
         settings = {
           MusicFolder = "/media-nfs/Music_lidarr";
         };

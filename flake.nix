@@ -19,8 +19,9 @@
   };
 
   inputs = {
-    nixpkgs.url = "https://channels.nixos.org/nixos-26.05-small/nixexprs.tar.xz";
-    nixpkgs-unstable.url = "https://channels.nixos.org/nixos-unstable-small/nixexprs.tar.xz";
+    nixpkgs.url = "https://channels.nixos.org/nixos-26.05/nixexprs.tar.xz";
+    nixpkgs-unstable.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz";
+    nixpkgs-unstable-small.url = "https://channels.nixos.org/nixos-unstable-small/nixexprs.tar.xz";
 
     # Keep upstream's dependency pins for ABI compatibility and cache hits.
     devenv.url = "github:cachix/devenv";
@@ -62,7 +63,7 @@
 
     hermes-agent = {
       url = "github:NousResearch/hermes-agent";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.nixpkgs.follows = "nixpkgs-unstable-small";
     };
 
     hermes-holographic = {
@@ -75,6 +76,7 @@
     self,
     nixpkgs,
     nixpkgs-unstable,
+    nixpkgs-unstable-small,
     arion,
     priv,
     home-manager,
@@ -94,6 +96,10 @@
       nixpkgs.overlays = [
         (_: prev: {
           unstable = import nixpkgs-unstable {
+            inherit (prev.stdenv.hostPlatform) system;
+            inherit (prev) config;
+          };
+          unstable-small = import nixpkgs-unstable-small {
             inherit (prev.stdenv.hostPlatform) system;
             inherit (prev) config;
           };
