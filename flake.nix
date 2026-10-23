@@ -37,7 +37,7 @@
       # I am not sure why this broke, but for now setting the url to the github repo + directory with the sub flake seems to work :/
       # url = "path:./priv";
       url = "github:doot/nixos-config?dir=priv";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     home-manager = {

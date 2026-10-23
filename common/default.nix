@@ -136,7 +136,7 @@
 in {
   environment = {
     systemPackages = with pkgs; [
-      alejandra
+      unstable-small.alejandra
       bat
       cmake
       delta
@@ -144,7 +144,7 @@ in {
       eza
       fd
       file
-      unstable.fzf
+      unstable-small.fzf
       gnumake
       htop
       jq
@@ -159,7 +159,7 @@ in {
       nvd
       ripgrep
       tmux
-      vim
+      unstable.vim
       inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default.headless
       inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default.terminfo
       wget

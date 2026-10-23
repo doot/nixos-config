@@ -17,7 +17,7 @@
     waypaper
     wl-clipboard
     wofi
-    immich-cli
+    unstable-small.immich-cli
 
     # are these necessary?
     meson
@@ -91,7 +91,8 @@
       enable = true;
       hostName = "nc.nmd.jhauschildt.com";
       # database.createLocally = true;
-      package = pkgs.nextcloud35;
+      package = pkgs.unstable-small.nextcloud35;
+      phpPackage = pkgs.unstable-small.pkgs.php84;
       config = {
         # dbtype = "pgsql";
         dbtype = "sqlite";
