@@ -126,7 +126,7 @@
 
     dms-shell = {
       enable = true;
-      package = pkgs.unstable-small.dms-shell;
+      package = pkgs.unstable-small.dux-shell;
       systemd.enable = true;
     };
   };
