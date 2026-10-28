@@ -239,6 +239,11 @@ in {
       ...
     }: let
       hermesCfg = config.services.hermes-agent;
+      copilotPlugin = pkgs.applyPatches {
+        name = "hermes-github-copilot";
+        src = "${inputs.hermes-labs-plugins}/github-copilot";
+        patches = [./copilot-token-no-redirect.patch];
+      };
       # FastMCP 3 requires MCP SDK 1; keep the override local to this server.
       mcpNixos = pkgs.mcp-nixos.override {
         python3Packages =
@@ -415,6 +420,7 @@ in {
           lcm.context_threshold = 0.70;
           plugins = {
             enabled = [
+              "github-copilot"
               "hermes-lcm"
             ];
             hermes-memory-store.embeddings = "off";
@@ -515,8 +521,9 @@ in {
         ];
       };
 
-      # The memory loader requires the provider name, not extraPlugins' nix-managed-* prefix.
+      # Memory loading and migration checks require canonical plugin names.
       systemd.tmpfiles.rules = [
+        "L+ ${hermesCfg.stateDir}/.hermes/plugins/github-copilot - ${hermesCfg.user} ${hermesCfg.group} - ${copilotPlugin}"
         "L+ ${hermesCfg.stateDir}/.hermes/plugins/holographic - ${hermesCfg.user} ${hermesCfg.group} - ${inputs.hermes-holographic}"
       ];
 

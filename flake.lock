@@ -317,6 +317,22 @@
         "type": "github"
       }
     },
+    "hermes-labs-plugins": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793005508,
+        "narHash": "sha256-Z+mJyWn0bFuuQuHB3doI3XqXs3hDcpL6g/gLkaaSNwA=",
+        "owner": "NousResearch",
+        "repo": "hermes-labs-plugins",
+        "rev": "346cfe972f72b6a966e84c1004cf8742554b193d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NousResearch",
+        "repo": "hermes-labs-plugins",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -653,6 +669,7 @@
         "devenv": "devenv",
         "hermes-agent": "hermes-agent",
         "hermes-holographic": "hermes-holographic",
+        "hermes-labs-plugins": "hermes-labs-plugins",
         "home-manager": "home-manager_2",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
         "nixpkgs": "nixpkgs_2",
