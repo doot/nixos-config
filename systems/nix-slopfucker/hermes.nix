@@ -383,6 +383,7 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
+        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal;
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
         # TUI wrapper and the gateway share one state dir.
