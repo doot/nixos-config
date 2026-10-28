@@ -384,6 +384,7 @@ in {
       services.hermes-agent = {
         enable = true;
         package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal;
+        extraDependencyGroups = ["matrix"];
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
         # TUI wrapper and the gateway share one state dir.
