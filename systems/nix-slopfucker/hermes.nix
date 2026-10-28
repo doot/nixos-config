@@ -239,6 +239,15 @@ in {
       ...
     }: let
       hermesCfg = config.services.hermes-agent;
+      # FastMCP 3 requires MCP SDK 1; keep the override local to this server.
+      mcpNixos = pkgs.mcp-nixos.override {
+        python3Packages =
+          (pkgs.python3.override {
+            packageOverrides = _: prev: {
+              mcp = prev.mcp_1;
+            };
+          }).pkgs;
+      };
     in {
       imports = [
         inputs.hermes-agent.nixosModules.default
@@ -301,7 +310,7 @@ in {
         btop
         dig
         iperf3
-        mcp-nixos
+        mcpNixos
         shellcheck
         lua-language-server
         basedpyright
@@ -438,7 +447,7 @@ in {
 
         mcpServers = {
           nixos = {
-            command = "${pkgs.mcp-nixos}/bin/mcp-nixos";
+            command = "${mcpNixos}/bin/mcp-nixos";
             args = ["--"];
           };
           # TODO: Re-enable after memory issues are sorted out. Each spawned process consumes 4-8 GB of memory, even before it does anything...
