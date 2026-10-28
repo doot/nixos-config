@@ -383,6 +383,8 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
+        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal;
+        extraDependencyGroups = ["matrix"];
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
         # TUI wrapper and the gateway share one state dir.
@@ -413,6 +415,7 @@ in {
           lcm.context_threshold = 0.70;
           plugins = {
             enabled = [
+              "github-copilot"
               "hermes-lcm"
             ];
             hermes-memory-store.embeddings = "off";
@@ -513,8 +516,9 @@ in {
         ];
       };
 
-      # The memory loader requires the provider name, not extraPlugins' nix-managed-* prefix.
+      # Memory loading and migration checks require canonical plugin names.
       systemd.tmpfiles.rules = [
+        "L+ ${hermesCfg.stateDir}/.hermes/plugins/github-copilot - ${hermesCfg.user} ${hermesCfg.group} - ${inputs.hermes-labs-plugins}/github-copilot"
         "L+ ${hermesCfg.stateDir}/.hermes/plugins/holographic - ${hermesCfg.user} ${hermesCfg.group} - ${inputs.hermes-holographic}"
       ];
 

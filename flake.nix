@@ -70,6 +70,11 @@
       url = "github:itpartypattaya/hermes-plugin-holographic";
       flake = false;
     };
+
+    hermes-labs-plugins = {
+      url = "github:NousResearch/hermes-labs-plugins";
+      flake = false;
+    };
   };
 
   outputs = {
