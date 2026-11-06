@@ -56,7 +56,8 @@
 
   # Private (RFC1918 / link-local / CGNAT) IPv4 ranges the agent must NOT reach,
   # EXCEPT the allowlisted hosts above. Enforced host-side in the hermes-egress
-  # chain on the container's veth. IPv6 is not provisioned for the container.
+  # chain on the container's veth. Its unprovisioned IPv6 is blocked in both
+  # INPUT and FORWARD; host IPv6 on other interfaces is unchanged.
   lanDenyCidrs = [
     "10.0.0.0/8"
     "172.16.0.0/12"
@@ -65,22 +66,10 @@
     "100.64.0.0/10" # CGNAT
   ];
 
-  # Body of the `hermes-egress` iptables chain: allow the explicit hosts and
-  # port-scoped services first, then deny the private ranges. Evaluated
-  # top-to-bottom, so allow wins over deny; anything not matched falls through
-  # to the internet.
-  egressRules = lib.concatStringsSep "\n" (
-    (map (host: "iptables -A hermes-egress -d ${host} -j ACCEPT") allowedInternalHosts)
-    ++ (lib.concatMap (
-        svc:
-          map (
-            port: "iptables -A hermes-egress -d ${svc.host} -p tcp --dport ${toString port} -j ACCEPT"
-          )
-          svc.ports
-      )
-      allowedInternalServices)
-    ++ (map (cidr: "iptables -A hermes-egress -d ${cidr} -j DROP") lanDenyCidrs)
-  );
+  firewallCommands = import ./hermes-firewall.nix {
+    inherit lib vethHost hostAddress allowedInternalHosts allowedInternalServices lanDenyCidrs;
+    inherit (config.networking) enableIPv6;
+  };
 
   # Host↔container point-to-point veth (a /30 link, never forwarded → not LAN).
   # Both addresses are consumed by containers.hermes below (nixos-containers
@@ -629,40 +618,26 @@ in {
     };
 
     firewall = {
-      # Let the container reach the host's DNS stub on the veth (this is host
-      # INPUT, not LAN forwarding). DNS is the ONLY host service exposed.
-      interfaces.${vethHost} = {
-        allowedUDPPorts = [53];
-        allowedTCPPorts = [53];
-      };
-
-      # LAN isolation for the container's forwarded traffic, in a dedicated
-      # `hermes-egress` chain so the rule order is explicit and self-contained
-      # (no dependence on insertion position vs. the nat module's FORWARD jump):
-      # the chain is evaluated top-to-bottom — ACCEPT the allowlisted hosts,
-      # then DROP the private ranges, then fall through to internet. With
-      # allowedInternalHosts empty (default), the container reaches the internet
-      # and nothing on the LAN. Raw iptables because the typed extraForwardRules
-      # needs the nftables backend this host doesn't run (see PR notes).
-      # Verify after rebuild: `iptables -L hermes-egress -n`.
-      extraCommands = ''
-        # Keep routed ingress denied across firewall reloads and failures.
-        iptables -C FORWARD -o ${vethHost} -m conntrack ! --ctstate ESTABLISHED,RELATED -j DROP 2>/dev/null \
-          || iptables -I FORWARD 1 -o ${vethHost} -m conntrack ! --ctstate ESTABLISHED,RELATED -j DROP
-        # create-or-flush — idempotent across firewall reloads
-        iptables -N hermes-egress 2>/dev/null || iptables -F hermes-egress
-        ${egressRules}
-        # jump from FORWARD exactly once (guard against stacking on reload)
-        iptables -C FORWARD -i ${vethHost} -j hermes-egress 2>/dev/null \
-          || iptables -A FORWARD -i ${vethHost} -j hermes-egress
-      '';
-
-      extraStopCommands = ''
-        iptables -D FORWARD -i ${vethHost} -j hermes-egress 2>/dev/null || true
-        iptables -F hermes-egress 2>/dev/null || true
-        iptables -X hermes-egress 2>/dev/null || true
-      '';
+      # Keep confinement on stop/failure; only NixOS-owned NAT/filter chains stop.
+      # Install before NAT accepts, including the stop phase of native reload.
+      extraCommands = lib.mkBefore firewallCommands;
+      extraStopCommands = lib.mkBefore firewallCommands;
     };
+  };
+
+  assertions = [
+    {
+      assertion = config.networking.firewall.enable && config.networking.firewall.backend == "iptables";
+      message = "Hermes confinement requires the host iptables firewall.";
+    }
+  ];
+
+  # Cover failures before extraCommands, and refuse container boot if setup fails.
+  # Stopping the firewall also stops its dependent container; the policy remains.
+  systemd.services.firewall = {
+    preStart = firewallCommands;
+    before = ["container@hermes.service"];
+    requiredBy = ["container@hermes.service"];
   };
 
   environment.systemPackages = [

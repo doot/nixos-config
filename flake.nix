@@ -146,6 +146,7 @@
     checks.x86_64-linux = {
       hermes-webapp = import ./tests/hermes-webapp.nix {inherit inputs;};
       hermes-state-init = import ./tests/hermes-state-init.nix {inherit inputs;};
+      hermes-firewall = (import ./tests/hermes-firewall.nix {inherit inputs;}).check;
     };
 
     nixosConfigurations = {
