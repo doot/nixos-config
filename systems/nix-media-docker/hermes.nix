@@ -17,11 +17,6 @@
     access_log /var/log/nginx/hermes-webapp.access.log hermes_webapp;
   '';
 in {
-  programs.ssh.knownHosts.hermes-webapp = {
-    hostNames = [slop.ip slop.fqdn];
-    publicKey = slop.sshHostKey;
-  };
-
   systemd.services.hermes-webapp-tunnel = {
     description = "Encrypted Hermes webapp upstream";
     wantedBy = ["multi-user.target"];

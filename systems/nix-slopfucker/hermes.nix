@@ -16,8 +16,7 @@
   hermesGid = 992;
 
   # nmd's fqdn — fronts the agent's observability endpoints (Grafana/Prom/Loki).
-  nmd = (import ../../common/network.nix).hosts.nix-media-docker;
-  nmdFqdn = nmd.fqdn;
+  nmdFqdn = (import ../../common/network.nix).hosts.nix-media-docker.fqdn;
 
   # ── The agent's git identity ───────────────────────────────────────────────
   # Path INSIDE the container where the private SSH key is mounted
@@ -172,9 +171,6 @@ in {
         isSystemUser = true;
         group = "hermes-webapp-tunnel";
         hashedPassword = "*";
-        openssh.authorizedKeys.keys = [
-          ''from="${nmd.ip}",restrict,port-forwarding,permitopen="${localAddress}:${webappPort}" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBAhndCg5l4hdliAVtmVmsz8gVXhkZGnw/jbdEYgB3Z2 hermes-webapp-tunnel@nmd''
-        ];
       };
     };
   };

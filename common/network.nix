@@ -23,7 +23,6 @@ in rec {
       shortname = "slop";
       ip = "192.168.1.90";
       fqdn = "slop.${domain}";
-      sshHostKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC/+Z9z5S05zGDi7KadDVa3ze6hRFLugClMMSdl/FLt7 root@nix-slopfucker";
     };
     synology = {
       shortname = "sh2"; # formerly referred to as "shitholder"
