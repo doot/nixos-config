@@ -1,2 +1,4 @@
 # Nix interpolation is parsed as a literal short hostname.
 ^https://hermes/
+# nginx Unix-socket upstreams are not HTTP hosts.
+^http://unix/

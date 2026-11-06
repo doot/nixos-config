@@ -11,12 +11,18 @@
   port = toString webapp.port;
   hostname = lib.removePrefix "https://" webapp.public_url;
   slop = network.hosts.nix-slopfucker;
+  tunnelGroup = "hermes-webapp";
+  runtimeDirectory = "hermes-webapp-tunnel";
+  socket = "/run/${runtimeDirectory}/backend.sock";
   logConfig = ''
     # Request errors can include query-string WebSocket credentials.
     error_log /dev/null;
     access_log /var/log/nginx/hermes-webapp.access.log hermes_webapp;
   '';
 in {
+  users.groups.${tunnelGroup} = {};
+  users.users.nginx.extraGroups = [tunnelGroup];
+
   systemd.services.hermes-webapp-tunnel = {
     description = "Encrypted Hermes webapp upstream";
     wantedBy = ["multi-user.target"];
@@ -26,6 +32,10 @@ in {
     startLimitIntervalSec = 0;
     serviceConfig = {
       DynamicUser = true;
+      Group = tunnelGroup;
+      RuntimeDirectory = runtimeDirectory;
+      RuntimeDirectoryMode = "0750";
+      UMask = "0077";
       LoadCredential = ["identity:/run/secrets/hermes-webapp-tunnel-key"];
       ExecStart = lib.concatStringsSep " " [
         "${pkgs.openssh}/bin/ssh -F /dev/null -NT"
@@ -35,7 +45,8 @@ in {
         "-o HostKeyAlgorithms=ssh-ed25519 -o UpdateHostKeys=no -o ForwardAgent=no"
         "-o ExitOnForwardFailure=yes -o ConnectTimeout=10"
         "-o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o GatewayPorts=no"
-        "-L 127.0.0.1:${port}:${container.localAddress}:${port}"
+        "-o StreamLocalBindMask=0117 -o StreamLocalBindUnlink=yes"
+        "-L ${socket}:${container.localAddress}:${port}"
         "hermes-webapp-tunnel@${slop.ip}"
       ];
       Restart = "always";
@@ -57,13 +68,23 @@ in {
   services.nginx = {
     commonHttpConfig = ''
       log_format hermes_webapp '$remote_addr [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent';
+      map $http_origin $hermes_webapp_origin_allowed {
+        default 0;
+        "" 1;
+        "${webapp.public_url}" 1;
+      }
     '';
     virtualHosts = {
       ${hostname} = {
         # The automatic redirect server cannot inherit this vhost's log policy.
         forceSSL = lib.mkForce false;
         onlySSL = true;
-        extraConfig = logConfig;
+        basicAuthFile = "/run/secrets/hermes-webapp-nginx";
+        extraConfig =
+          logConfig
+          + ''
+            satisfy all;
+          '';
       };
       hermes-http = {
         serverName = hostname;
@@ -76,11 +97,14 @@ in {
   roles.nginx-proxy.proxies = [
     {
       name = "hermes";
-      inherit (webapp) port;
+      unixSocket = socket;
       allowAddresses = network.localClientCidrs;
       replaceForwardedHeaders = true;
       extraConfig = ''
         if ($host != ${hostname}) { return 444; }
+        if ($hermes_webapp_origin_allowed = 0) { return 403; }
+        proxy_set_header Authorization "";
+        proxy_set_header Proxy-Authorization "";
         proxy_set_header Forwarded "";
         proxy_set_header X-Forwarded-Prefix "";
         proxy_buffering off;
