@@ -3,11 +3,11 @@
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1793199252,
-        "narHash": "sha256-LRgdAdMHL3uIX+kix/oyMzG+gMxzSYOzLrrRaoZthog=",
+        "lastModified": 1793731702,
+        "narHash": "sha256-WlVNaWXVTYaGBNey2Z+20sY1lT7BvzJEECb+VlDDdk0=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "0d6c556e5f862c14a75a543e2ee4fdb7acc005ad",
+        "rev": "9655d320b8f9df74dbecf681f52a7334574606c3",
         "type": "github"
       },
       "original": {
@@ -23,11 +23,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1793237820,
-        "narHash": "sha256-5kq6PpkCeMSPwVqfuKWHpVT+SEsAGEf2RcXwX8z9+tg=",
+        "lastModified": 1793942716,
+        "narHash": "sha256-ogCuvBsem5dOHRvb07mWmYTjNII7LBBwM448nt1GRW8=",
         "owner": "doot",
         "repo": "devenv-base",
-        "rev": "3ada28be2850e81795d105ed48feb1853ee314c2",
+        "rev": "6c32329504d1c03b4c8fa8b9213f3a028b4c9b12",
         "type": "github"
       },
       "original": {
@@ -77,11 +77,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791909798,
-        "narHash": "sha256-VAhpCOmrun/KXimYfR8NM88bciKCui7CqHHhThSzgag=",
+        "lastModified": 1793686154,
+        "narHash": "sha256-Zb/0L3soxrkfcrywpfp0J++0WFLB3tzh0Xtx9up+VNc=",
         "owner": "cachix",
         "repo": "git-hooks.nix",
-        "rev": "1ba1dbfe28738c9a71c266be6efa5b89e75491a9",
+        "rev": "204b6977e00caac19e2313015a598543ca7be150",
         "type": "github"
       },
       "original": {
@@ -99,11 +99,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791909798,
-        "narHash": "sha256-VAhpCOmrun/KXimYfR8NM88bciKCui7CqHHhThSzgag=",
+        "lastModified": 1793686154,
+        "narHash": "sha256-Zb/0L3soxrkfcrywpfp0J++0WFLB3tzh0Xtx9up+VNc=",
         "owner": "cachix",
         "repo": "git-hooks.nix",
-        "rev": "1ba1dbfe28738c9a71c266be6efa5b89e75491a9",
+        "rev": "204b6977e00caac19e2313015a598543ca7be150",
         "type": "github"
       },
       "original": {
@@ -205,11 +205,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "path": "/nix/store/ybng89wy8d8rakgxh0pqd0i52l8fl0c2-source",
+        "path": "/nix/store/473vswgg87msq5wi7wkzklxy750a9rbs-source",
         "type": "path"
       },
       "original": {
-        "path": "/nix/store/ybng89wy8d8rakgxh0pqd0i52l8fl0c2-source",
+        "path": "/nix/store/473vswgg87msq5wi7wkzklxy750a9rbs-source",
         "type": "path"
       }
     }
