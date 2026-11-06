@@ -143,7 +143,10 @@
     # Set the formatter for `nix fmt`
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
 
-    checks.x86_64-linux.hermes-webapp = import ./tests/hermes-webapp.nix {inherit inputs;};
+    checks.x86_64-linux = {
+      hermes-webapp = import ./tests/hermes-webapp.nix {inherit inputs;};
+      hermes-state-init = import ./tests/hermes-state-init.nix {inherit inputs;};
+    };
 
     nixosConfigurations = {
       ${host_nmd} = mkHost {

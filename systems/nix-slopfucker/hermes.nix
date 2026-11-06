@@ -284,6 +284,7 @@ in {
     in {
       imports = [
         inputs.hermes-agent.nixosModules.default
+        ./hermes-state-init.nix
         inputs.priv.nixosModules.hermesPriv
 
         # The container intentionally does not inherit anything from the host,
