@@ -1,0 +1,2 @@
+# Nix interpolation is parsed as a literal short hostname.
+^https://hermes/

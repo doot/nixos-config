@@ -16,7 +16,8 @@
   hermesGid = 992;
 
   # nmd's fqdn — fronts the agent's observability endpoints (Grafana/Prom/Loki).
-  nmdFqdn = (import ../../common/network.nix).hosts.nix-media-docker.fqdn;
+  nmd = (import ../../common/network.nix).hosts.nix-media-docker;
+  nmdFqdn = nmd.fqdn;
 
   # ── The agent's git identity ───────────────────────────────────────────────
   # Path INSIDE the container where the private SSH key is mounted
@@ -89,6 +90,7 @@
   localAddress = "10.100.0.2";
   externalInterface = "ens18";
   vethHost = "ve-hermes";
+  webappPort = toString config.containers.hermes.config.services.hermes-agent.settings.webapp.port;
 
   # Forwarded into the container so the TUI can identify the terminal and enable
   # modified-key reporting (Shift+Enter). Every hop must cooperate: the client
@@ -152,17 +154,52 @@ in {
   # homeMode 2770 (setgid + group-rwx) is essential: the default 0700 would lock
   # the hermes group out, so users like doot could not access the shared state.
   users = {
-    groups.hermes.gid = hermesGid;
-    users.hermes = {
-      isSystemUser = true;
-      uid = hermesUid;
-      group = "hermes";
-      home = "/var/lib/hermes";
-      createHome = true;
-      homeMode = "2770";
+    groups = {
+      hermes.gid = hermesGid;
+      hermes-webapp-tunnel = {};
     };
-    users.doot.extraGroups = ["hermes"];
+    users = {
+      hermes = {
+        isSystemUser = true;
+        uid = hermesUid;
+        group = "hermes";
+        home = "/var/lib/hermes";
+        createHome = true;
+        homeMode = "2770";
+      };
+      doot.extraGroups = ["hermes"];
+      hermes-webapp-tunnel = {
+        isSystemUser = true;
+        group = "hermes-webapp-tunnel";
+        hashedPassword = "*";
+        openssh.authorizedKeys.keys = [
+          ''from="${nmd.ip}",restrict,port-forwarding,permitopen="${localAddress}:${webappPort}" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBAhndCg5l4hdliAVtmVmsz8gVXhkZGnw/jbdEYgB3Z2 hermes-webapp-tunnel@nmd''
+        ];
+      };
+    };
   };
+
+  # Forwarding needs no session channel; reject shells, commands, and SFTP.
+  services.openssh.extraConfig = ''
+    Match User hermes-webapp-tunnel
+      AuthenticationMethods publickey
+      AuthorizedKeysFile /etc/ssh/authorized_keys.d/%u
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      AllowTcpForwarding local
+      AllowStreamLocalForwarding no
+      PermitOpen ${localAddress}:${webappPort}
+      PermitListen none
+      GatewayPorts no
+      AllowAgentForwarding no
+      X11Forwarding no
+      PermitTTY no
+      PermitUserRC no
+      PermitTunnel no
+      MaxSessions 0
+      ForceCommand ${pkgs.coreutils}/bin/false
+    Match all
+  '';
 
   # ── The agent runs ONLY inside this declarative container ─────────────────
   # The ~5 GB hermes uv2nix closure is excluded from the Proxmox IMAGE build in
@@ -403,7 +440,7 @@ in {
         settings = {
           # Hand-bumped: managed installs refuse the config writes that would
           # otherwise advance this on update.
-          _config_version = 50;
+          _config_version = 52;
 
           model = {
             provider = "copilot";
@@ -418,6 +455,14 @@ in {
               "github-copilot"
               "hermes-lcm"
             ];
+            disabled = [
+              "dashboard_auth/nous"
+              "dashboard_auth/self_hosted"
+              "dashboard_auth/session_token"
+              "dashboard_auth/drain"
+            ];
+            auto_apply = false;
+            auto_update_check_hours = 0;
             hermes-memory-store.embeddings = "off";
           };
           memory = {
@@ -440,7 +485,23 @@ in {
           };
           privacy.redact_pii = true;
           security.allow_lazy_installs = false;
-          dashboard.theme = "ember";
+          telemetry.shared_metrics = {
+            enabled = false;
+            send = false;
+          };
+          webapp = {
+            enabled = true;
+            host = "0.0.0.0";
+            port = 9120;
+            public_url = "https://hermes.${nmdFqdn}";
+          };
+          dashboard = {
+            theme = "ember";
+            # SSH opens the upstream connection from the host's veth address.
+            trusted_proxies = [hostAddress];
+            basic_auth.username = "admin";
+            session_token_auth.enabled = false;
+          };
           agent = {
             environment_hint = "You are running inside a locked-down NixOS container: no nix daemon, no package managers, and network access restricted to the internet only (no local network).";
             reasoning_effort = "xhigh";
@@ -588,6 +649,9 @@ in {
       # needs the nftables backend this host doesn't run (see PR notes).
       # Verify after rebuild: `iptables -L hermes-egress -n`.
       extraCommands = ''
+        # Keep routed ingress denied across firewall reloads and failures.
+        iptables -C FORWARD -o ${vethHost} -m conntrack ! --ctstate ESTABLISHED,RELATED -j DROP 2>/dev/null \
+          || iptables -I FORWARD 1 -o ${vethHost} -m conntrack ! --ctstate ESTABLISHED,RELATED -j DROP
         # create-or-flush — idempotent across firewall reloads
         iptables -N hermes-egress 2>/dev/null || iptables -F hermes-egress
         ${egressRules}
