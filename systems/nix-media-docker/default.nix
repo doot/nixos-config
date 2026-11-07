@@ -19,6 +19,7 @@ in {
   imports = [
     (modulesPath + "/virtualisation/proxmox-lxc.nix")
     ./hardware-configuration.nix # Include the results of the hardware scan.
+    ./hermes.nix
   ];
 
   environment.systemPackages = with pkgs; [

@@ -19,6 +19,11 @@ in rec {
       ip = "192.168.1.110";
       fqdn = "nsf.${domain}";
     };
+    nix-slopfucker = {
+      shortname = "slop";
+      ip = "192.168.1.90";
+      fqdn = "slop.${domain}";
+    };
     synology = {
       shortname = "sh2"; # formerly referred to as "shitholder"
       ip = "192.168.1.60";

@@ -64,8 +64,14 @@ in {
             description = "Subdomain name for the vhost";
           };
           port = lib.mkOption {
-            type = lib.types.either lib.types.int lib.types.str;
+            type = lib.types.nullOr (lib.types.either lib.types.int lib.types.str);
+            default = null;
             description = "Port to proxy to (int or string)";
+          };
+          unixSocket = lib.mkOption {
+            type = lib.types.nullOr lib.types.path;
+            default = null;
+            description = "Unix socket upstream, mutually exclusive with port";
           };
           proxyPassHost = lib.mkOption {
             type = lib.types.str;
@@ -108,6 +114,12 @@ in {
   };
   config = lib.mkMerge [
     (lib.mkIf cfg.enable {
+      assertions =
+        map (proxy: {
+          assertion = (proxy.port != null) != (proxy.unixSocket != null);
+          message = "nginx proxy ${proxy.name} must set exactly one of port or unixSocket";
+        })
+        cfg.proxies;
       networking.firewall.allowedTCPPorts = [80 443];
       services.nginx = {
         enable = true;
@@ -133,7 +145,10 @@ in {
                 proxy.extraLocations
                 // {
                   "/" = {
-                    proxyPass = "${proxy.proxyPassHost}:${toString proxy.port}";
+                    proxyPass =
+                      if proxy.unixSocket != null
+                      then "http://unix:${proxy.unixSocket}:"
+                      else "${proxy.proxyPassHost}:${toString proxy.port}";
                     proxyWebsockets = true;
                     recommendedProxySettings = !proxy.replaceForwardedHeaders && config.services.nginx.recommendedProxySettings;
                     extraConfig =
