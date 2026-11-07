@@ -37,11 +37,6 @@
 
   forgejoSshHost = (import ../../common/network.nix).hosts.nix-shitfucker.fqdn;
 
-  # Internal hosts the agent may reach despite the LAN-wide deny below: each
-  # becomes a whole-host ACCEPT in hermes-egress, ahead of the RFC1918 drops.
-  # DEFAULT EMPTY — the agent is hostile; add hosts deliberately. (DNS needs no
-  # entry; it goes to the host resolver on the veth.) For a single port, prefer
-  # allowedInternalServices below.
   # nmd is whole-host: the agent uses several of its services (Forgejo, ntfy, …).
   allowedInternalHosts = [(import ../../common/network.nix).ips.nix-media-docker];
 
@@ -54,10 +49,8 @@
     }
   ];
 
-  # Private (RFC1918 / link-local / CGNAT) IPv4 ranges the agent must NOT reach,
-  # EXCEPT the allowlisted hosts above. Enforced host-side in the hermes-egress
-  # chain on the container's veth. Its unprovisioned IPv6 is blocked in both
-  # INPUT and FORWARD; host IPv6 on other interfaces is unchanged.
+  # Private IPv4 ranges are blocked after the explicit grants; unprovisioned
+  # container IPv6 is blocked without changing other host interfaces.
   lanDenyCidrs = [
     "10.0.0.0/8"
     "172.16.0.0/12"
@@ -66,9 +59,8 @@
     "100.64.0.0/10" # CGNAT
   ];
 
-  firewallCommands = import ./hermes-firewall.nix {
+  firewallTable = import ./hermes-firewall.nix {
     inherit lib vethHost hostAddress allowedInternalHosts allowedInternalServices lanDenyCidrs;
-    inherit (config.networking) enableIPv6;
   };
 
   # Host↔container point-to-point veth (a /30 link, never forwarded → not LAN).
@@ -440,6 +432,7 @@ in {
             enabled = [
               "github-copilot"
               "hermes-lcm"
+              "dashboard_auth/basic"
             ];
             disabled = [
               "dashboard_auth/nous"
@@ -617,27 +610,47 @@ in {
       internalInterfaces = [vethHost];
     };
 
+    nftables = {
+      enable = true;
+      flushRuleset = false;
+      tables.hermes-confinement = firewallTable;
+    };
     firewall = {
-      # Keep confinement on stop/failure; only NixOS-owned NAT/filter chains stop.
-      # Install before NAT accepts, including the stop phase of native reload.
-      extraCommands = lib.mkBefore firewallCommands;
-      extraStopCommands = lib.mkBefore firewallCommands;
+      backend = "nftables";
+      # An accept in the confinement table still passes through the host firewall.
+      interfaces.${vethHost} = {
+        allowedTCPPorts = [53];
+        allowedUDPPorts = [53];
+      };
     };
   };
 
   assertions = [
     {
-      assertion = config.networking.firewall.enable && config.networking.firewall.backend == "iptables";
-      message = "Hermes confinement requires the host iptables firewall.";
+      assertion = config.networking.firewall.enable && config.networking.firewall.backend == "nftables";
+      message = "Hermes confinement requires the host nftables firewall.";
     }
   ];
 
-  # Cover failures before extraCommands, and refuse container boot if setup fails.
-  # Stopping the firewall also stops its dependent container; the policy remains.
-  systemd.services.firewall = {
-    preStart = firewallCommands;
+  # The legacy firewall can remove its guard before native rules are installed.
+  system.preSwitchChecks.hermes-firewall-backend = ''
+    case "''${2:-}" in
+      boot|dry-activate) exit 0 ;;
+    esac
+    if [ -e /run/current-system/etc/systemd/system/firewall.service ]; then
+      state=$(${pkgs.systemd}/bin/systemctl show --property=ActiveState --value container@hermes.service) || exit 1
+      if [ "$state" != inactive ]; then
+        echo "Stop container@hermes.service before switching firewall backends; alternatively use nixos-rebuild boot and reboot." >&2
+        exit 1
+      fi
+    fi
+  '';
+
+  systemd.services.nftables = {
     before = ["container@hermes.service"];
     requiredBy = ["container@hermes.service"];
+    # Stop the dependent container but retain all managed firewall/NAT tables.
+    serviceConfig.ExecStop = lib.mkForce [];
   };
 
   environment.systemPackages = [
