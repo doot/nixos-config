@@ -124,6 +124,9 @@ for block in blocks:
     rewritten.append(block)
 log_format = re.search(r"log_format hermes_webapp[^;]+;", SOURCE)
 assert log_format, "Missing credential-safe log format"
+# PrivateDevices in the nginx unit denies device paths such as /dev/null.
+for block in blocks:
+    assert re.findall(r"error_log\s+([^;]+);", block) == ["stderr emerg"], "Request errors must stay unlogged without device paths"
 origin_map = re.search(r"map\s+\$http_origin\s+\$hermes_webapp_origin_allowed\s*\{[^}]*\}", SOURCE)
 config = ROOT / "nginx.conf"
 config.write_text(f"""pid {ROOT}/nginx.pid;

@@ -15,8 +15,9 @@
   runtimeDirectory = "hermes-webapp-tunnel";
   socket = "/run/${runtimeDirectory}/backend.sock";
   logConfig = ''
-    # Request errors can include query-string WebSocket credentials.
-    error_log /dev/null;
+    # Request errors can include query-string WebSocket credentials; keep only
+    # fatal errors. PrivateDevices in the nginx unit forbids /dev/null here.
+    error_log stderr emerg;
     access_log /var/log/nginx/hermes-webapp.access.log hermes_webapp;
   '';
 in {
