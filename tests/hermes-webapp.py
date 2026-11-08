@@ -29,6 +29,14 @@ assert tunnel["DynamicUser"] and tunnel["RuntimeDirectoryMode"] == "0750"
 assert tunnel["Group"] in SETTINGS["nginxGroups"] and tunnel["Group"] != "nginx"
 assert "StreamLocalBindMask=0117" in tunnel["ExecStart"]
 assert "StreamLocalBindUnlink=yes" in tunnel["ExecStart"]
+# Inside the nmd LXC, PrivateDevices makes /dev/null unopenable; ssh and the
+# nginx error_log both open it.
+def _enabled(value: bool | str | None) -> bool:
+    return str(value).lower() in {"true", "yes", "1", "on"}
+
+
+assert not _enabled(tunnel.get("PrivateDevices")), "PrivateDevices breaks ssh in the nmd LXC"
+assert not _enabled(SETTINGS["nginxPrivateDevices"]), "PrivateDevices breaks nginx error_log in the nmd LXC"
 ROOT = Path(tempfile.mkdtemp(prefix="webapp-", dir=os.environ["TMPDIR"]))
 ssh_command = [argument.replace("%d", str(ROOT / "unused-credentials")) for argument in shlex.split(tunnel["ExecStart"])]
 ssh_policy = subprocess.check_output([ssh_command[0], "-G", *ssh_command[1:]], text=True)
@@ -124,9 +132,9 @@ for block in blocks:
     rewritten.append(block)
 log_format = re.search(r"log_format hermes_webapp[^;]+;", SOURCE)
 assert log_format, "Missing credential-safe log format"
-# PrivateDevices in the nginx unit denies device paths such as /dev/null.
+# Every error-log level can carry the request line, including query credentials.
 for block in blocks:
-    assert re.findall(r"error_log\s+([^;]+);", block) == ["stderr emerg"], "Request errors must stay unlogged without device paths"
+    assert re.findall(r"error_log\s+([^;]+);", block) == ["/dev/null"], "Request errors must be discarded"
 origin_map = re.search(r"map\s+\$http_origin\s+\$hermes_webapp_origin_allowed\s*\{[^}]*\}", SOURCE)
 config = ROOT / "nginx.conf"
 config.write_text(f"""pid {ROOT}/nginx.pid;

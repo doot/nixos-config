@@ -15,14 +15,16 @@
   runtimeDirectory = "hermes-webapp-tunnel";
   socket = "/run/${runtimeDirectory}/backend.sock";
   logConfig = ''
-    # Request errors can include query-string WebSocket credentials; keep only
-    # fatal errors. PrivateDevices in the nginx unit forbids /dev/null here.
-    error_log stderr emerg;
+    # Any error-log level can include the request line with its query-string
+    # WebSocket ticket, so discard them all.
+    error_log /dev/null;
     access_log /var/log/nginx/hermes-webapp.access.log hermes_webapp;
   '';
 in {
   users.groups.${tunnelGroup} = {};
   users.users.nginx.extraGroups = [tunnelGroup];
+  # PrivateDevices leaves /dev/null unopenable in the nmd LXC; error_log needs it.
+  systemd.services.nginx.serviceConfig.PrivateDevices = lib.mkForce "no";
 
   systemd.services.hermes-webapp-tunnel = {
     description = "Encrypted Hermes webapp upstream";
@@ -39,10 +41,10 @@ in {
       UMask = "0077";
       LoadCredential = ["identity:/run/secrets/hermes-webapp-tunnel-key"];
       ExecStart = lib.concatStringsSep " " [
-        "${pkgs.openssh}/bin/ssh -F /dev/null -NT"
+        "${pkgs.openssh}/bin/ssh -F none -NT"
         "-o BatchMode=yes -o IdentitiesOnly=yes -o IdentityAgent=none"
         "-o IdentityFile=%d/identity -o StrictHostKeyChecking=yes"
-        "-o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/etc/ssh/ssh_known_hosts"
+        "-o UserKnownHostsFile=none -o GlobalKnownHostsFile=/etc/ssh/ssh_known_hosts"
         "-o HostKeyAlgorithms=ssh-ed25519 -o UpdateHostKeys=no -o ForwardAgent=no"
         "-o ExitOnForwardFailure=yes -o ConnectTimeout=10"
         "-o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o GatewayPorts=no"
@@ -56,7 +58,8 @@ in {
       ProtectSystem = "strict";
       ProtectHome = true;
       PrivateTmp = true;
-      PrivateDevices = true;
+      # No PrivateDevices: inside the nmd LXC it makes /dev/null unopenable,
+      # and ssh opens /dev/null for stdin even with -N.
       ProtectKernelTunables = true;
       ProtectKernelModules = true;
       ProtectControlGroups = true;
