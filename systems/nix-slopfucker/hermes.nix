@@ -37,11 +37,6 @@
 
   forgejoSshHost = (import ../../common/network.nix).hosts.nix-shitfucker.fqdn;
 
-  # Internal hosts the agent may reach despite the LAN-wide deny below: each
-  # becomes a whole-host ACCEPT in hermes-egress, ahead of the RFC1918 drops.
-  # DEFAULT EMPTY — the agent is hostile; add hosts deliberately. (DNS needs no
-  # entry; it goes to the host resolver on the veth.) For a single port, prefer
-  # allowedInternalServices below.
   # nmd is whole-host: the agent uses several of its services (Forgejo, ntfy, …).
   allowedInternalHosts = [(import ../../common/network.nix).ips.nix-media-docker];
 
@@ -54,9 +49,8 @@
     }
   ];
 
-  # Private (RFC1918 / link-local / CGNAT) IPv4 ranges the agent must NOT reach,
-  # EXCEPT the allowlisted hosts above. Enforced host-side in the hermes-egress
-  # chain on the container's veth. IPv6 is not provisioned for the container.
+  # Private IPv4 ranges are blocked after the explicit grants; unprovisioned
+  # container IPv6 is blocked without changing other host interfaces.
   lanDenyCidrs = [
     "10.0.0.0/8"
     "172.16.0.0/12"
@@ -65,22 +59,9 @@
     "100.64.0.0/10" # CGNAT
   ];
 
-  # Body of the `hermes-egress` iptables chain: allow the explicit hosts and
-  # port-scoped services first, then deny the private ranges. Evaluated
-  # top-to-bottom, so allow wins over deny; anything not matched falls through
-  # to the internet.
-  egressRules = lib.concatStringsSep "\n" (
-    (map (host: "iptables -A hermes-egress -d ${host} -j ACCEPT") allowedInternalHosts)
-    ++ (lib.concatMap (
-        svc:
-          map (
-            port: "iptables -A hermes-egress -d ${svc.host} -p tcp --dport ${toString port} -j ACCEPT"
-          )
-          svc.ports
-      )
-      allowedInternalServices)
-    ++ (map (cidr: "iptables -A hermes-egress -d ${cidr} -j DROP") lanDenyCidrs)
-  );
+  firewallTable = import ./hermes-firewall.nix {
+    inherit lib vethHost hostAddress allowedInternalHosts allowedInternalServices lanDenyCidrs;
+  };
 
   # Host↔container point-to-point veth (a /30 link, never forwarded → not LAN).
   # Both addresses are consumed by containers.hermes below (nixos-containers
@@ -89,6 +70,7 @@
   localAddress = "10.100.0.2";
   externalInterface = "ens18";
   vethHost = "ve-hermes";
+  webappPort = toString config.containers.hermes.config.services.hermes-agent.settings.webapp.port;
 
   # Forwarded into the container so the TUI can identify the terminal and enable
   # modified-key reporting (Shift+Enter). Every hop must cooperate: the client
@@ -152,17 +134,49 @@ in {
   # homeMode 2770 (setgid + group-rwx) is essential: the default 0700 would lock
   # the hermes group out, so users like doot could not access the shared state.
   users = {
-    groups.hermes.gid = hermesGid;
-    users.hermes = {
-      isSystemUser = true;
-      uid = hermesUid;
-      group = "hermes";
-      home = "/var/lib/hermes";
-      createHome = true;
-      homeMode = "2770";
+    groups = {
+      hermes.gid = hermesGid;
+      hermes-webapp-tunnel = {};
     };
-    users.doot.extraGroups = ["hermes"];
+    users = {
+      hermes = {
+        isSystemUser = true;
+        uid = hermesUid;
+        group = "hermes";
+        home = "/var/lib/hermes";
+        createHome = true;
+        homeMode = "2770";
+      };
+      doot.extraGroups = ["hermes"];
+      hermes-webapp-tunnel = {
+        isSystemUser = true;
+        group = "hermes-webapp-tunnel";
+        hashedPassword = "*";
+      };
+    };
   };
+
+  # Forwarding needs no session channel; reject shells, commands, and SFTP.
+  services.openssh.extraConfig = ''
+    Match User hermes-webapp-tunnel
+      AuthenticationMethods publickey
+      AuthorizedKeysFile /etc/ssh/authorized_keys.d/%u
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      AllowTcpForwarding local
+      AllowStreamLocalForwarding no
+      PermitOpen ${localAddress}:${webappPort}
+      PermitListen none
+      GatewayPorts no
+      AllowAgentForwarding no
+      X11Forwarding no
+      PermitTTY no
+      PermitUserRC no
+      PermitTunnel no
+      MaxSessions 0
+      ForceCommand ${pkgs.coreutils}/bin/false
+    Match all
+  '';
 
   # ── The agent runs ONLY inside this declarative container ─────────────────
   # The ~5 GB hermes uv2nix closure is excluded from the Proxmox IMAGE build in
@@ -251,6 +265,7 @@ in {
     in {
       imports = [
         inputs.hermes-agent.nixosModules.default
+        ./hermes-state-init.nix
         inputs.priv.nixosModules.hermesPriv
 
         # The container intentionally does not inherit anything from the host,
@@ -403,7 +418,7 @@ in {
         settings = {
           # Hand-bumped: managed installs refuse the config writes that would
           # otherwise advance this on update.
-          _config_version = 50;
+          _config_version = 52;
 
           model = {
             provider = "copilot";
@@ -417,7 +432,16 @@ in {
             enabled = [
               "github-copilot"
               "hermes-lcm"
+              "dashboard_auth/basic"
             ];
+            disabled = [
+              "dashboard_auth/nous"
+              "dashboard_auth/self_hosted"
+              "dashboard_auth/session_token"
+              "dashboard_auth/drain"
+            ];
+            auto_apply = false;
+            auto_update_check_hours = 0;
             hermes-memory-store.embeddings = "off";
           };
           memory = {
@@ -440,7 +464,23 @@ in {
           };
           privacy.redact_pii = true;
           security.allow_lazy_installs = false;
-          dashboard.theme = "ember";
+          telemetry.shared_metrics = {
+            enabled = false;
+            send = false;
+          };
+          webapp = {
+            enabled = true;
+            host = "0.0.0.0";
+            port = 9120;
+            public_url = "https://hermes.${nmdFqdn}";
+          };
+          dashboard = {
+            theme = "ember";
+            # SSH opens the upstream connection from the host's veth address.
+            trusted_proxies = [hostAddress];
+            basic_auth.username = "admin";
+            session_token_auth.enabled = false;
+          };
           agent = {
             environment_hint = "You are running inside a locked-down NixOS container: no nix daemon, no package managers, and network access restricted to the internet only (no local network).";
             reasoning_effort = "xhigh";
@@ -570,38 +610,47 @@ in {
       internalInterfaces = [vethHost];
     };
 
-    firewall = {
-      # Let the container reach the host's DNS stub on the veth (this is host
-      # INPUT, not LAN forwarding). DNS is the ONLY host service exposed.
-      interfaces.${vethHost} = {
-        allowedUDPPorts = [53];
-        allowedTCPPorts = [53];
-      };
-
-      # LAN isolation for the container's forwarded traffic, in a dedicated
-      # `hermes-egress` chain so the rule order is explicit and self-contained
-      # (no dependence on insertion position vs. the nat module's FORWARD jump):
-      # the chain is evaluated top-to-bottom — ACCEPT the allowlisted hosts,
-      # then DROP the private ranges, then fall through to internet. With
-      # allowedInternalHosts empty (default), the container reaches the internet
-      # and nothing on the LAN. Raw iptables because the typed extraForwardRules
-      # needs the nftables backend this host doesn't run (see PR notes).
-      # Verify after rebuild: `iptables -L hermes-egress -n`.
-      extraCommands = ''
-        # create-or-flush — idempotent across firewall reloads
-        iptables -N hermes-egress 2>/dev/null || iptables -F hermes-egress
-        ${egressRules}
-        # jump from FORWARD exactly once (guard against stacking on reload)
-        iptables -C FORWARD -i ${vethHost} -j hermes-egress 2>/dev/null \
-          || iptables -A FORWARD -i ${vethHost} -j hermes-egress
-      '';
-
-      extraStopCommands = ''
-        iptables -D FORWARD -i ${vethHost} -j hermes-egress 2>/dev/null || true
-        iptables -F hermes-egress 2>/dev/null || true
-        iptables -X hermes-egress 2>/dev/null || true
-      '';
+    nftables = {
+      enable = true;
+      flushRuleset = false;
+      tables.hermes-confinement = firewallTable;
     };
+    firewall = {
+      backend = "nftables";
+      # An accept in the confinement table still passes through the host firewall.
+      interfaces.${vethHost} = {
+        allowedTCPPorts = [53];
+        allowedUDPPorts = [53];
+      };
+    };
+  };
+
+  assertions = [
+    {
+      assertion = config.networking.firewall.enable && config.networking.firewall.backend == "nftables";
+      message = "Hermes confinement requires the host nftables firewall.";
+    }
+  ];
+
+  # The legacy firewall can remove its guard before native rules are installed.
+  system.preSwitchChecks.hermes-firewall-backend = ''
+    case "''${2:-}" in
+      boot|dry-activate) exit 0 ;;
+    esac
+    if [ -e /run/current-system/etc/systemd/system/firewall.service ]; then
+      state=$(${pkgs.systemd}/bin/systemctl show --property=ActiveState --value container@hermes.service) || exit 1
+      if [ "$state" != inactive ]; then
+        echo "Stop container@hermes.service before switching firewall backends; alternatively use nixos-rebuild boot and reboot." >&2
+        exit 1
+      fi
+    fi
+  '';
+
+  systemd.services.nftables = {
+    before = ["container@hermes.service"];
+    requiredBy = ["container@hermes.service"];
+    # Stop the dependent container but retain all managed firewall/NAT tables.
+    serviceConfig.ExecStop = lib.mkForce [];
   };
 
   environment.systemPackages = [
