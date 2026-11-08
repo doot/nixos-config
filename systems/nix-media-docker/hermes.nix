@@ -15,14 +15,16 @@
   runtimeDirectory = "hermes-webapp-tunnel";
   socket = "/run/${runtimeDirectory}/backend.sock";
   logConfig = ''
-    # Request errors can include query-string WebSocket credentials; keep only
-    # fatal errors. PrivateDevices in the nginx unit forbids /dev/null here.
-    error_log stderr emerg;
+    # Any error-log level can include the request line with its query-string
+    # WebSocket ticket, so discard them all.
+    error_log /dev/null;
     access_log /var/log/nginx/hermes-webapp.access.log hermes_webapp;
   '';
 in {
   users.groups.${tunnelGroup} = {};
   users.users.nginx.extraGroups = [tunnelGroup];
+  # PrivateDevices leaves /dev/null unopenable in the nmd LXC; error_log needs it.
+  systemd.services.nginx.serviceConfig.PrivateDevices = lib.mkForce "no";
 
   systemd.services.hermes-webapp-tunnel = {
     description = "Encrypted Hermes webapp upstream";

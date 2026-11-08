@@ -48,6 +48,7 @@ in
         upstream = cfg.services.nginx.virtualHosts."hermes.${fqdn}".locations."/".proxyPass;
         nginxGroups = cfg.users.users.nginx.extraGroups;
         tunnel = cfg.systemd.services.hermes-webapp-tunnel.serviceConfig;
+        nginxPrivateDevices = cfg.systemd.services.nginx.serviceConfig.PrivateDevices;
       };
     } ''
       python ${./hermes-webapp.py}
