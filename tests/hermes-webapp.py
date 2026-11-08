@@ -29,6 +29,8 @@ assert tunnel["DynamicUser"] and tunnel["RuntimeDirectoryMode"] == "0750"
 assert tunnel["Group"] in SETTINGS["nginxGroups"] and tunnel["Group"] != "nginx"
 assert "StreamLocalBindMask=0117" in tunnel["ExecStart"]
 assert "StreamLocalBindUnlink=yes" in tunnel["ExecStart"]
+# Inside the nmd LXC, PrivateDevices makes /dev/null unopenable and ssh needs it.
+assert not tunnel.get("PrivateDevices", False), "PrivateDevices breaks ssh in the nmd LXC"
 ROOT = Path(tempfile.mkdtemp(prefix="webapp-", dir=os.environ["TMPDIR"]))
 ssh_command = [argument.replace("%d", str(ROOT / "unused-credentials")) for argument in shlex.split(tunnel["ExecStart"])]
 ssh_policy = subprocess.check_output([ssh_command[0], "-G", *ssh_command[1:]], text=True)
