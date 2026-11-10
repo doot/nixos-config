@@ -332,6 +332,22 @@
         "type": "github"
       }
     },
+    "hermes-official-plugins": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794288919,
+        "narHash": "sha256-kUd2NKPPfixSoYUDLYUtd5kQWrNCAqyuDl+SPlrfpTU=",
+        "owner": "NousResearch",
+        "repo": "hermes-official-plugins",
+        "rev": "ab348e1d8d8691f56000875420bc3b29349a902b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NousResearch",
+        "repo": "hermes-official-plugins",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -591,6 +607,22 @@
         "type": "github"
       }
     },
+    "proficiently-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1773330658,
+        "narHash": "sha256-YDfvXi/aIXFFf3InuVnxkaE2vDTs/gomvdoNfmLqDhU=",
+        "owner": "proficientlyjobs",
+        "repo": "proficiently-claude-skills",
+        "rev": "9bc1f6fd7af532fe0cd4a1843e06ab2b474d0d53",
+        "type": "github"
+      },
+      "original": {
+        "owner": "proficientlyjobs",
+        "repo": "proficiently-claude-skills",
+        "type": "github"
+      }
+    },
     "pyproject-build-systems": {
       "inputs": {
         "nixpkgs": [
@@ -648,12 +680,14 @@
         "hermes-agent": "hermes-agent",
         "hermes-holographic": "hermes-holographic",
         "hermes-labs-plugins": "hermes-labs-plugins",
+        "hermes-official-plugins": "hermes-official-plugins",
         "home-manager": "home-manager_2",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nixpkgs-unstable-small": "nixpkgs-unstable-small",
         "priv": "priv",
+        "proficiently-skills": "proficiently-skills",
         "wezterm": "wezterm"
       }
     },

@@ -253,6 +253,10 @@ in {
       ...
     }: let
       hermesCfg = config.services.hermes-agent;
+      jobSearch = import ./job-search.nix {
+        inherit pkgs;
+        src = inputs.proficiently-skills;
+      };
       # FastMCP 3 requires MCP SDK 1; keep the override local to this server.
       mcpNixos = pkgs.mcp-nixos.override {
         python3Packages =
@@ -398,7 +402,11 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
-        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal;
+        package = assert inputs.hermes-agent.rev == "90d6b98fd86d20981ee06ddd5b7d93e4320f26a4";
+          inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal.override {
+            version = "0.23.0";
+            distance = 209;
+          };
         extraDependencyGroups = ["matrix"];
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
@@ -428,13 +436,19 @@ in {
             engine = "lcm";
           };
           lcm.context_threshold = 0.70;
+          toolsets = ["kanban"];
+          skills.external_dirs = ["${jobSearch}"];
           plugins = {
             enabled = [
               "github-copilot"
               "hermes-lcm"
+              "memory-wiki"
+              "hermes-security"
+              "security-guidance"
               "dashboard_auth/basic"
             ];
             disabled = [
+              "disk-cleanup"
               "dashboard_auth/nous"
               "dashboard_auth/self_hosted"
               "dashboard_auth/session_token"
@@ -443,6 +457,7 @@ in {
             auto_apply = false;
             auto_update_check_hours = 0;
             hermes-memory-store.embeddings = "off";
+            entries.hermes-security.allow_gateway_injection = false;
           };
           memory = {
             memory_enabled = true;
@@ -507,6 +522,10 @@ in {
 
         # Non-secret env for the agent.
         environment = {
+          HERMES_SECURITY_DEPENDENCY_CHECK = "off";
+          SECURITY_GUIDANCE_BLOCK = "1";
+          SECURITY_GUIDANCE_DISABLE = "0";
+
           # Points the obsidian skill at the vault clone (homelab/hermes-vault)
           # so it resolves without a hardcoded path.
           OBSIDIAN_VAULT_PATH = "/var/lib/hermes/workspace/hermes-vault";
@@ -546,14 +565,19 @@ in {
         # HRR needs NumPy built for Hermes' interpreter.
         extraPythonPackages = [hermesCfg.package.python.pkgs.numpy];
 
-        extraPlugins = [
-          (pkgs.fetchFromGitHub {
-            owner = "stephenschoettler";
-            repo = "hermes-lcm";
-            rev = "v0.20.0";
-            hash = "sha256-yJ1Nn+su7YbKd+cgVOizXChzLbKHqTprSprF1p9/HYk=";
-          })
-        ];
+        extraPlugins =
+          [
+            (pkgs.fetchFromGitHub {
+              owner = "stephenschoettler";
+              repo = "hermes-lcm";
+              rev = "v0.20.0";
+              hash = "sha256-yJ1Nn+su7YbKd+cgVOizXChzLbKHqTprSprF1p9/HYk=";
+            })
+          ]
+          ++ map (name:
+            pkgs.runCommand name {} ''
+              ln -s ${inputs.hermes-official-plugins}/${name} "$out"
+            '') ["memory-wiki" "hermes-security"];
       };
 
       # Memory loading and migration checks require canonical plugin names.
