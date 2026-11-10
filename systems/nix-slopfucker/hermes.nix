@@ -253,10 +253,6 @@ in {
       ...
     }: let
       hermesCfg = config.services.hermes-agent;
-      jobSearch = import ./job-search.nix {
-        inherit pkgs;
-        src = inputs.proficiently-skills;
-      };
       # FastMCP 3 requires MCP SDK 1; keep the override local to this server.
       mcpNixos = pkgs.mcp-nixos.override {
         python3Packages =
@@ -402,11 +398,7 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
-        package = assert inputs.hermes-agent.rev == "90d6b98fd86d20981ee06ddd5b7d93e4320f26a4";
-          inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal.override {
-            version = "0.23.0";
-            distance = 209;
-          };
+        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal;
         extraDependencyGroups = ["matrix"];
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
@@ -437,13 +429,10 @@ in {
           };
           lcm.context_threshold = 0.70;
           toolsets = ["kanban"];
-          skills.external_dirs = ["${jobSearch}"];
           plugins = {
             enabled = [
               "github-copilot"
               "hermes-lcm"
-              "memory-wiki"
-              "hermes-security"
               "security-guidance"
               "dashboard_auth/basic"
             ];
@@ -457,7 +446,6 @@ in {
             auto_apply = false;
             auto_update_check_hours = 0;
             hermes-memory-store.embeddings = "off";
-            entries.hermes-security.allow_gateway_injection = false;
           };
           memory = {
             memory_enabled = true;
@@ -504,6 +492,20 @@ in {
         };
 
         mcpServers = {
+          grafana = {
+            command = "${pkgs.mcp-grafana}/bin/mcp-grafana";
+            args = [
+              "--transport=stdio"
+              "--enabled-tools=search,datasource,dashboard,prometheus,loki,alerting"
+              "--disable-write"
+              "--usage-stats=disabled"
+            ];
+            env = {
+              GRAFANA_URL = "\${GRAFANA_URL}";
+              GRAFANA_SERVICE_ACCOUNT_TOKEN = "\${GRAFANA_TOKEN}";
+            };
+            sampling.enabled = false;
+          };
           nixos = {
             command = "${mcpNixos}/bin/mcp-nixos";
             args = ["--"];
@@ -522,9 +524,17 @@ in {
 
         # Non-secret env for the agent.
         environment = {
-          HERMES_SECURITY_DEPENDENCY_CHECK = "off";
+          # The plugin's path-based rule requires human edits for workflow YAML.
           SECURITY_GUIDANCE_BLOCK = "1";
           SECURITY_GUIDANCE_DISABLE = "0";
+          LCM_EMBEDDINGS_ENABLED = "false";
+          LCM_RERANK_ENABLED = "false";
+          LCM_PROACTIVE_RECALL_ENABLED = "false";
+          LCM_PREANSWER_EVIDENCE_ENABLED = "false";
+          LCM_ASSERTION_EXTRACTION_ENABLED = "false";
+          LCM_SELECTIVE_COMPILER_ENABLED = "false";
+          LCM_EXTRACTION_ENABLED = "false";
+          LCM_TEMPORAL_ROLLUPS_ENABLED = "false";
 
           # Points the obsidian skill at the vault clone (homelab/hermes-vault)
           # so it resolves without a hardcoded path.
@@ -565,19 +575,11 @@ in {
         # HRR needs NumPy built for Hermes' interpreter.
         extraPythonPackages = [hermesCfg.package.python.pkgs.numpy];
 
-        extraPlugins =
-          [
-            (pkgs.fetchFromGitHub {
-              owner = "stephenschoettler";
-              repo = "hermes-lcm";
-              rev = "v0.20.0";
-              hash = "sha256-yJ1Nn+su7YbKd+cgVOizXChzLbKHqTprSprF1p9/HYk=";
-            })
-          ]
-          ++ map (name:
-            pkgs.runCommand name {} ''
-              ln -s ${inputs.hermes-official-plugins}/${name} "$out"
-            '') ["memory-wiki" "hermes-security"];
+        extraPlugins = [
+          (pkgs.runCommand "hermes-lcm" {} ''
+            ln -s ${inputs.hermes-lcm} "$out"
+          '')
+        ];
       };
 
       # Memory loading and migration checks require canonical plugin names.

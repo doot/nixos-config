@@ -76,13 +76,8 @@
       flake = false;
     };
 
-    hermes-official-plugins = {
-      url = "github:NousResearch/hermes-official-plugins";
-      flake = false;
-    };
-
-    proficiently-skills = {
-      url = "github:proficientlyjobs/proficiently-claude-skills";
+    hermes-lcm = {
+      url = "github:stephenschoettler/hermes-lcm";
       flake = false;
     };
   };
@@ -156,10 +151,7 @@
     checks.x86_64-linux = {
       hermes-webapp = import ./tests/hermes-webapp.nix {inherit inputs;};
       hermes-state-init = import ./tests/hermes-state-init.nix {inherit inputs;};
-      hermes-job-search = import ./systems/nix-slopfucker/job-search.nix {
-        pkgs = nixpkgs-unstable.legacyPackages.x86_64-linux;
-        src = inputs.proficiently-skills;
-      };
+      hermes-catalog = import ./tests/hermes-catalog.nix {inherit inputs;};
       hermes-firewall = (import ./tests/hermes-firewall.nix {inherit inputs;}).check;
     };
 
