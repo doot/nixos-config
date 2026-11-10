@@ -2,3 +2,5 @@
 ^https://hermes/
 # nginx Unix-socket upstreams are not HTTP hosts.
 ^http://unix/
+# HiringCafe requires a browser challenge that lychee cannot complete.
+^https?://hiring[.]cafe/?$
