@@ -61,10 +61,7 @@
     #   inputs.nixpkgs.follows = "nixpkgs-unstable";
     # };
 
-    hermes-agent = {
-      url = "github:NousResearch/hermes-agent";
-      inputs.nixpkgs.follows = "nixpkgs-unstable-small";
-    };
+    hermes-agent.url = "github:NousResearch/hermes-agent";
 
     hermes-holographic = {
       url = "github:itpartypattaya/hermes-plugin-holographic";
