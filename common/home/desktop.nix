@@ -200,7 +200,8 @@
     };
 
     wezterm = {
-      enable = true;
+      # TODO: Temporarily disable until upstream is fixed
+      enable = false;
       enableBashIntegration = true;
       package = inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default;
     };
