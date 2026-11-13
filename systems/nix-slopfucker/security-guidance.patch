@@ -21,21 +21,30 @@
      "skill_manage": ("file_path", ("file_content", "new_string")),
  }
  
-@@ -71,10 +73,10 @@
+@@ -71,10 +73,18 @@
  
++def _path_key(path: str) -> str:
++    """Normalize POSIX spelling only; unknown task cwd, tilde and symlinks stay unresolved."""
++    parts = path.split("/")
++    segments = [part for part in parts if part not in ("", ".")]
++    tail = "/" if segments and parts[-1] in ("", ".") else ""
++    return ("/" if path.startswith("/") else "") + "/".join(segments) + tail
++
++
  def _scan_content(path: str, content: str) -> list[tuple[str, str]]:
      """Return [(ruleName, reminder), ...]; each rule fires at most once per call."""
 -    if not content or len(content.encode("utf-8", errors="ignore")) > _MAX_SCAN_BYTES:
 -        return []
-+    scan_content = bool(content) and len(content.encode("utf-8", errors="ignore")) <= _MAX_SCAN_BYTES
-     path = path or ""
+-    path = path or ""
 -    return [(e["ruleName"], e["reminder"]) for e in _COMPILED if _rule_matches(e, path, content)]
++    scan_content = bool(content) and len(content.encode("utf-8", errors="ignore")) <= _MAX_SCAN_BYTES
++    path = _path_key(path or "")
 +    return [(e["ruleName"], e["reminder"]) for e in _COMPILED
 +            if (e["path_check"] is not None or scan_content) and _rule_matches(e, path, content)]
  
  
  def _scan_args(tool_name: str, args: Any) -> list[tuple[str, str]]:
-@@ -82,9 +84,28 @@
+@@ -82,9 +92,28 @@
      spec = _TARGET_TOOLS.get(tool_name)
      if _env_flag("SECURITY_GUIDANCE_DISABLE") or spec is None or not isinstance(args, dict):
          return []

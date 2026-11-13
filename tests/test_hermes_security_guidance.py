@@ -77,6 +77,44 @@ class SecurityGuidanceTests(unittest.TestCase):
                 with self.subTest(suffix=suffix, tool=tool, mode=args.get("mode")):
                     self._assert_blocked(tool, args, "github_actions_workflow")
 
+    def test_workflow_spelling_aliases_are_blocked(self) -> None:
+        """Classify harmless POSIX spellings without resolving or changing tool arguments."""
+        for suffix in ("yml", "yaml"):
+            for spelling in (".github/./workflows", ".github//workflows"):
+                path = f"{spelling}/check.{suffix}"
+                bodies = [
+                    f"*** Add File: {path}\n+name: Check\n",
+                    f"*** Update File: {path}\n@@\n-old\n+name: Check\n",
+                    f"*** Delete File: {path}\n",
+                    f"*** Move File: ordinary.{suffix} -> {path}\n",
+                    f"*** Move File: {path} -> ordinary.{suffix}\n",
+                ]
+                calls = _content_calls(path, "name: Check\n") + [("patch", self._v4a_args(body)) for body in bodies]
+                for index, (tool, args) in enumerate(calls):
+                    with self.subTest(path=path, call=index):
+                        original = args.copy()
+                        with patch("builtins.open", side_effect=AssertionError("No target reads")), \
+                             patch("io.open", side_effect=AssertionError("No target reads")), \
+                             patch("os.open", side_effect=AssertionError("No target reads")), \
+                             patch.object(Path, "resolve", side_effect=AssertionError("No host resolution")), \
+                             patch("os.getcwd", side_effect=AssertionError("No global cwd")):
+                            self._assert_blocked(tool, args, "github_actions_workflow")
+                        self.assertEqual(args, original)
+
+    def test_path_normalization_preserves_nonaliases(self) -> None:
+        """Keep parent components, POSIX backslashes, and directory-only suffixes distinct."""
+        paths = (
+            ".github/other/../workflows/check.yml",
+            r".github\workflows\check.yml",
+            ".github/workflows/check.yml/",
+            ".github/workflows/check.yml/.",
+            ".github/./workflows/check.yml//./",
+        )
+        for path in paths:
+            for tool, args in _content_calls(path, "") + [("patch", self._v4a_args(f"*** Delete File: {path}\n"))]:
+                with self.subTest(path=path, tool=tool, mode=args.get("mode")):
+                    self.assertIsNone(plugin._on_pre_tool_call(tool_name=tool, args=args))
+
     def test_empty_workflow_edits_are_blocked(self) -> None:
         """Apply path-only rules to empty writes and replacement deletions."""
         for suffix in ("yml", "yaml"):
