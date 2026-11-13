@@ -1,0 +1,89 @@
+--- a/security-guidance/__init__.py
++++ b/security-guidance/__init__.py
+@@ -15,15 +15,17 @@
+ import re
+ from typing import Any, Dict, List, Optional, Tuple
+
++from tools.patch_parser import OperationType, parse_v4a_patch
++
+ from . import patterns as _patterns
+
+ logger = logging.getLogger(__name__)
+
+-# tool name -> (path_arg_name, content_arg_names). Every populated content field is scanned
+-# (patch's new_string vs raw patch text; skill_manage's file_path is the path inside the skill dir).
++# tool name -> (path_arg_name, content_arg_names). Every string content field is scanned
++# (V4A patches use parsed operations; skill_manage's file_path is the path inside the skill dir).
+ _TARGET_TOOLS: dict[str, tuple[str, tuple[str, ...]]] = {
+     "write_file": ("path", ("content",)),
+-    "patch": ("path", ("new_string", "patch")),
++    "patch": ("path", ("new_string",)),
+     "skill_manage": ("file_path", ("file_content", "new_string")),
+ }
+
+@@ -69,12 +71,27 @@
+     return any(sub in content for sub in entry["substrings"]) or (entry["regex"] is not None and bool(entry["regex"].search(content)))
+
+
++def _path_key(path: str) -> str:
++    """Normalize POSIX spelling only; unknown task cwd, tilde and symlinks stay unresolved."""
++    parts = path.split("/")
++    segments = [part for part in parts if part not in ("", ".")]
++    tail = "/" if segments and parts[-1] in ("", ".") else ""
++    return ("/" if path.startswith("/") else "") + "/".join(segments) + tail
++
++
+ def _scan_content(path: str, content: str) -> list[tuple[str, str]]:
+     """Return [(ruleName, reminder), ...]; each rule fires at most once per call."""
+-    if not content or len(content.encode("utf-8", errors="ignore")) > _MAX_SCAN_BYTES:
+-        return []
+-    path = path or ""
+-    return [(e["ruleName"], e["reminder"]) for e in _COMPILED if _rule_matches(e, path, content)]
++    return _scan_fragments(path, [content])
++
++
++def _scan_fragments(path: str, fragments: list[str]) -> list[tuple[str, str]]:
++    """Match fragments independently under one content budget."""
++    content = "\n".join(fragments)
++    scan_content = bool(content) and len(content.encode("utf-8", errors="ignore")) <= _MAX_SCAN_BYTES
++    path = _path_key(path or "")
++    return [(e["ruleName"], e["reminder"]) for e in _COMPILED
++            if (e["path_check"] is not None or scan_content)
++            and any(_rule_matches(e, path, fragment) for fragment in fragments or [""])]
+
+
+ def _scan_args(tool_name: str, args: Any) -> list[tuple[str, str]]:
+@@ -82,9 +99,32 @@
+     spec = _TARGET_TOOLS.get(tool_name)
+     if _env_flag("SECURITY_GUIDANCE_DISABLE") or spec is None or not isinstance(args, dict):
+         return []
++    if tool_name == "patch" and args.get("mode", "replace") == "patch":
++        patch = args.get("patch")
++        if not isinstance(patch, str):
++            return []
++        operations, error = parse_v4a_patch(patch)
++        if error:
++            return []
++        findings: list[tuple[str, str]] = []
++        for operation in operations:
++            prefixes = ("+", " ") if operation.operation is OperationType.UPDATE else ("+",)
++            chunks = [[line.content for line in hunk.lines if line.prefix in prefixes] for hunk in operation.hunks]
++            fragments = ["\n".join(lines) for lines in chunks if lines]
++            # ADD hunks are contiguous in the newly created file.
++            if operation.operation is not OperationType.UPDATE:
++                fragments = ["\n".join(fragments)]
++            findings.extend(_scan_fragments(operation.file_path, fragments))
++            if operation.new_path:
++                findings.extend(_scan_content(operation.new_path, ""))
++        return findings
++    if tool_name == "patch" and (args.get("mode", "replace") != "replace" or not isinstance(args.get("old_string"), str)):
++        return []
+     path_key, content_keys = spec
+     path = raw_path if isinstance(raw_path := args.get(path_key), str) else ""
+-    return [finding for val in (args.get(ck) for ck in content_keys) if isinstance(val, str) and val for finding in _scan_content(path, val)]
++    if tool_name in ("write_file", "patch") and not path:
++        return []
++    return [finding for val in (args.get(ck) for ck in content_keys) if isinstance(val, str) for finding in _scan_content(path, val)]
+
+
+ def _format_warning_block(findings: list[tuple[str, str]]) -> str:

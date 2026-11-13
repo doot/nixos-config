@@ -253,6 +253,11 @@ in {
       ...
     }: let
       hermesCfg = config.services.hermes-agent;
+      hermesPlugins = pkgs.applyPatches {
+        name = "hermes-bundled-plugins";
+        src = "${inputs.hermes-agent}/plugins";
+        patches = [./security-guidance.patch];
+      };
       # FastMCP 3 requires MCP SDK 1; keep the override local to this server.
       mcpNixos = pkgs.mcp-nixos.override {
         python3Packages =
@@ -398,7 +403,15 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
-        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal;
+        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal.overrideAttrs (old: {
+          postInstall =
+            (old.postInstall or "")
+            + ''
+              test -L "$out/share/hermes-agent/plugins"
+              ln -sfn ${hermesPlugins} "$out/share/hermes-agent/plugins"
+            '';
+          passthru = (old.passthru or {}) // {bundledPlugins = hermesPlugins;};
+        });
         extraDependencyGroups = ["matrix"];
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
@@ -428,10 +441,12 @@ in {
             engine = "lcm";
           };
           lcm.context_threshold = 0.70;
+          toolsets = ["kanban"];
           plugins = {
             enabled = [
               "github-copilot"
               "hermes-lcm"
+              "security-guidance"
               "dashboard_auth/basic"
             ];
             disabled = [
@@ -489,6 +504,20 @@ in {
         };
 
         mcpServers = {
+          grafana = {
+            command = "${pkgs.mcp-grafana}/bin/mcp-grafana";
+            args = [
+              "--transport=stdio"
+              "--enabled-tools=search,datasource,dashboard,prometheus,loki,alerting"
+              "--disable-write"
+              "--usage-stats=disabled"
+            ];
+            env = {
+              GRAFANA_URL = "\${GRAFANA_URL}";
+              GRAFANA_SERVICE_ACCOUNT_TOKEN = "\${GRAFANA_TOKEN}";
+            };
+            sampling.enabled = false;
+          };
           nixos = {
             command = "${mcpNixos}/bin/mcp-nixos";
             args = ["--"];
@@ -507,6 +536,9 @@ in {
 
         # Non-secret env for the agent.
         environment = {
+          SECURITY_GUIDANCE_BLOCK = "1";
+          SECURITY_GUIDANCE_DISABLE = "0";
+
           # Points the obsidian skill at the vault clone (homelab/hermes-vault)
           # so it resolves without a hardcoded path.
           OBSIDIAN_VAULT_PATH = "/var/lib/hermes/workspace/hermes-vault";
@@ -547,12 +579,9 @@ in {
         extraPythonPackages = [hermesCfg.package.python.pkgs.numpy];
 
         extraPlugins = [
-          (pkgs.fetchFromGitHub {
-            owner = "stephenschoettler";
-            repo = "hermes-lcm";
-            rev = "v0.20.0";
-            hash = "sha256-yJ1Nn+su7YbKd+cgVOizXChzLbKHqTprSprF1p9/HYk=";
-          })
+          (pkgs.runCommand "hermes-lcm" {} ''
+            ln -s ${inputs.hermes-lcm} "$out"
+          '')
         ];
       };
 

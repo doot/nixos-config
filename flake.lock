@@ -330,6 +330,22 @@
         "type": "github"
       }
     },
+    "hermes-lcm": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792231667,
+        "narHash": "sha256-01GtWFqwhty0Nn5rsdpPtzOF+RzAodaYcOS4nUyoxys=",
+        "owner": "stephenschoettler",
+        "repo": "hermes-lcm",
+        "rev": "a13e709c25476fa9dc145c61f733f1f4a0443a05",
+        "type": "github"
+      },
+      "original": {
+        "owner": "stephenschoettler",
+        "repo": "hermes-lcm",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -662,6 +678,7 @@
         "hermes-agent": "hermes-agent",
         "hermes-holographic": "hermes-holographic",
         "hermes-labs-plugins": "hermes-labs-plugins",
+        "hermes-lcm": "hermes-lcm",
         "home-manager": "home-manager_2",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
         "nixpkgs": "nixpkgs_3",
