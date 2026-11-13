@@ -253,6 +253,11 @@ in {
       ...
     }: let
       hermesCfg = config.services.hermes-agent;
+      hermesPlugins = pkgs.applyPatches {
+        name = "hermes-bundled-plugins";
+        src = "${inputs.hermes-agent}/plugins";
+        patches = [./security-guidance.patch];
+      };
       # FastMCP 3 requires MCP SDK 1; keep the override local to this server.
       mcpNixos = pkgs.mcp-nixos.override {
         python3Packages =
@@ -398,7 +403,15 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
-        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal;
+        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal.overrideAttrs (old: {
+          postInstall =
+            (old.postInstall or "")
+            + ''
+              test -L "$out/share/hermes-agent/plugins"
+              ln -sfn ${hermesPlugins} "$out/share/hermes-agent/plugins"
+            '';
+          passthru = (old.passthru or {}) // {bundledPlugins = hermesPlugins;};
+        });
         extraDependencyGroups = ["matrix"];
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
@@ -437,7 +450,6 @@ in {
               "dashboard_auth/basic"
             ];
             disabled = [
-              "disk-cleanup"
               "dashboard_auth/nous"
               "dashboard_auth/self_hosted"
               "dashboard_auth/session_token"
@@ -524,17 +536,8 @@ in {
 
         # Non-secret env for the agent.
         environment = {
-          # The plugin's path-based rule requires human edits for workflow YAML.
           SECURITY_GUIDANCE_BLOCK = "1";
           SECURITY_GUIDANCE_DISABLE = "0";
-          LCM_EMBEDDINGS_ENABLED = "false";
-          LCM_RERANK_ENABLED = "false";
-          LCM_PROACTIVE_RECALL_ENABLED = "false";
-          LCM_PREANSWER_EVIDENCE_ENABLED = "false";
-          LCM_ASSERTION_EXTRACTION_ENABLED = "false";
-          LCM_SELECTIVE_COMPILER_ENABLED = "false";
-          LCM_EXTRACTION_ENABLED = "false";
-          LCM_TEMPORAL_ROLLUPS_ENABLED = "false";
 
           # Points the obsidian skill at the vault clone (homelab/hermes-vault)
           # so it resolves without a hardcoded path.

@@ -52,11 +52,11 @@
         "rust-overlay": "rust-overlay"
       },
       "locked": {
-        "lastModified": 1793731702,
-        "narHash": "sha256-WlVNaWXVTYaGBNey2Z+20sY1lT7BvzJEECb+VlDDdk0=",
+        "lastModified": 1794505935,
+        "narHash": "sha256-V9kPRUmASiEPPDEQ1rlqoRZbJKVAAhWT+CSs62Eto/s=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "9655d320b8f9df74dbecf681f52a7334574606c3",
+        "rev": "9eaaab8d32d853b30823f56997ec3d7c106c358c",
         "type": "github"
       },
       "original": {
@@ -279,19 +279,17 @@
       "inputs": {
         "flake-parts": "flake-parts_3",
         "home-manager": "home-manager",
-        "nixpkgs": [
-          "nixpkgs-unstable-small"
-        ],
+        "nixpkgs": "nixpkgs_2",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1793949162,
-        "narHash": "sha256-9VzFpxiMcfBMIZecNq7dXj1bkWiEcwkopqei+gdS+fQ=",
+        "lastModified": 1794509776,
+        "narHash": "sha256-sTBiv73T15vRGCe/1XWFE2Wi6EICZvV07+wIFfZHSJM=",
         "owner": "NousResearch",
         "repo": "hermes-agent",
-        "rev": "90d6b98fd86d20981ee06ddd5b7d93e4320f26a4",
+        "rev": "0d1eb82d87852de979d458156a56e024f5cd4654",
         "type": "github"
       },
       "original": {
@@ -303,11 +301,11 @@
     "hermes-holographic": {
       "flake": false,
       "locked": {
-        "lastModified": 1793698243,
-        "narHash": "sha256-wpldNdVfspf19B+XGlGmnNxRkoqG8ST1rJ4LSgXe2z0=",
+        "lastModified": 1794251984,
+        "narHash": "sha256-mwdjzBT3dfbUJ40DVLeUU4p2QYTyNOeBVRfLuVwRsRQ=",
         "owner": "itpartypattaya",
         "repo": "hermes-plugin-holographic",
-        "rev": "6fe7d424cdc1b197e4a1f2dc1542e9e3869bf4f0",
+        "rev": "05e890b461dc3e6390982cb21c5b471a6ed3d8b4",
         "type": "github"
       },
       "original": {
@@ -319,11 +317,11 @@
     "hermes-labs-plugins": {
       "flake": false,
       "locked": {
-        "lastModified": 1793951370,
-        "narHash": "sha256-BwE/9rB91ng++hK/Lx2d/A31Wh08r4YnLkdr6XsbvoE=",
+        "lastModified": 1794026591,
+        "narHash": "sha256-/4Zrqb2lVo9ocLKCgplo2BmKjcU+pqm/cXcnnFOOhMc=",
         "owner": "NousResearch",
         "repo": "hermes-labs-plugins",
-        "rev": "4987918a068fcf4b3efbb584db5dd05e5f57c669",
+        "rev": "51ede1f023906114ec06c216c4a7b98e8a45d672",
         "type": "github"
       },
       "original": {
@@ -376,11 +374,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793757180,
-        "narHash": "sha256-gyV7AtCwLnOImcrfSETP4J3Ie96bz19DY47B7m7Y3HM=",
+        "lastModified": 1794278858,
+        "narHash": "sha256-rkrJwLgLSHBnXfgoSKIDa+2LLGdTqynsV3GAxOTGhUU=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "b787c48e2ec57a9d098f5c2721882a3bc1e16f97",
+        "rev": "82ce401aa350502897c3f2e85f384d61cd3b0b6d",
         "type": "github"
       },
       "original": {
@@ -415,11 +413,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793923363,
-        "narHash": "sha256-Tqc2oCw9o3efz+r6h4vo80GZ9Tdqrc4dA4C4fhWpBH0=",
+        "lastModified": 1794441770,
+        "narHash": "sha256-eESZYur5jV7FC1ORybPx7DZk2yWksbuxN3ifskLyep8=",
         "owner": "nix-community",
         "repo": "neovim-nightly-overlay",
-        "rev": "60eb4aa73b9aba4d92a7ee09919a0a579536b6ad",
+        "rev": "909aad91701893b367c03e8202464cd66c986040",
         "type": "github"
       },
       "original": {
@@ -431,11 +429,11 @@
     "neovim-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1793890084,
-        "narHash": "sha256-cna/u9v6HszQvjxfGAea9i/n3s7Y5PHxAqXE4x/Nhn8=",
+        "lastModified": 1794417882,
+        "narHash": "sha256-Bn6jy6zrjEVDsey2UhYtMdtpNIvHEHwJPAMbbJrICKo=",
         "owner": "neovim",
         "repo": "neovim",
-        "rev": "893d90fced480d234e8eb1c3922c2ee5f898d3e4",
+        "rev": "7f85c2f4856c59a59be78bc550f5b31b11876f4d",
         "type": "github"
       },
       "original": {
@@ -548,11 +546,11 @@
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1793726008,
-        "narHash": "sha256-iNjybNORi/2+shilhMlkNr01UHWKOHRGzQyIyvobs9o=",
-        "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+        "lastModified": 1794386569,
+        "narHash": "sha256-W60urNAgQVS8bhNWH0bQsYoiagds8m38oTDUjEOM9FE=",
+        "rev": "d4f25a3e562008648d45bcf2d70bcc7422cad84e",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1107793.1d060086d60c/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1117658.d4f25a3e5620/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
@@ -561,11 +559,11 @@
     },
     "nixpkgs-unstable-small": {
       "locked": {
-        "lastModified": 1793931523,
-        "narHash": "sha256-zhDDTq8TUT4jAM4ajNzQkMMcX5mcGLlt9wD52vWDZ7o=",
-        "rev": "7dd597af6a9776394693e4d0fed85dd5ea8d56da",
+        "lastModified": 1794493573,
+        "narHash": "sha256-bTpKv+dMNZ+J9Be4WRsBUAjZiRBBUUZnyW3ffm2nuTU=",
+        "rev": "3fe6b2e95f7304e16d6637199c6ae3b4382cbf89",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/unstable-small/nixos-26.11pre1109465.7dd597af6a97/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixos/unstable-small/nixos-26.11pre1118956.3fe6b2e95f73/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
@@ -574,11 +572,27 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1793865203,
-        "narHash": "sha256-4D+5oPvxkOa6tTCWXi4jwRfmWhDXGRSrX4+eOTItLh0=",
-        "rev": "c56a87d8e41ce69bd2af57eb35dcc117a9dfca33",
+        "lastModified": 1792502884,
+        "narHash": "sha256-IoNisKcGbUjdd45qCqywGMCYmZ5EnkxezvLII0FWwNA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "02c087f3fe673c9e317f206a627cb6b910336dbe",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
+        "lastModified": 1794165970,
+        "narHash": "sha256-YqwBRaXgqn0+I8BCsZVLkzd746X/84fr1/FvZiocsYE=",
+        "rev": "ac588ef1c914865dad517b337ea0eb9694a4021c",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.13627.c56a87d8e41c/nixexprs.tar.xz"
+        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.13936.ac588ef1c914/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
@@ -593,11 +607,11 @@
       },
       "locked": {
         "dir": "priv",
-        "lastModified": 1793942782,
-        "narHash": "sha256-dDsPqNuw9xrvFpLNv1UDIkIG3kCpvjfGnoE+AUoUQPA=",
+        "lastModified": 1794509808,
+        "narHash": "sha256-1ntVBZDikrnivYCeFesMASpytnih78nbi0RG/O6hANA=",
         "owner": "doot",
         "repo": "nixos-config",
-        "rev": "79adf857e6084af190e3c18f79b7ab5d42a3050d",
+        "rev": "abf3e4ab6db32ea0006a24855374f6ae8ad18dd0",
         "type": "github"
       },
       "original": {
@@ -667,7 +681,7 @@
         "hermes-lcm": "hermes-lcm",
         "home-manager": "home-manager_2",
         "neovim-nightly-overlay": "neovim-nightly-overlay",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs_3",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nixpkgs-unstable-small": "nixpkgs-unstable-small",
         "priv": "priv",
@@ -792,11 +806,11 @@
       },
       "locked": {
         "dir": "nix",
-        "lastModified": 1792999588,
-        "narHash": "sha256-/TbdG8AumOtUnF4x3shcyFAHIzYYPcfRpE5kZfZt+tg=",
+        "lastModified": 1794460743,
+        "narHash": "sha256-uWKyVsksFElfUreHcPhX8PIogg7/caY3qRR1gX9QkPU=",
         "owner": "wezterm",
         "repo": "wezterm",
-        "rev": "e68a8ec27727fbbda15e07f0a0737cd5e16481f6",
+        "rev": "ce8e6b140c2a52c8be1cc31c1274104b01422fdc",
         "type": "github"
       },
       "original": {

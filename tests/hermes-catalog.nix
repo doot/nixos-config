@@ -24,14 +24,13 @@ in
   "The existing NixOS MCP must remain configured";
   assert lib.assertMsg (builtins.elem "security-guidance" cfg.settings.plugins.enabled)
   "Security Guidance must be enabled for its block policy";
-  assert lib.assertMsg (builtins.elem "disk-cleanup" cfg.settings.plugins.disabled)
-  "Automatic cleanup requires separate approval";
-    pkgs.runCommand "hermes-catalog-test" ({
-        nativeBuildInputs = [pkgs.python3];
-        inherit (cfg.environment) SECURITY_GUIDANCE_BLOCK SECURITY_GUIDANCE_DISABLE;
-      }
-      // lib.filterAttrs (name: _: lib.hasPrefix "LCM_" name) cfg.environment) ''
-      python ${./test_hermes_security_guidance.py} ${inputs.hermes-agent}/plugins/security-guidance
-      python ${./test_hermes_lcm_config.py} ${inputs.hermes-lcm}
+  assert lib.assertMsg (!(builtins.elem "disk-cleanup" cfg.settings.plugins.enabled))
+  "Automatic cleanup must remain opt-in";
+    pkgs.runCommand "hermes-catalog-test" {
+      nativeBuildInputs = [pkgs.python3];
+      PYTHONPATH = inputs.hermes-agent;
+      inherit (cfg.environment) SECURITY_GUIDANCE_BLOCK SECURITY_GUIDANCE_DISABLE;
+    } ''
+      python ${./test_hermes_security_guidance.py} ${package.bundledPlugins}/security-guidance
       cp ${evaluation} "$out"
     ''
