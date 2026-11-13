@@ -6,9 +6,11 @@ import sys
 import unittest
 from itertools import permutations
 from pathlib import Path
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
-from tools.patch_parser import parse_v4a_patch
+from tools.file_operations_common import ReadResult, WriteResult
+from tools.patch_parser import OperationType, apply_v4a_operations, parse_v4a_patch
 
 
 plugin_path = Path(sys.argv.pop(1))
@@ -37,7 +39,7 @@ def _content_calls(path: str, content: str) -> list[tuple[str, dict[str, object]
 
 
 class SecurityGuidanceTests(unittest.TestCase):
-    """Check argument scanning without dispatching tools or applying patches."""
+    """Check hooks with inert arguments and in-memory native patch application."""
 
     def setUp(self) -> None:
         """Require the deployed block policy before exercising mode overrides."""
@@ -180,6 +182,91 @@ class SecurityGuidanceTests(unittest.TestCase):
             for name, body in operations.items():
                 with self.subTest(path=path, rule=rule, operation=name):
                     self._assert_blocked("patch", self._v4a_args(body), rule)
+
+    def test_update_hunks_do_not_invent_missing_integrity(self) -> None:
+        """Keep an unchanged integrity attribute between distinct UPDATE hunks."""
+        remote = "https" + "://" + "example.invalid/library.js"
+        opening = f'<script src="{remote}"'
+        before = (
+            f'{opening}\n data-version="old"\n integrity="sha384-fixture"\n'
+            ' crossorigin="anonymous"\n>\nold\n</script>'
+        )
+        expected = before.replace('data-version="old"', 'data-version="new"').replace("\nold\n", "\nnew\n")
+        args = self._v4a_args(
+            f'*** Update File: page.html\n@@\n {opening}\n- data-version="old"\n+ data-version="new"\n'
+            '@@\n >\n-old\n+new\n'
+        )
+        operations, error = parse_v4a_patch(args["patch"])
+        self.assertIsNone(error)
+        self.assertEqual(len(operations), 1)
+        self.assertIs(operations[0].operation, OperationType.UPDATE)
+        self.assertEqual(len(operations[0].hunks), 2)
+        reads = Mock(return_value=ReadResult(content=before))
+        writes = Mock(return_value=WriteResult(bytes_written=len(expected.encode()), verified=True))
+        files = SimpleNamespace(env=SimpleNamespace(cwd="/synthetic-worktree", is_local=False), read_file_raw=reads, write_file=writes)
+        with patch("tools.patch_parser._backend_is_windows", return_value=False):
+            result = apply_v4a_operations(operations, files)
+        self.assertTrue(result.success, result.error)
+        self.assertEqual(reads.call_count, 2)
+        self.assertTrue(all(call.args == ("page.html",) and not call.kwargs for call in reads.call_args_list))
+        writes.assert_called_once_with("page.html", expected, pre_content=before)
+        self.assertIsNone(plugin._on_pre_tool_call(tool_name="write_file", args={"path": "page.html", "content": expected}))
+        self.assertIsNone(plugin._on_pre_tool_call(tool_name="patch", args=args))
+
+    def test_add_hunks_form_contiguous_content(self) -> None:
+        """Scan the complete ADD result even when a tag spans its hunk markers."""
+        remote = "https" + "://" + "example.invalid/library.js"
+        opening = f'<script src="{remote}"'
+        expected = f"{opening}\n></script>"
+        args = self._v4a_args(f"*** Add File: page.html\n+{opening}\n@@\n+></script>\n")
+        operations, error = parse_v4a_patch(args["patch"])
+        self.assertIsNone(error)
+        self.assertEqual(len(operations), 1)
+        self.assertIs(operations[0].operation, OperationType.ADD)
+        self.assertEqual(len(operations[0].hunks), 2)
+        reads = Mock(return_value=ReadResult(error="synthetic file absent", not_found=True))
+        writes = Mock(return_value=WriteResult(bytes_written=len(expected.encode()), verified=True))
+        files = SimpleNamespace(env=SimpleNamespace(cwd="/synthetic-worktree", is_local=False), read_file_raw=reads, write_file=writes)
+        with patch("tools.patch_parser._backend_is_windows", return_value=False):
+            result = apply_v4a_operations(operations, files)
+        self.assertTrue(result.success, result.error)
+        self.assertEqual(reads.call_count, 2)
+        self.assertTrue(all(call.args == ("page.html",) and not call.kwargs for call in reads.call_args_list))
+        writes.assert_called_once_with("page.html", expected)
+        self._assert_blocked("patch", args, "script_src_without_sri")
+
+    def test_update_hunks_share_the_operation_content_budget(self) -> None:
+        """Count UTF-8 bytes and selected blank lines across all UPDATE hunks."""
+        unsafe = "pickle.load(handle)"
+        for extra, blank_lines in (("", 0), ("@@\n-previous\n", 0), ("@@\n+\n", 1)):
+            for size in (SCAN_LIMIT - 1, SCAN_LIMIT, SCAN_LIMIT + 1):
+                count, remainder = divmod(size - len(unsafe) - 1 - blank_lines, len("é".encode()))
+                filler = "é" * count + "x" * remainder
+                args = self._v4a_args(f"*** Update File: example.py\n{extra}@@\n+{unsafe}\n@@\n+{filler}\n")
+                operations, error = parse_v4a_patch(args["patch"])
+                self.assertIsNone(error)
+                selected = [line.content for hunk in operations[0].hunks for line in hunk.lines if line.prefix in ("+", " ")]
+                self.assertEqual(len("\n".join(selected).encode()), size)
+                with self.subTest(extra=extra, size=size):
+                    if size <= SCAN_LIMIT:
+                        self._assert_blocked("patch", args, "pickle_deserialization")
+                    else:
+                        self.assertIsNone(plugin._on_pre_tool_call(tool_name="patch", args=args))
+
+    def test_update_hunk_findings_are_deduplicated(self) -> None:
+        """Find content in either hunk and report a repeated rule once per operation."""
+        unsafe = "pickle.load(handle)"
+        for fragments in ((unsafe, "value = 1"), ("value = 1", unsafe), (unsafe, unsafe)):
+            args = self._v4a_args("*** Update File: example.py\n" + "".join(f"@@\n+{fragment}\n" for fragment in fragments))
+            with self.subTest(fragments=fragments):
+                result = plugin._on_pre_tool_call(tool_name="patch", args=args)
+                self.assertIsNotNone(result)
+                self.assertEqual(result["action"], "block")
+                self.assertIn("1 pattern matched (pickle_deserialization)", result["message"])
+                with patch.dict(os.environ, {"SECURITY_GUIDANCE_BLOCK": "0"}):
+                    warning = plugin._on_transform_tool_result(tool_name="patch", args=args, result='{"success": true}')
+                    self.assertIsNotNone(warning)
+                    self.assertIn("1 pattern matched (pickle_deserialization)", warning)
 
     def test_removed_dangerous_lines_are_allowed(self) -> None:
         """Do not treat removed Python, JavaScript, or unfiltered patterns as writes."""
