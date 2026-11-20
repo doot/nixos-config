@@ -160,9 +160,8 @@ in {
       ripgrep
       tmux
       unstable.vim
-      # TODO: Temporarily disable until upstream is fixed
-      # inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default.headless
-      # inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default.terminfo
+      inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default.headless
+      inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default.terminfo
       wget
       yq
       unstable.git-who # `git who` command to show blame for file trees
