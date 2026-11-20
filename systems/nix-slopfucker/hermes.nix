@@ -398,7 +398,14 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
-        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal;
+        package = import ./hermes-package.nix {
+          inherit lib;
+          inherit (inputs) hermes-agent;
+          system = pkgs.stdenv.hostPlatform.system;
+          # Each patch says in its header why it exists and when to drop it.
+          # A patch that no longer applies fails the build: drop it then.
+          patches = [./hermes-provider-snapshot-writable.patch];
+        };
         extraDependencyGroups = ["matrix"];
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
@@ -422,7 +429,7 @@ in {
 
           model = {
             provider = "copilot";
-            default = "gpt-6-astra";
+            default = "gpt-6.2-astra";
           };
           context = {
             engine = "lcm";

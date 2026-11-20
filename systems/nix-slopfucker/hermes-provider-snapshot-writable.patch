@@ -1,0 +1,36 @@
+Make provider plugin snapshots owner-writable.
+
+Hermes snapshots each $HERMES_HOME provider plugin with copytree into a
+private dir, then renames it into place. copytree copies directory modes,
+so a read-only source (our plugins are symlinks into the Nix store) gives
+a read-only copy, and renaming a directory into another parent needs write
+on it (the rename rewrites its `..`): the rename fails with EACCES and the
+plugin (github-copilot) never loads. Read-only copies can't be cleaned up
+either.
+
+Introduced upstream in df8295c (2026-11-14, "per-home frozen copies,
+published by rename"); still present on main as of 2026-11-20. Drop this
+patch once it stops applying.
+
+--- a/providers/plugin_reload.py
++++ b/providers/plugin_reload.py
+@@ -27,6 +27,7 @@
+ import logging
+ import os
+ import shutil
++import stat
+ import sys
+ import tempfile
+ import threading
+@@ -156,6 +157,11 @@
+     private = Path(tempfile.mkdtemp(prefix=".copy-", dir=target.parent))
+     try:
+         shutil.copytree(plugin_dir, private / plugin_dir.name, ignore=_SNAPSHOT_IGNORE)
++        # copytree copies each directory's mode, so a read-only source (a Nix store path) gives a
++        # read-only copy: the rename below (it rewrites the moved directory's `..`) and the
++        # snapshot cleanup both need the owner to be able to write its directories.
++        for root, _dirs, _files in os.walk(private / plugin_dir.name):
++            os.chmod(root, os.stat(root).st_mode | stat.S_IWUSR)
+         os.rename(private / plugin_dir.name, target)
+     except OSError:
+         if not target.is_dir():  # another scan publishing the same copy first is fine
