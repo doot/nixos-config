@@ -5,10 +5,11 @@
   ...
 }: let
   cfg = config.roles.neovim;
+  inherit (pkgs.unstable.vimPlugins.nvim-treesitter) parsers queries;
   # LazyVim owns the Lua plugin; Nix supplies only its parsers and matching queries.
   grammarSite = pkgs.unstable.buildEnv {
     name = "neovim-treesitter-grammars";
-    paths = pkgs.unstable.vimPlugins.nvim-treesitter.withAllGrammars.dependencies;
+    paths = lib.attrValues parsers ++ lib.attrValues queries;
     pathsToLink = ["/parser" "/queries"];
   };
 in {
