@@ -5,26 +5,13 @@
   pkgs,
   config,
   lib,
-  inputs,
   ...
 }: let
   cfg = config.roles.neovim;
-  nightly = inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default;
-  parserTools = lib.makeBinPath [pkgs.stdenv.cc pkgs.unstable-small.tree-sitter];
-  editor = pkgs.symlinkJoin {
-    pname = "neovim-with-parser-tools";
-    inherit (nightly) version meta;
-    passthru = {inherit (nightly) lua;};
-    paths = [nightly];
-    nativeBuildInputs = [pkgs.makeWrapper];
-    postBuild = ''
-      wrapProgram "$out/bin/nvim" --suffix PATH : ${parserTools}
-    '';
-  };
 in {
   options.roles.neovim = {
     enable =
-      lib.mkEnableOption "additional LazyVim tools and providers"
+      lib.mkEnableOption "the Neovim role's additional LazyVim tools and providers (nightly Neovim remains installed when disabled)"
       // {
         default = true;
       };
@@ -39,10 +26,9 @@ in {
       '';
     };
   };
-  config = {
-    environment.systemPackages =
-      if cfg.enable
-      then
+  config = lib.mkIf cfg.enable {
+    environment = {
+      systemPackages =
         [
           pkgs.unstable-small.lazygit
           pkgs.unstable-small.unzip
@@ -53,14 +39,21 @@ in {
           pkgs.unstable-small.gh
           pkgs.unstable-small.nil
         ]
-        ++ lib.optional cfg.imageSupport pkgs.unstable.ueberzugpp
-      else [editor];
-
-    programs.neovim = {
-      inherit (cfg) enable;
-      withPython3 = cfg.enable;
-      withNodeJs = cfg.enable;
-      package = editor;
+        ++ lib.optional cfg.imageSupport pkgs.unstable.ueberzugpp;
+    };
+    programs = {
+      neovim = {
+        enable = true;
+        withPython3 = true;
+        withNodeJs = true;
+      };
+      # nix-ld = {
+      #   # Allows LazyVim to work with neovim as-is (not a good way to do this, but works for now)
+      #   enable = true;
+      #   libraries = with pkgs; [
+      #     stdenv.cc.cc
+      #   ];
+      # };
     };
   };
 }
