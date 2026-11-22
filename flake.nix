@@ -141,6 +141,7 @@
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
 
     checks.x86_64-linux = {
+      neovim-treesitter = import ./tests/neovim-treesitter.nix {host = self.nixosConfigurations.${host_slop};};
       hermes-webapp = import ./tests/hermes-webapp.nix {inherit inputs;};
       hermes-state-init = import ./tests/hermes-state-init.nix {inherit inputs;};
       hermes-firewall = (import ./tests/hermes-firewall.nix {inherit inputs;}).check;

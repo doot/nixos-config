@@ -1,6 +1,3 @@
-# Module to load everything required to use Neovim with LazyVim without managing anything
-# in nix. This isn't pretty, but it might be the best option for now since some systems do
-# not have nix available and I don't want to manage two configs.
 {
   pkgs,
   config,
@@ -8,13 +5,21 @@
   ...
 }: let
   cfg = config.roles.neovim;
+  # LazyVim owns the Lua plugin; Nix supplies only its parsers and matching queries.
+  grammarSite = pkgs.unstable.buildEnv {
+    name = "neovim-treesitter-grammars";
+    paths = pkgs.unstable.vimPlugins.nvim-treesitter.withAllGrammars.dependencies;
+    pathsToLink = ["/parser" "/queries"];
+  };
 in {
   options.roles.neovim = {
-    enable =
-      lib.mkEnableOption "the Neovim role's additional LazyVim tools and providers (nightly Neovim remains installed when disabled)"
-      // {
-        default = true;
-      };
+    enable = lib.mkEnableOption "Neovim with prebuilt Tree-sitter grammars";
+
+    extraTools = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Install additional LazyVim tools and enable the Node.js and Python providers.";
+    };
 
     imageSupport = lib.mkOption {
       type = lib.types.bool;
@@ -28,21 +33,24 @@ in {
   };
   config = lib.mkIf cfg.enable {
     environment = {
+      variables.NVIM_TREESITTER_GRAMMARS = toString grammarSite;
       systemPackages =
-        [
-          pkgs.unstable-small.lazygit
-          pkgs.unstable-small.unzip
-          pkgs.unstable.nodejs_26
-          pkgs.unstable-small.tree-sitter
-          pkgs.unstable-small.stylua
-          pkgs.unstable-small.luarocks
-          pkgs.unstable-small.gh
-          pkgs.unstable-small.nil
-        ]
-        ++ lib.optional cfg.imageSupport pkgs.unstable.ueberzugpp;
+        if cfg.extraTools
+        then
+          [
+            pkgs.unstable-small.lazygit
+            pkgs.unstable-small.unzip
+            pkgs.unstable.nodejs_26
+            pkgs.unstable-small.stylua
+            pkgs.unstable-small.luarocks
+            pkgs.unstable-small.gh
+            pkgs.unstable-small.nil
+          ]
+          ++ lib.optional cfg.imageSupport pkgs.unstable.ueberzugpp
+        else [config.programs.neovim.package];
     };
     programs = {
-      neovim = {
+      neovim = lib.mkIf cfg.extraTools {
         enable = true;
         withPython3 = true;
         withNodeJs = true;

@@ -8,7 +8,6 @@
   fqdn,
   ...
 }: let
-  neovimNightly = inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default;
   mainUser = config.users.users.doot;
   nixosConfigDir = "${mainUser.home}/nixos-config";
   dotfilesDir = "${mainUser.home}/.dotfiles";
@@ -150,7 +149,6 @@ in {
       htop
       jq
       ncdu
-      neovimNightly
       # Nix helpers
       nix-inspect # TUI to browse nix config
       nix-tree # TUI to browse nix dependency graph/sizes
@@ -211,7 +209,7 @@ in {
   programs = {
     git.enable = true;
     direnv.enable = true;
-    neovim.package = neovimNightly;
+    neovim.package = inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
     # Let root's nixos-rebuild fetch the private priv overlay from Forgejo over
     # git+ssh non-interactively: pin the host key (no prompt) and present the
@@ -499,5 +497,8 @@ in {
   };
 
   # Enable default roles
-  roles.alloy.enable = true;
+  roles = {
+    alloy.enable = true;
+    neovim.enable = true;
+  };
 }
