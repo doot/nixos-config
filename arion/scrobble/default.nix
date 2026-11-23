@@ -39,6 +39,8 @@ in {
         "/docker-nfs/scrobble/multi-scrobbler:/config"
       ];
       user = "${common.puid}:${common.pgid}";
+      capabilities.ALL = false;
+      security_opt = ["no-new-privileges:true"];
       environment = {
         TZ = common.tz;
         # set if using a source/client with redirect URI that you have not explicitly set and MS is NOT running on the same machine that you will view the dashboard from
