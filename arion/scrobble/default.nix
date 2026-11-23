@@ -32,6 +32,7 @@ in {
     service = {
       image = "foxxmd/multi-scrobbler";
       restart = "unless-stopped";
+      user = "${common.puid}:${common.pgid}";
       ports = [
         "9078:9078"
       ];
@@ -39,15 +40,19 @@ in {
         "/docker-nfs/scrobble/multi-scrobbler:/config"
       ];
       environment = {
-        PUID = common.puid;
-        PGID = common.pgid;
         TZ = common.tz;
         # set if using a source/client with redirect URI that you have not explicitly set and MS is NOT running on the same machine that you will view the dashboard from
         # EX: You will view MS dashboard at 'http://192.168.0.101:9078' -> set BASE_URL=http://192.168.0.101:9078
         #- BASE_URL=http://<MyHostIP>:9078
       };
       healthcheck = {
-        test = ["CMD-SHELL" "curl --fail localhost:9078/api/health || exit 1"];
+        test = [
+          "CMD"
+          "/nodejs/bin/node"
+          "--input-type=module"
+          "-e"
+          "process.exit((await fetch('http://127.0.0.1:9078/api/health', {redirect: 'manual'})).ok ? 0 : 1)"
+        ];
         interval = "30s";
         timeout = "15s";
         retries = 3;
