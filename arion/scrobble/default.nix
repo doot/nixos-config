@@ -39,6 +39,8 @@ in {
         "/docker-nfs/scrobble/multi-scrobbler:/config"
       ];
       user = "${common.puid}:${common.pgid}";
+      capabilities.ALL = false;
+      security_opt = ["no-new-privileges:true"];
       environment = {
         TZ = common.tz;
         # set if using a source/client with redirect URI that you have not explicitly set and MS is NOT running on the same machine that you will view the dashboard from
@@ -46,7 +48,13 @@ in {
         #- BASE_URL=http://<MyHostIP>:9078
       };
       healthcheck = {
-        test = ["CMD-SHELL" "curl --fail localhost:9078/api/health || exit 1"];
+        test = [
+          "CMD"
+          "/nodejs/bin/node"
+          "--input-type=module"
+          "-e"
+          "process.exit((await fetch('http://127.0.0.1:9078/api/health', {redirect: 'manual'})).ok ? 0 : 1)"
+        ];
         interval = "30s";
         timeout = "15s";
         retries = 3;
