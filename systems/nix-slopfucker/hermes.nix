@@ -484,6 +484,7 @@ in {
             session_token_auth.enabled = false;
           };
           agent = {
+            clarify_timeout = 0;
             environment_hint = "You are running inside a locked-down NixOS container: no nix daemon, no package managers, and network access restricted to the internet only (no local network).";
             reasoning_effort = "xhigh";
           };
