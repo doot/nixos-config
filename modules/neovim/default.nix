@@ -25,7 +25,7 @@ in {
 
     imageSupport = lib.mkOption {
       type = lib.types.bool;
-      default = config.services.xserver.enable || config.programs.hyprland.enable;
+      default = cfg.extraTools && (config.services.xserver.enable || config.programs.hyprland.enable);
       description = ''
         Terminal image previews in neovim, via ueberzugpp. Only useful under a
         graphical session, and pulls in the X11/Wayland stack, so headless hosts
@@ -37,19 +37,17 @@ in {
     environment = {
       variables.NVIM_TREESITTER_GRAMMARS = toString grammarSite;
       systemPackages =
-        if cfg.extraTools
-        then
-          [
-            pkgs.unstable-small.lazygit
-            pkgs.unstable-small.unzip
-            pkgs.unstable.nodejs_26
-            pkgs.unstable-small.stylua
-            pkgs.unstable-small.luarocks
-            pkgs.unstable-small.gh
-            pkgs.unstable-small.nil
-          ]
-          ++ lib.optional cfg.imageSupport pkgs.unstable.ueberzugpp
-        else [config.programs.neovim.package];
+        lib.optionals cfg.extraTools [
+          pkgs.unstable-small.lazygit
+          pkgs.unstable-small.unzip
+          pkgs.unstable.nodejs_26
+          pkgs.unstable-small.stylua
+          pkgs.unstable-small.luarocks
+          pkgs.unstable-small.gh
+          pkgs.unstable-small.nil
+        ]
+        ++ lib.optional (!cfg.extraTools) config.programs.neovim.package
+        ++ lib.optional cfg.imageSupport pkgs.unstable.ueberzugpp;
     };
     programs = {
       neovim = lib.mkMerge [
