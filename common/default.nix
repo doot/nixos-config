@@ -209,7 +209,6 @@ in {
   programs = {
     git.enable = true;
     direnv.enable = true;
-    neovim.package = inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
     # Let root's nixos-rebuild fetch the private priv overlay from Forgejo over
     # git+ssh non-interactively: pin the host key (no prompt) and present the

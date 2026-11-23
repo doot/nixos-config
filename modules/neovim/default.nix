@@ -1,6 +1,7 @@
 {
   pkgs,
   config,
+  inputs,
   lib,
   ...
 }: let
@@ -51,11 +52,14 @@ in {
         else [config.programs.neovim.package];
     };
     programs = {
-      neovim = lib.mkIf cfg.extraTools {
-        enable = true;
-        withPython3 = true;
-        withNodeJs = true;
-      };
+      neovim = lib.mkMerge [
+        {package = inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default;}
+        (lib.mkIf cfg.extraTools {
+          enable = true;
+          withPython3 = true;
+          withNodeJs = true;
+        })
+      ];
       # nix-ld = {
       #   # Allows LazyVim to work with neovim as-is (not a good way to do this, but works for now)
       #   enable = true;

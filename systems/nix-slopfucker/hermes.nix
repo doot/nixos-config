@@ -109,7 +109,7 @@
       /run/current-system/sw/bin/hermes "$@"
   '';
 in {
-  # Neovim's extra tools pull in npm, which we do not want anywhere on this host.
+  # Neovim role pulls in npm, which we do not want anywhere on this host.
   roles.neovim.extraTools = lib.mkForce false;
 
   # Host-side hermes user/group: owns the bind-mounted state on disk and lets
