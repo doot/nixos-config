@@ -267,11 +267,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1795452466,
-        "narHash": "sha256-yxDWDzL09TmkFgKq0A2WW0GA4aKmwz77LLsOdQe5T7A=",
+        "lastModified": 1795469586,
+        "narHash": "sha256-jyRigu6WuD+gS+16jBKkbtikV56dPl1yuU4rqlOQ/6A=",
         "owner": "NousResearch",
         "repo": "hermes-agent",
-        "rev": "352b249f67fb6a4a7d7904acaca9dd410db229e0",
+        "rev": "b98c388a880b1b6fd303c9c2821a3946651a0b4c",
         "type": "github"
       },
       "original": {
@@ -283,11 +283,11 @@
     "hermes-holographic": {
       "flake": false,
       "locked": {
-        "lastModified": 1795005530,
-        "narHash": "sha256-+xCSQuv4hxjK99cKH/NBHmN2qDHXESzFIicBP7TSCwc=",
+        "lastModified": 1795472567,
+        "narHash": "sha256-A2Pdf92ez4+mNz0ZetV4qvrjlgcCSVCe5G2g1Vf+Iv4=",
         "owner": "itpartypattaya",
         "repo": "hermes-plugin-holographic",
-        "rev": "76689f954f500d49a7ef2eb73d0e868a5b43b53e",
+        "rev": "46e6c690b4c4a6166ca72b8d0901fb44034a140c",
         "type": "github"
       },
       "original": {
@@ -573,11 +573,11 @@
       },
       "locked": {
         "dir": "priv",
-        "lastModified": 1795402780,
-        "narHash": "sha256-SdPQu+eA7XvbcUAMEaCU1Q2Vx6IeSTNxzIsz3GNOSfE=",
+        "lastModified": 1795472530,
+        "narHash": "sha256-5CUObX7TcR1Jh70YJtczdw+6FIw5ZXiqEH270ri9+c8=",
         "owner": "doot",
         "repo": "nixos-config",
-        "rev": "3113461c7c5c45d89239b7773dec27dbc20dd5bb",
+        "rev": "359b24d5fd83369cf0d7a37b7e8ecac542c2c56a",
         "type": "github"
       },
       "original": {
