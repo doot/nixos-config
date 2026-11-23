@@ -149,7 +149,6 @@ in {
       htop
       jq
       ncdu
-      inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default
       # Nix helpers
       nix-inspect # TUI to browse nix config
       nix-tree # TUI to browse nix dependency graph/sizes
@@ -497,5 +496,8 @@ in {
   };
 
   # Enable default roles
-  roles.alloy.enable = true;
+  roles = {
+    alloy.enable = true;
+    neovim.enable = true;
+  };
 }
