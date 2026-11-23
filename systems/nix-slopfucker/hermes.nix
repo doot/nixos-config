@@ -253,6 +253,8 @@ in {
       ...
     }: let
       hermesCfg = config.services.hermes-agent;
+      copilotSrc = "${inputs.hermes-labs-plugins}/github-copilot";
+      copilotEtc = "hermes/plugins/github-copilot";
       # FastMCP 3 requires MCP SDK 1; keep the override local to this server.
       mcpNixos = pkgs.mcp-nixos.override {
         python3Packages =
@@ -398,14 +400,7 @@ in {
       # ── THE Hermes config — single source of truth, defined once, here ────
       services.hermes-agent = {
         enable = true;
-        package = import ./hermes-package.nix {
-          inherit lib;
-          inherit (inputs) hermes-agent;
-          system = pkgs.stdenv.hostPlatform.system;
-          # Each patch says in its header why it exists and when to drop it.
-          # A patch that no longer applies fails the build: drop it then.
-          patches = [./hermes-provider-snapshot-writable.patch];
-        };
+        package = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.minimal;
         extraDependencyGroups = ["matrix"];
 
         # CLI on the container PATH + HERMES_HOME exported, so the machinectl
@@ -563,9 +558,15 @@ in {
         ];
       };
 
+      # Hermes copies directory modes into its snapshots; link the files, not their directories.
+      environment.etc = lib.genAttrs' (lib.filesystem.listFilesRecursive copilotSrc) (source: let
+        relative = builtins.unsafeDiscardStringContext (lib.removePrefix "${copilotSrc}/" source);
+      in
+        lib.nameValuePair "${copilotEtc}/${relative}" {inherit source;});
+
       # Memory loading and migration checks require canonical plugin names.
       systemd.tmpfiles.rules = [
-        "L+ ${hermesCfg.stateDir}/.hermes/plugins/github-copilot - ${hermesCfg.user} ${hermesCfg.group} - ${inputs.hermes-labs-plugins}/github-copilot"
+        "L+ ${hermesCfg.stateDir}/.hermes/plugins/github-copilot - ${hermesCfg.user} ${hermesCfg.group} - /etc/${copilotEtc}"
         "L+ ${hermesCfg.stateDir}/.hermes/plugins/holographic - ${hermesCfg.user} ${hermesCfg.group} - ${inputs.hermes-holographic}"
       ];
 
