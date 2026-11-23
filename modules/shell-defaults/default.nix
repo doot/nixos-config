@@ -20,7 +20,11 @@ in {
 
     editor = lib.mkOption {
       type = lib.types.str;
-      default = "nvim";
+      default =
+        if config.roles.neovim.enable or false
+        then "nvim"
+        else "vim";
+      defaultText = lib.literalMD "`nvim` when the Neovim role is enabled, otherwise `vim`";
       description = ''
         Command used for EDITOR/VISUAL. Must be present in
         {option}`environment.systemPackages` on the host that sets it.

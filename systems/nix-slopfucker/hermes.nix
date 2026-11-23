@@ -110,7 +110,7 @@
   '';
 in {
   # Neovim role pulls in npm, which we do not want anywhere on this host.
-  roles.neovim.enable = lib.mkForce false;
+  roles.neovim.extraTools = lib.mkForce false;
 
   # Host-side hermes user/group: owns the bind-mounted state on disk and lets
   # regular users in the hermes group share the workspace.

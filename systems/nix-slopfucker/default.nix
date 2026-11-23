@@ -1,7 +1,6 @@
 {
   lib,
   pkgs,
-  inputs,
   ...
 }: {
   imports = [
@@ -17,10 +16,7 @@
     cores = 1;
   };
 
-  environment.systemPackages = with pkgs; [
-    inputs.neovim-nightly-overlay.packages.${pkgs.stdenv.hostPlatform.system}.default
-    github-cli
-  ];
+  environment.systemPackages = [pkgs.github-cli];
 
   services = {
     qemuGuest.enable = true;
