@@ -32,13 +32,13 @@ in {
     service = {
       image = "foxxmd/multi-scrobbler";
       restart = "unless-stopped";
-      user = "${common.puid}:${common.pgid}";
       ports = [
         "9078:9078"
       ];
       volumes = [
         "/docker-nfs/scrobble/multi-scrobbler:/config"
       ];
+      user = "${common.puid}:${common.pgid}";
       environment = {
         TZ = common.tz;
         # set if using a source/client with redirect URI that you have not explicitly set and MS is NOT running on the same machine that you will view the dashboard from
