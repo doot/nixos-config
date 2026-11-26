@@ -347,6 +347,9 @@ in {
         {
           name = "ms";
           port = 9078;
+          extraConfig = ''
+            proxy_buffering off;
+          '';
         }
         {
           name = "cadvisor";
